@@ -12,6 +12,7 @@
       "*": ["node_modules/*"],
       "@api/*": ["src/api/*"],
       "@internal/*": ["src/internal/*"],
+      "@util/*": ["src/internal/util/*"],
     }
   },
   "include": ["src/**/*"]

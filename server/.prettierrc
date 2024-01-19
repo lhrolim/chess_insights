@@ -1,0 +1,8 @@
+{
+    "eslintIntegration": true,
+    "printWidth": 120,
+    "trailingComma": "none",
+    "endOfLine": "lf",
+    "arrowParens": "avoid"
+  }
+  

@@ -12,11 +12,13 @@ router.get("/best", async (req: Request, res: Response) => {
     user: userName,
     format: gameFormat,
     months,
+    minmoves,
     maxGames: max
   } = req.query as {
     user: string;
     format?: string;
     months?: string;
+    minmoves?: string;
     maxGames?: string;
   };
   if (!userName) {
@@ -26,14 +28,16 @@ router.get("/best", async (req: Request, res: Response) => {
   }
 
   let monthsToLookBack = months ? parseInt(months) : 1;
-  let maxGamesToReturn = max ? parseInt(max) : 10;
+  let maxGamesToReturn = max ? parseInt(max) : 20;
+  let minNumberOfMoves = max ? parseInt(minmoves) : 0;
   const gameFormatEnum: GameFormat = gameFormat ? (gameFormat.toLowerCase() as GameFormat) : null;
 
   const games = await fetchBestAnalyzedGamesOverPastMonths(
     userName,
     monthsToLookBack,
     maxGamesToReturn,
-    gameFormatEnum
+    gameFormatEnum,
+    minNumberOfMoves
   );
 
   res.send(games);

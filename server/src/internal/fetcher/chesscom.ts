@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as Collections from "typescript-collections";
-import { ICompareFunction } from "typescript-collections/dist/lib/util";
+import { ParseTree, parse as pgnParser } from "@mliebelt/pgn-parser";
+import {convertEpochToFormattedDate} from "@util/dateutil";
 
 export interface GameResult {
   url: string;
@@ -10,9 +11,10 @@ export interface GameResult {
   myRating?: number;
   opponentRating?: number;
   format: GameFormat;
-  timestamp: number;
+  timestamp: string;
   result: MatchResult;
   endMatchMode: EndMatchMode;
+  numberOfMoves?: number;
 }
 
 export enum GameFormat {
@@ -48,14 +50,15 @@ export const fetchBestAnalyzedGamesOverPastMonths = async (
   username: string,
   months: number,
   numberOfGames: number,
-  gameFormat?: GameFormat
+  gameFormat?: GameFormat,
+  minNumberOfMoves?: number
 ): Promise<GameResult[]> => {
   let ignoredGames = 0;
   const results = new Collections.BSTree<GameResult>(
     (a: GameResult, b: GameResult) => b.myPrecision - a.myPrecision
   );
   for (let i = 0; i < months; i++) {
-    const date = getPastDate(months - 1);
+    const date = getPastDate(i);
     const url = `https://api.chess.com/pub/player/${username}/games/${date.year}/${date.month}`;
     console.log(`Fetching games for ${username} at ${url}`);
     const response = await axios.get(url);
@@ -70,7 +73,13 @@ export const fetchBestAnalyzedGamesOverPastMonths = async (
         continue;
       }
       const gameResult = parseGamesFromApiResponse(username, game);
-      results.add(gameResult);
+      if (gameResult.numberOfMoves < minNumberOfMoves) {
+        ignoredGames++;
+        continue;
+      }
+      if (!!gameResult) {
+        results.add(gameResult);
+      }
     }
   }
 
@@ -120,7 +129,7 @@ const getPastDate = (months: number): YearAndMonth => {
   return { year, month: formattedMonth };
 };
 
-const parseGamesFromApiResponse = (userName: string, game: any) => {
+const parseGamesFromApiResponse = (userName: string, game: any): GameResult => {
   const amIPlayingAsWhite = game.white.username === userName ? true : false;
   const opponentUserName = amIPlayingAsWhite ? game.black.username : game.white.username;
   const myResult = amIPlayingAsWhite ? game.white.result : game.black.result;
@@ -128,8 +137,16 @@ const parseGamesFromApiResponse = (userName: string, game: any) => {
   const matchResult = parseMatchResult(myResult, opponentResult);
   if (!matchResult || matchResult[0] == MatchResult.Unknown) {
     console.log("matchResult is null" + game);
-    throw new Error("matchResult is null");
+    return null;
   }
+  let numberOfMoves = undefined;
+  try {
+    const pgnResult = pgnParser(game.pgn, { startRule: "game" }) as ParseTree;
+    numberOfMoves = pgnResult.moves[pgnResult.moves.length-1].moveNumber;
+  } catch (e) {
+    console.error("unable to parse game pgn", e);
+  }
+  const time = convertEpochToFormattedDate(game.end_time);
 
   return {
     url: game.url,
@@ -139,8 +156,9 @@ const parseGamesFromApiResponse = (userName: string, game: any) => {
     opponentRating: amIPlayingAsWhite ? game.black.rating : game.white.rating,
     opponentUserName,
     format: game.time_class,
-    timestamp: game.start_time,
+    timestamp: time,
     result: matchResult[0],
-    endMatchMode: matchResult[1]
+    endMatchMode: matchResult[1],
+    numberOfMoves
   };
 };
