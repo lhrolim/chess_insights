@@ -1,50 +1,9 @@
 import axios from "axios";
 import * as Collections from "typescript-collections";
 import { ParseTree, parse as pgnParser } from "@mliebelt/pgn-parser";
-import {convertEpochToFormattedDate} from "@util/dateutil";
-
-export interface GameResult {
-  url: string;
-  myPrecision: number;
-  opponentPrecision: number;
-  opponentUserName: string;
-  myRating?: number;
-  opponentRating?: number;
-  format: GameFormat;
-  timestamp: string;
-  result: MatchResult;
-  endMatchMode: EndMatchMode;
-  numberOfMoves?: number;
-}
-
-export enum GameFormat {
-  Bullet = "bullet",
-  Blitz = "blitz",
-  Daily = "daily",
-  Rapid = "rapid"
-}
-
-export enum MatchResult {
-  Draw = "draw",
-  Lost = "lost",
-  Won = "won",
-  Unknown = "unknown" // This should never happen, but just in case it does, we'll have a default optio
-}
-
-export enum EndMatchMode {
-  Checkmated = "checkmated",
-  Resign = "resigned",
-  Timeout = "timeout",
-  StaleMate = "stalemate",
-  TimeVsInsufficient = "timevsinsufficient",
-  Insufficient = "insufficient",
-  Unknown = "unknown"
-}
-
-interface YearAndMonth {
-  year: string;
-  month: string;
-}
+import { convertEpochToFormattedDate } from "@util/dateutil";
+import { PGNParsedData, parseRelevantDataFromPGN } from "@util/pgnparserutil";
+import { GameFormat, GameResult, MatchResult, EndMatchMode } from "@api/dtos/gamedto";
 
 export const fetchBestAnalyzedGamesOverPastMonths = async (
   username: string,
@@ -54,9 +13,7 @@ export const fetchBestAnalyzedGamesOverPastMonths = async (
   minNumberOfMoves?: number
 ): Promise<GameResult[]> => {
   let ignoredGames = 0;
-  const results = new Collections.BSTree<GameResult>(
-    (a: GameResult, b: GameResult) => b.myPrecision - a.myPrecision
-  );
+  const results = new Collections.BSTree<GameResult>((a: GameResult, b: GameResult) => b.myPrecision - a.myPrecision);
   for (let i = 0; i < months; i++) {
     const date = getPastDate(i);
     const url = `https://api.chess.com/pub/player/${username}/games/${date.year}/${date.month}`;
@@ -86,10 +43,7 @@ export const fetchBestAnalyzedGamesOverPastMonths = async (
   return results.toArray().slice(0, numberOfGames);
 };
 
-const parseMatchResult = (
-  myResult: string,
-  opponentResult: string
-): [MatchResult, EndMatchMode] => {
+const parseMatchResult = (myResult: string, opponentResult: string): [MatchResult, EndMatchMode] => {
   if (myResult === "win") {
     return [MatchResult.Won, opponentResult as EndMatchMode];
   }
@@ -104,12 +58,7 @@ const parseMatchResult = (
     return [MatchResult.Draw, myResult as EndMatchMode];
   }
 
-  if (
-    myResult === "resigned" ||
-    myResult === "timeout" ||
-    myResult === "abandoned" ||
-    myResult === "checkmated"
-  ) {
+  if (myResult === "resigned" || myResult === "timeout" || myResult === "abandoned" || myResult === "checkmated") {
     return [MatchResult.Lost, myResult as EndMatchMode];
   }
   return [MatchResult.Lost, EndMatchMode.Unknown];
@@ -139,14 +88,8 @@ const parseGamesFromApiResponse = (userName: string, game: any): GameResult => {
     console.log("matchResult is null" + game);
     return null;
   }
-  let numberOfMoves = undefined;
-  try {
-    const pgnResult = pgnParser(game.pgn, { startRule: "game" }) as ParseTree;
-    numberOfMoves = pgnResult.moves[pgnResult.moves.length-1].moveNumber;
-  } catch (e) {
-    console.error("unable to parse game pgn", e);
-  }
-  const time = convertEpochToFormattedDate(game.end_time);
+  let time = convertEpochToFormattedDate(game.end_time);
+  const pgnParsedData: PGNParsedData = parseRelevantDataFromPGN(game.pgn,amIPlayingAsWhite);
 
   return {
     url: game.url,
@@ -156,9 +99,17 @@ const parseGamesFromApiResponse = (userName: string, game: any): GameResult => {
     opponentRating: amIPlayingAsWhite ? game.black.rating : game.white.rating,
     opponentUserName,
     format: game.time_class,
-    timestamp: time,
+    timestamp: pgnParsedData.startTime ?? time,
     result: matchResult[0],
     endMatchMode: matchResult[1],
-    numberOfMoves
+    numberOfMoves: pgnParsedData.numberOfMoves,
+    opening: pgnParsedData.opening,
+    myClock: pgnParsedData.myClock,
+    opponentClock: pgnParsedData.opponentClock
   };
 };
+
+interface YearAndMonth {
+  year: string;
+  month: string;
+}

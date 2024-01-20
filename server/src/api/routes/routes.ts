@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 
-import { GameFormat } from "@internal/fetcher/chesscom";
+import { GameFormat } from "@api/dtos/gamedto";
 import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom";
 
 export const subRoute = "/api/games";

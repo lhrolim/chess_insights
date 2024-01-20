@@ -1,5 +1,6 @@
 import axios from "axios";
-import { fetchBestAnalyzedGamesOverPastMonths, GameFormat, MatchResult, EndMatchMode } from "./chesscom"; // Adjust the import path accordingly
+import { fetchBestAnalyzedGamesOverPastMonths } from "./chesscom"; // Adjust the import path accordingly
+import {GameFormat, GameResult, MatchResult,EndMatchMode} from "@api/dtos/gamedto";
 
 // Mock the axios module
 jest.mock("axios");
@@ -92,7 +93,8 @@ describe("fetchBestAnalyzedGamesOverPastMonths", () => {
         myRating: 1937,
         opponentRating: 1927,
         format: GameFormat.Rapid,
-        timestamp: "2024-01-01 09:53",
+        timestamp: "2024-01-01 14:38:09",
+        opening: "https://www.chess.com/openings/Queens-Pawn-Opening-Chigorin-Variation-2...Nf6",
         result: MatchResult.Lost,
         endMatchMode: EndMatchMode.Resign,
         numberOfMoves: 42
