@@ -31,7 +31,9 @@ app.use(
 // CORS
 app.use((req, res, next) => {
   const origin = req.get("origin") || req.get("referrer");
-  if (Config.server.allowed_origins.indexOf(origin) !== -1) {
+  if (!isProduction) {
+    res.header("Access-Control-Allow-Origin", origin);
+  } else if (Config.server.allowed_origins.indexOf(origin) !== -1) {
     res.header("Access-Control-Allow-Origin", origin);
   }
   res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept");
@@ -43,9 +45,7 @@ app.use((req, res, next) => {
 // Static files from the React app
 const clientBuildDirectory = path.join(__dirname, Config.client.relative_build_directory);
 app.use(express.static(clientBuildDirectory)); // Non-index.html files
-Config.client.routes.forEach(route =>
-  app.use(route, express.static(path.join(clientBuildDirectory, "index.html")))
-);
+Config.client.routes.forEach(route => app.use(route, express.static(path.join(clientBuildDirectory, "index.html"))));
 
 // API Endpoints
 app.use(gameSubRoute, gameRoutes);
