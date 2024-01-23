@@ -11,3 +11,45 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+@font-face {
+  font-family: 'ChessFonts';
+  src: url('./fonts/chess.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.icon-font-chess.blitz:before,.icon-font-chess.lightning:before {
+  content: "\1F1C"
+}
+
+.icon-font-chess.rapid:before,.icon-font-chess.rapid:before {
+  content: "\1F1B"
+}
+
+.icon-font-chess.crossed-swords:before {
+  content: "\03C4"
+}
+
+.icon-font-chess {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  font-family: ChessFonts !important;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center
+}
+
+.icon-font-chess.square-minus:before {
+  content: "\1F02"
+}
+
+.icon-font-chess.square-plus:before {
+  content: "\1F01"
+}
+
+.icon-font-chess.square-equal:before {
+  content: "\1F03"
+}

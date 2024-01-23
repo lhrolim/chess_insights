@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { GameResult } from "@ctypes/gameresult";
 import Title from "@components/Title";
 import { styled } from "@mui/material/styles";
+import { GameFormatCell, GameResultCell } from "@components/game/GameCell";
 
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
   backgroundColor: theme.palette.primary.main, // Using theme color
@@ -13,7 +14,7 @@ const StyledTableHead = styled(TableHead)(({ theme }) => ({
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   fontSize: theme.typography.pxToRem(16),
   fontWeight: theme.typography.fontWeightBold,
-  // textAlign: "center",
+  textAlign: "center",
   padding: theme.spacing(1),
   fontFamily: "Arial, sans-serif",
   borderBottom: `1px solid ${theme.palette.divider}`,
@@ -29,16 +30,21 @@ const StyledTableBody = styled(TableBody)(({ theme }) => ({
 const StyledTableBodyCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(1),
   borderBottom: `1px solid ${theme.palette.divider}`,
-  // textAlign: "center",
+  textAlign: "center",
   "&:last-child": {
     textAlign: "right"
   }
 }));
 
 export default function BestGames() {
-
   const formattedResult = (result: string, endMatchMode: string) => {
     return result + " - " + endMatchMode;
+  };
+
+  const gameFormatIcon = (format: string) => {};
+
+  const formattedOpponent = (opponentUserName: string, opponentRating?: number) => {
+    return opponentUserName + " (" + opponentRating + ")";
   };
 
   const [games, setGames] = React.useState<Array<GameResult>>([]);
@@ -52,7 +58,7 @@ export default function BestGames() {
   }, []);
 
   const handleClick = (url: string) => {
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   };
 
   return (
@@ -61,32 +67,30 @@ export default function BestGames() {
       <Table size="small">
         <StyledTableHead>
           <TableRow>
-            <StyledTableCell>Date</StyledTableCell>
-            <StyledTableCell>Opponent</StyledTableCell>
-            <StyledTableCell>Time Control</StyledTableCell>
-            <StyledTableCell>Ratings</StyledTableCell>
+            <StyledTableCell></StyledTableCell>
+            <StyledTableCell>Players</StyledTableCell>
             <StyledTableCell>Result</StyledTableCell>
+            <StyledTableCell>Accuracy</StyledTableCell>
             <StyledTableCell>Moves</StyledTableCell>
-            <StyledTableCell align="right">Accuracy</StyledTableCell>
+            <StyledTableCell>Date</StyledTableCell>
           </TableRow>
         </StyledTableHead>
         <StyledTableBody>
-          {games.map(row => (
+          {games.map(game => (
             <TableRow
-              key={row.url}
+              key={game.url}
               hover
               style={{ cursor: "pointer" }}
-              onClick={() => handleClick(row.url)}
+              onClick={() => handleClick(game.url)}
             >
-              <StyledTableBodyCell>{row.timestamp}</StyledTableBodyCell>
-              <StyledTableBodyCell>{row.opponentUserName}</StyledTableBodyCell>
-              <StyledTableBodyCell>{row.format}</StyledTableBodyCell>
-              <StyledTableBodyCell>{row.myRating}</StyledTableBodyCell>
-              <StyledTableBodyCell>
-                {formattedResult(row.result, row.endMatchMode)}
+              <GameFormatCell row={game} />
+              <StyledTableBodyCell >
+                {formattedOpponent(game.opponentUserName, game.opponentRating)}
               </StyledTableBodyCell>
-              <StyledTableBodyCell>{row.numberOfMoves}</StyledTableBodyCell>
-              <StyledTableBodyCell align="right">{`${row.myPrecision}`}</StyledTableBodyCell>
+              <GameResultCell row={game}  />
+              <StyledTableBodyCell >{`${game.myPrecision}`}</StyledTableBodyCell>
+              <StyledTableBodyCell >{game.numberOfMoves}</StyledTableBodyCell>
+              <StyledTableBodyCell >{game.timestamp}</StyledTableBodyCell>
             </TableRow>
           ))}
         </StyledTableBody>
