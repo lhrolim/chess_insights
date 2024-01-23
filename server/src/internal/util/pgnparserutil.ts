@@ -6,6 +6,8 @@ export type PGNParsedData = {
   opponentClock: string;
   opening: string;
   numberOfMoves: number;
+  whiteClock: string;
+  blackClock: string;
 };
 
 export const parseRelevantDataFromPGN = (pgn: string, amIPlayingAsWhite: boolean): PGNParsedData | null => {
@@ -43,7 +45,9 @@ export const parseRelevantDataFromPGN = (pgn: string, amIPlayingAsWhite: boolean
       myClock,
       opponentClock,
       opening: opening,
-      numberOfMoves: numberOfMoves
+      numberOfMoves: numberOfMoves,
+      whiteClock,
+      blackClock
     };
   } catch (e) {
     console.error("unable to parse game pgn", e);

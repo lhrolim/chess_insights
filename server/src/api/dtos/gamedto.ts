@@ -13,8 +13,21 @@ export interface GameResult {
     opening?: string;
     myClock?: string;
     opponentClock?: string;
+    whiteData: PlayerData;
+    blackData: PlayerData;
+    matchTimeInSeconds: number;
   }
   
+  export type PlayerData = {
+    username: string;
+    country?: string;
+    rating: number;
+    result: string;
+    precision: number;
+    finalClock: string;
+  }
+
+
   export enum GameFormat {
     Bullet = "bullet",
     Blitz = "blitz",

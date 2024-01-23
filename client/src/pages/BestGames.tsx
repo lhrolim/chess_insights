@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import { findBestGames } from "@api/api";
-import React, { useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import { GameResult } from "@ctypes/gameresult";
 import Title from "@components/Title";
 import { styled } from "@mui/material/styles";
@@ -30,10 +30,13 @@ const StyledTableBody = styled(TableBody)(({ theme }) => ({
 const StyledTableBodyCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(1),
   borderBottom: `1px solid ${theme.palette.divider}`,
-  textAlign: "center",
-  "&:last-child": {
-    textAlign: "right"
-  }
+  textAlign: "center"
+}));
+
+const StyledTableBodyCellNoBorder = styled(TableCell)(({ theme }) => ({
+  padding: theme.spacing(1),
+  borderBottom: `0px solid ${theme.palette.divider}`,
+  textAlign: "center"
 }));
 
 export default function BestGames() {
@@ -63,7 +66,7 @@ export default function BestGames() {
 
   return (
     <React.Fragment>
-      <Title>Best games</Title>
+      <Title>Best Reviewed Games</Title>
       <Table size="small">
         <StyledTableHead>
           <TableRow>
@@ -72,26 +75,37 @@ export default function BestGames() {
             <StyledTableCell>Result</StyledTableCell>
             <StyledTableCell>Accuracy</StyledTableCell>
             <StyledTableCell>Moves</StyledTableCell>
+            <StyledTableCell>Clock</StyledTableCell>
             <StyledTableCell>Date</StyledTableCell>
           </TableRow>
         </StyledTableHead>
         <StyledTableBody>
           {games.map(game => (
-            <TableRow
-              key={game.url}
-              hover
-              style={{ cursor: "pointer" }}
-              onClick={() => handleClick(game.url)}
-            >
-              <GameFormatCell row={game} />
-              <StyledTableBodyCell >
-                {formattedOpponent(game.opponentUserName, game.opponentRating)}
-              </StyledTableBodyCell>
-              <GameResultCell row={game}  />
-              <StyledTableBodyCell >{`${game.myPrecision}`}</StyledTableBodyCell>
-              <StyledTableBodyCell >{game.numberOfMoves}</StyledTableBodyCell>
-              <StyledTableBodyCell >{game.timestamp}</StyledTableBodyCell>
-            </TableRow>
+            <Fragment key={game.url}>
+              <TableRow hover style={{ cursor: "pointer" }} onClick={() => handleClick(game.url)}>
+                <GameFormatCell row={game} style={{ borderBottom: "0px" }}/>
+                <StyledTableBodyCellNoBorder>
+                  {formattedOpponent(game.whiteData.username, game.whiteData.rating)}
+                </StyledTableBodyCellNoBorder>
+                <GameResultCell row={game} rowSpan={2} />
+                <StyledTableBodyCellNoBorder>{`${game.whiteData.precision}`}</StyledTableBodyCellNoBorder>
+                <StyledTableBodyCell rowSpan={2}>{game.numberOfMoves}</StyledTableBodyCell>
+                <StyledTableBodyCellNoBorder >
+                  {game.whiteData.finalClock}
+                </StyledTableBodyCellNoBorder>
+                <StyledTableBodyCell rowSpan={2} style={{ textAlign: "right" }}>
+                  {game.timestamp}
+                </StyledTableBodyCell>
+              </TableRow>
+              <TableRow hover style={{ cursor: "pointer" }} onClick={() => handleClick(game.url)}>
+                <StyledTableBodyCell>{`${game.matchTimeInSeconds}`}</StyledTableBodyCell>
+                <StyledTableBodyCell>
+                  {formattedOpponent(game.blackData.username, game.blackData.rating)}
+                </StyledTableBodyCell>
+                <StyledTableBodyCell>{`${game.blackData.precision}`}</StyledTableBodyCell>
+                <StyledTableBodyCell>{game.blackData.finalClock}</StyledTableBodyCell>
+              </TableRow>
+            </Fragment>
           ))}
         </StyledTableBody>
       </Table>

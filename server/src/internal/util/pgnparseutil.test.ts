@@ -11,6 +11,8 @@ describe("parseRelevantDataFromPGN", () => {
       startTime: "2024-01-02 16:50:15",
       myClock: '0:01:43.5',
       opponentClock: '0:01:42.5',
+      "blackClock": "0:01:42.5",
+      "whiteClock": "0:01:43.5",
       opening: "https://www.chess.com/openings/Alekhines-Defense-Modern-Main-Line-5.Be2",
       numberOfMoves: 18
     });
@@ -26,6 +28,8 @@ describe("parseRelevantDataFromPGN", () => {
       startTime: "2024-01-02 16:50:15",
       myClock: '0:01:42.5',
       opponentClock: '0:01:43.5',
+      "blackClock": "0:01:42.5",
+      "whiteClock": "0:01:43.5",
       opening: "https://www.chess.com/openings/Alekhines-Defense-Modern-Main-Line-5.Be2",
       numberOfMoves: 18
     });

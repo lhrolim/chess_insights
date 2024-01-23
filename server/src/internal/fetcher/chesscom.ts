@@ -105,7 +105,24 @@ const parseGamesFromApiResponse = (userName: string, game: any): GameResult => {
     numberOfMoves: pgnParsedData.numberOfMoves,
     opening: pgnParsedData.opening,
     myClock: pgnParsedData.myClock,
-    opponentClock: pgnParsedData.opponentClock
+    opponentClock: pgnParsedData.opponentClock,
+    matchTimeInSeconds: game.time_control,
+    whiteData: {
+      username: game.white.username,
+      country: game.white.country,
+      rating: game.white.rating,
+      result: game.white.result,
+      precision: game.accuracies.white,
+      finalClock: pgnParsedData.whiteClock
+    },
+    blackData: {
+      username: game.black.username,
+      country: game.black.country,
+      rating: game.black.rating,
+      result: game.black.result,
+      precision: game.accuracies.black,
+      finalClock: pgnParsedData.blackClock
+    }
   };
 };
 

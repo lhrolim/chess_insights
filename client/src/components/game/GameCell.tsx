@@ -5,11 +5,12 @@ import { GameFormat, GameResult, MatchResult } from "@ctypes/gameresult";
 type GameResultRowProps = {
   row: GameResult;
   rowSpan?: number;
+  style?: React.CSSProperties;
 };
 
 const StyledTableBodyCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(1),
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  // borderBottom: `1px solid ${theme.palette.divider}`,
   textAlign: "center",
   className: "icon-font-chess",
   "&:last-child": {
@@ -17,7 +18,7 @@ const StyledTableBodyCell = styled(TableCell)(({ theme }) => ({
   }
 }));
 
-export const GameFormatCell: React.FC<GameResultRowProps> = ({ row, rowSpan }) => {
+export const GameFormatCell: React.FC<GameResultRowProps> = ({ row, rowSpan, style }) => {
   const gameFormatIcon = (format: GameFormat): string => {
     let baseString = "icon-font-chess ";
     switch (format) {
@@ -34,10 +35,12 @@ export const GameFormatCell: React.FC<GameResultRowProps> = ({ row, rowSpan }) =
     return baseString;
   };
 
-  return <StyledTableBodyCell className={gameFormatIcon(row.format)} rowSpan={rowSpan} />;
+  return (
+    <StyledTableBodyCell className={gameFormatIcon(row.format)} rowSpan={rowSpan} style={style} />
+  );
 };
 
-export const GameResultCell: React.FC<GameResultRowProps> = ({ row, rowSpan }) => {
+export const GameResultCell: React.FC<GameResultRowProps> = ({ row, rowSpan, style }) => {
   const gameResultClass = (result: MatchResult): string => {
     return result === MatchResult.Won
       ? "icon-font-chess square-plus"
@@ -48,6 +51,7 @@ export const GameResultCell: React.FC<GameResultRowProps> = ({ row, rowSpan }) =
     <StyledTableBodyCell
       className={gameResultClass(row.result)}
       rowSpan={rowSpan}
+      style={style}
     ></StyledTableBodyCell>
   );
 };
