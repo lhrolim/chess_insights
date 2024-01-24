@@ -1,10 +1,11 @@
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import { findBestGames } from "@api/api";
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, useEffect, useContext } from "react";
 import { GameResult } from "@ctypes/gameresult";
 import Title from "@components/Title";
 import { styled } from "@mui/material/styles";
 import { GameFormatCell, GameResultCell } from "@components/game/GameCell";
+import { UserContext } from "@utils/UserProvider";
 
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
   backgroundColor: theme.palette.primary.main, // Using theme color
@@ -39,26 +40,28 @@ const StyledTableBodyCellNoBorder = styled(TableCell)(({ theme }) => ({
   textAlign: "center"
 }));
 
-export default function BestGames() {
-  const formattedResult = (result: string, endMatchMode: string) => {
-    return result + " - " + endMatchMode;
-  };
+const formattedResult = (result: string, endMatchMode: string) => {
+  return result + " - " + endMatchMode;
+};
 
-  const gameFormatIcon = (format: string) => {};
+const formattedOpponent = (opponentUserName: string, opponentRating?: number) => {
+  return opponentUserName + " (" + opponentRating + ")";
+};
 
-  const formattedOpponent = (opponentUserName: string, opponentRating?: number) => {
-    return opponentUserName + " (" + opponentRating + ")";
-  };
+interface IProps {}
 
+const BestGames: React.FC<IProps> = () => {
   const [games, setGames] = React.useState<Array<GameResult>>([]);
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     const getBestGames = async () => {
-      var games = await findBestGames("lhrolim", 3);
+      if (!user?.userName) return;
+      var games = await findBestGames(user?.userName, 3);
       setGames(games);
     };
     getBestGames();
-  }, []);
+  }, [user]);
 
   const handleClick = (url: string) => {
     window.open(url, "_blank");
@@ -83,14 +86,14 @@ export default function BestGames() {
           {games.map(game => (
             <Fragment key={game.url}>
               <TableRow hover style={{ cursor: "pointer" }} onClick={() => handleClick(game.url)}>
-                <GameFormatCell row={game} style={{ borderBottom: "0px" }}/>
+                <GameFormatCell row={game} style={{ borderBottom: "0px" }} />
                 <StyledTableBodyCellNoBorder>
                   {formattedOpponent(game.whiteData.username, game.whiteData.rating)}
                 </StyledTableBodyCellNoBorder>
                 <GameResultCell row={game} rowSpan={2} />
                 <StyledTableBodyCellNoBorder>{`${game.whiteData.precision}`}</StyledTableBodyCellNoBorder>
                 <StyledTableBodyCell rowSpan={2}>{game.numberOfMoves}</StyledTableBodyCell>
-                <StyledTableBodyCellNoBorder >
+                <StyledTableBodyCellNoBorder>
                   {game.whiteData.finalClock}
                 </StyledTableBodyCellNoBorder>
                 <StyledTableBodyCell rowSpan={2} style={{ textAlign: "right" }}>
@@ -111,4 +114,6 @@ export default function BestGames() {
       </Table>
     </React.Fragment>
   );
-}
+};
+
+export default BestGames;

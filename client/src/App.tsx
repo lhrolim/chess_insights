@@ -6,7 +6,7 @@ import Menu from "@components/menu/Menu";
 import { useRoutes, useRedirect } from "@patched/hookrouter";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { usePath } from '@patched/hookrouter';
+import { usePath } from "@patched/hookrouter";
 
 import { useEffect } from "react";
 
@@ -16,13 +16,19 @@ import {
   Container,
   ThemeProvider,
   styled,
-  Toolbar, IconButton,
+  Toolbar,
+  IconButton,
   Typography,
-  Badge
+  Badge,
+  TextField,
+  Button
 } from "@mui/material";
 import useThemeState from "@hooks/useThemeState";
 import { routes } from "@pages/Routes";
 import NotFound from "@components/NotFound";
+import { UserProvider } from "@utils/UserProvider";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import BasicUserForm from "@components/BasicUserForm";
 
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
@@ -64,59 +70,61 @@ const App: React.FC = () => {
     // setRouteResult(...) based on the new location
   }, [path]); // Dependency on location ensures effect runs on route change
 
-
   const routeResult = useRoutes(routes);
   useRedirect("/about/", "/about");
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ display: "flex" }}>
-        <CssBaseline />
-        <AppBar position="absolute" open={open}>
-          <Toolbar
-            sx={{
-              pr: "24px" // keep right padding when drawer closed
-            }}
-          >
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="open drawer"
-              onClick={toggleDrawer}
+      <UserProvider>
+        <Box sx={{ display: "flex" }}>
+          <CssBaseline />
+          <AppBar position="absolute" open={open}>
+            <Toolbar
               sx={{
-                marginRight: "36px",
-                ...(open && { display: "none" })
+                pr: "24px" // keep right padding when drawer closed
               }}
             >
-              <MenuIcon />
-            </IconButton>
-            <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
-              Chess Insights
-            </Typography>
-            {/* <IconButton color="inherit">
+              <IconButton
+                edge="start"
+                color="inherit"
+                aria-label="open drawer"
+                onClick={toggleDrawer}
+                sx={{
+                  marginRight: "36px",
+                  ...(open && { display: "none" })
+                }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
+                Chess Insights
+              </Typography>
+              {/* <IconButton color="inherit">
               <Badge badgeContent={4} color="secondary">
                 <NotificationsIcon />
               </Badge>
             </IconButton> */}
-          </Toolbar>
-        </AppBar>
-        <Menu open={open} width={drawerWidth} toggleDrawer={toggleDrawer} />
-        <Box
-          component="main"
-          sx={{
-            backgroundColor: theme =>
-              theme.palette.mode === "light" ? theme.palette.grey[100] : theme.palette.grey[900],
-            flexGrow: 1,
-            height: "100vh",
-            overflow: "auto"
-          }}
-        >
-          <Toolbar />
-          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            {routeResult || <NotFound />}
-          </Container>
+            </Toolbar>
+          </AppBar>
+          <Menu open={open} width={drawerWidth} toggleDrawer={toggleDrawer} />
+          <Box
+            component="main"
+            sx={{
+              backgroundColor: theme =>
+                theme.palette.mode === "light" ? theme.palette.grey[100] : theme.palette.grey[900],
+              flexGrow: 1,
+              height: "100vh",
+              overflow: "auto"
+            }}
+          >
+            <Toolbar />
+            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+              <BasicUserForm />
+              {routeResult || <NotFound />}
+            </Container>
+          </Box>
         </Box>
-      </Box>
+      </UserProvider>
     </ThemeProvider>
   );
 };
