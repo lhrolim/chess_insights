@@ -43,13 +43,21 @@ code {
 }
 
 .icon-font-chess.square-minus:before {
-  content: "\1F02"
+  content: "\1F02";
+  color:red;
+}
+
+
+.square-plus {
+  color: green
 }
 
 .icon-font-chess.square-plus:before {
-  content: "\1F01"
+  content: "\1F01";
+  color: green
 }
 
 .icon-font-chess.square-equal:before {
-  content: "\1F03"
+  content: "\1F03";
+  color:orange
 }

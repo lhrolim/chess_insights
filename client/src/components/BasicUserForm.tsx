@@ -1,4 +1,4 @@
-import React, { ChangeEvent, MouseEvent, useState, useContext } from "react";
+import React, { ChangeEvent, MouseEvent, useState, useContext, FormEvent,useEffect } from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -11,10 +11,19 @@ interface BasicUserFormProps {
 }
 
 const BasicUserForm: React.FC<BasicUserFormProps> = () => {
+  const { user,setUser } = useContext(UserContext);
   const [userName, setUserName] = useState<string>("");
-  const { setUser } = useContext(UserContext);
 
-  const handleRefreshClick = (event: MouseEvent<HTMLButtonElement>) => {
+
+  // Initialize userName with the user's name from context when the component mounts
+  useEffect(() => {
+    if (user && user.userName) {
+      setUserName(user.userName);
+    }
+  }, [user]);
+
+  const handleRefreshClick = (event: MouseEvent<HTMLButtonElement> | FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Prevents the default form submit action
     const newUser: IUser = { userName };
     setUser(newUser);
   };
@@ -24,30 +33,35 @@ const BasicUserForm: React.FC<BasicUserFormProps> = () => {
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1
-      }}
-    >
-      <TextField
-        required
-        id="username"
-        name="username"
-        label="User Name"
-        autoComplete="username"
-        variant="standard"
-        sx={{ flexGrow: 1 }}
-        onChange={handleUsernameChange}
-      />
-      <Button
-        variant="contained"
-        color="primary"
-        startIcon={<RefreshIcon />}
-        onClick={handleRefreshClick}
-      ></Button>
-    </Box>
+    <form onSubmit={handleRefreshClick}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1
+        }}
+      >
+        <TextField
+          required
+          id="username"
+          name="username"
+          label="User Name"
+          autoComplete="username"
+          variant="standard"
+          sx={{ flexGrow: 1 }}
+          onChange={handleUsernameChange}
+          value={userName}
+        />
+        <Button
+          type="submit" // Make the button of type 'submit'
+          variant="contained"
+          color="primary"
+          startIcon={<RefreshIcon />}
+        >
+          Refresh
+        </Button>
+      </Box>
+    </form>
   );
 };
 
