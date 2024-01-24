@@ -3,6 +3,7 @@ import { TableCell, TableRow } from "@mui/material";
 import { GameResult } from "@ctypes/gameresult";
 import { GameFormatCell, GameResultCell } from "@components/game/GameCell";
 import { styled } from "@mui/material/styles";
+import { formatToMinutes, minfiedDate } from "@utils/TimeUtils";
 
 interface GameRowProps {
   game: GameResult;
@@ -39,16 +40,22 @@ const GameRow: React.FC<GameRowProps> = ({ game, handleClick }) => {
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => handleClick(game.url)}
       >
-        <GameFormatCell row={game} style={{ borderBottom: "0px" }} />
-        <StyledTableBodyCellNoBorder>
-          {formattedOpponent(game.whiteData.username, game.whiteData.rating)}
-        </StyledTableBodyCellNoBorder>
         <GameResultCell row={game} rowSpan={2} />
-        <StyledTableBodyCellNoBorder>{`${game.whiteData.precision}`}</StyledTableBodyCellNoBorder>
-        <StyledTableBodyCell rowSpan={2}>{game.numberOfMoves}</StyledTableBodyCell>
-        <StyledTableBodyCellNoBorder>{game.whiteData.finalClock}</StyledTableBodyCellNoBorder>
-        <StyledTableBodyCell rowSpan={2} style={{ textAlign: "right" }}>
-          {game.timestamp}
+        <StyledTableBodyCell rowSpan={2}>
+          {formatToMinutes(`${game.matchTimeInSeconds}`)}
+        </StyledTableBodyCell>
+        <StyledTableBodyCell rowSpan={2}>
+          {formattedOpponent(game.opponentUserName, game.opponentRating)}
+        </StyledTableBodyCell>
+        <StyledTableBodyCell rowSpan={2}>{`${game.myPrecision}`}</StyledTableBodyCell>
+        <StyledTableBodyCell rowSpan={2} className="hide-on-mobile">
+          {game.numberOfMoves}
+        </StyledTableBodyCell>
+        <StyledTableBodyCellNoBorder className="hide-on-mobile">
+          {game.whiteData.finalClock}
+        </StyledTableBodyCellNoBorder>
+        <StyledTableBodyCell rowSpan={2} style={{ textAlign: "right" }} className="hide-on-mobile">
+          {minfiedDate(game.timestamp)}
         </StyledTableBodyCell>
       </TableRow>
       <TableRow
@@ -58,12 +65,14 @@ const GameRow: React.FC<GameRowProps> = ({ game, handleClick }) => {
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => handleClick(game.url)}
       >
-        <StyledTableBodyCell>{`${game.matchTimeInSeconds}`}</StyledTableBodyCell>
-        <StyledTableBodyCell>
+        {/* <StyledTableBodyCell>{formatToMinutes(`${game.matchTimeInSeconds}`)}</StyledTableBodyCell> */}
+        {/* <StyledTableBodyCell>
           {formattedOpponent(game.blackData.username, game.blackData.rating)}
+        </StyledTableBodyCell> */}
+        {/* <StyledTableBodyCell>{`${game.blackData.precision}`}</StyledTableBodyCell> */}
+        <StyledTableBodyCell className="hide-on-mobile">
+          {game.blackData.finalClock}
         </StyledTableBodyCell>
-        <StyledTableBodyCell>{`${game.blackData.precision}`}</StyledTableBodyCell>
-        <StyledTableBodyCell>{game.blackData.finalClock}</StyledTableBodyCell>
       </TableRow>
     </Fragment>
   );

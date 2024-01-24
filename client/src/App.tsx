@@ -59,6 +59,26 @@ const App: React.FC = () => {
   const [open, setOpen] = React.useState(true);
   const path = usePath();
 
+  useEffect(() => {
+    // Check the window width on initial render
+    const handleResize = () => {
+      if (window.innerWidth < 600) {
+        setOpen(false);
+      } else {
+        setOpen(true);
+      }
+    };
+
+    // Call the function to set initial state
+    handleResize();
+
+    // Optional: Add event listener if you want the drawer to respond to window resizing
+    window.addEventListener("resize", handleResize);
+
+    // Clean up event listener
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const toggleDrawer = () => {
     setOpen(!open);
   };

@@ -20,6 +20,12 @@ code {
   font-style: normal;
 }
 
+@media (max-width: 600px) { /* Adjust the max-width as needed */
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
 .icon-font-chess.blitz:before,.icon-font-chess.lightning:before {
   content: "\1F1C"
 }

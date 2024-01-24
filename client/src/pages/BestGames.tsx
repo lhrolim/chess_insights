@@ -53,13 +53,12 @@ const BestGames: React.FC<IProps> = () => {
       <Table size="small">
         <StyledTableHead>
           <TableRow>
-            <StyledTableCell></StyledTableCell>
-            <StyledTableCell>Players</StyledTableCell>
-            <StyledTableCell>Result</StyledTableCell>
-            <StyledTableCell>Accuracy</StyledTableCell>
-            <StyledTableCell>Moves</StyledTableCell>
-            <StyledTableCell>Clock</StyledTableCell>
-            <StyledTableCell>Date</StyledTableCell>
+            <StyledTableCell colSpan={2} ></StyledTableCell>
+            <StyledTableCell>Opponent</StyledTableCell>
+            <StyledTableCell>My Precision</StyledTableCell>
+            <StyledTableCell className="hide-on-mobile">Moves</StyledTableCell>
+            <StyledTableCell className="hide-on-mobile">Clock</StyledTableCell>
+            <StyledTableCell className="hide-on-mobile">Date</StyledTableCell>
           </TableRow>
         </StyledTableHead>
         <StyledTableBody>
