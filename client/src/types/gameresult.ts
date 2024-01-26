@@ -1,7 +1,7 @@
-import { GameResult } from "../../../server/src/api/dtos/gamedto";
-import { PlayerData } from "../../../server/src/api/dtos/gamedto";
+import { GameResult, GameSearchDto, SortDTO } from "../../../server/src/api/dtos/GameDtos";
+import { PlayerData } from "../../../server/src/api/dtos/GameDtos";
 
-export type { GameResult, PlayerData };
+export type { GameResult, PlayerData, GameSearchDto, SortDTO };
 
 export enum GameFormat {
   Bullet = "bullet",
@@ -15,4 +15,10 @@ export enum MatchResult {
   Lost = "lost",
   Won = "won",
   Unknown = "unknown" // This should never happen, but just in case it does, we'll have a default optio
+}
+
+export enum SortCriteria {
+  PRECISION = "precision",
+  MOVES = "moves",
+  DATE = "date"
 }

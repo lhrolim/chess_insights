@@ -1,6 +1,6 @@
 import axios from "axios";
 import { fetchBestAnalyzedGamesOverPastMonths } from "./chesscom"; // Adjust the import path accordingly
-import {GameFormat, GameResult, MatchResult,EndMatchMode} from "@api/dtos/gamedto";
+import { GameFormat, GameResult, MatchResult, EndMatchMode, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 
 // Mock the axios module
 jest.mock("axios");
@@ -81,7 +81,18 @@ describe("fetchBestAnalyzedGamesOverPastMonths", () => {
     (axios.get as jest.Mock).mockResolvedValue(mockApiResponse);
 
     // Call the function to be tested
-    const games = await fetchBestAnalyzedGamesOverPastMonths("myUsername", 2, 5, GameFormat.Rapid, 30);
+    const searchDTO: GameSearchDto = {
+      user: "myUsername",
+      months: 2,
+      minAccuracy: 5,
+      gameFormat: GameFormat.Rapid,
+      maxGames: 30,
+      sortDTO: {
+        criteria: SortCriteria.PRECISION,
+        desc: true
+      }
+    };
+    const games = await fetchBestAnalyzedGamesOverPastMonths(searchDTO);
 
     // Assert the expected results
     expect(games).toEqual([
@@ -97,7 +108,26 @@ describe("fetchBestAnalyzedGamesOverPastMonths", () => {
         opening: "https://www.chess.com/openings/Queens-Pawn-Opening-Chigorin-Variation-2...Nf6",
         result: MatchResult.Lost,
         endMatchMode: EndMatchMode.Resign,
-        numberOfMoves: 42
+        numberOfMoves: 42,
+        myClock: "0:02:43.5",
+        opponentClock: "0:02:52.6",
+        matchTimeInSeconds: "600",
+        whiteData: {
+          country: undefined,
+          finalClock: "0:02:52.6",
+          precision: 60.51,
+          rating: 1927,
+          result: "win",
+          username: "2Grizzly"
+        },
+        blackData: {
+          country: undefined,
+          finalClock: "0:02:43.5",
+          precision: 55.33,
+          rating: 1937,
+          result: "resigned",
+          username: "lhrolim"
+        }
       }
       // Add more expected game results here
     ]);

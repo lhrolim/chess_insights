@@ -5,7 +5,6 @@ import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import Menu from "@components/menu/Menu";
 import { useRoutes, useRedirect } from "@patched/hookrouter";
 import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import { usePath } from "@patched/hookrouter";
 
 import { useEffect } from "react";
@@ -18,16 +17,12 @@ import {
   styled,
   Toolbar,
   IconButton,
-  Typography,
-  Badge,
-  TextField,
-  Button
+  Typography
 } from "@mui/material";
 import useThemeState from "@hooks/useThemeState";
 import { routes } from "@pages/Routes";
 import NotFound from "@components/NotFound";
 import { UserProvider } from "@utils/UserProvider";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import BasicUserForm from "@components/BasicUserForm";
 
 interface AppBarProps extends MuiAppBarProps {

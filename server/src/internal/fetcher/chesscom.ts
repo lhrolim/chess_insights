@@ -1,23 +1,39 @@
 import axios from "axios";
 import * as Collections from "typescript-collections";
-import { ParseTree, parse as pgnParser } from "@mliebelt/pgn-parser";
 import { convertEpochToFormattedDate } from "@util/dateutil";
 import { PGNParsedData, parseRelevantDataFromPGN } from "@util/pgnparserutil";
-import { GameFormat, GameResult, MatchResult, EndMatchMode } from "@api/dtos/gamedto";
+import {
+  GameResult,
+  MatchResult,
+  EndMatchMode,
+  GameSearchDto,
+  SortCriteria,
+  gameSearchDtoToString
+} from "@api/dtos/GameDtos";
 
-export const fetchBestAnalyzedGamesOverPastMonths = async (
-  username: string,
-  months: number,
-  numberOfGames: number,
-  gameFormat?: GameFormat,
-  minNumberOfMoves?: number
-): Promise<GameResult[]> => {
+export const fetchBestAnalyzedGamesOverPastMonths = async (gameSearchDTO: GameSearchDto): Promise<GameResult[]> => {
   let ignoredGames = 0;
-  const results = new Collections.BSTree<GameResult>((a: GameResult, b: GameResult) => b.myPrecision - a.myPrecision);
-  for (let i = 0; i < months; i++) {
+  const userName = gameSearchDTO.user;
+  const sortFunction = (a: GameResult, b: GameResult) => {
+    const sortDTO = gameSearchDTO.sortDTO;
+    const higherObject = sortDTO.desc ? b : a;
+    const lowerObject = sortDTO.desc ? a : b;
+    if (sortDTO.criteria === SortCriteria.PRECISION) {
+      return higherObject.myPrecision - lowerObject.myPrecision;
+    }
+    if (sortDTO.criteria === SortCriteria.DATE) {
+      return new Date(higherObject.timestamp).getTime() - new Date(lowerObject.timestamp).getTime();
+    }
+    if (sortDTO.criteria === SortCriteria.MOVES) {
+      return higherObject.numberOfMoves - lowerObject.numberOfMoves;
+    }
+  };
+  const results = new Collections.BSTree<GameResult>(sortFunction);
+  for (let i = 0; i < gameSearchDTO.months; i++) {
     const date = getPastDate(i);
-    const url = `https://api.chess.com/pub/player/${username}/games/${date.year}/${date.month}`;
-    console.log(`Fetching games for ${username} at ${url}`);
+    const url = `https://api.chess.com/pub/player/${userName}/games/${date.year}/${date.month}`;
+    console.log(`Fetching games for ${gameSearchDTO.user} at ${url}`);
+    console.log(`applying additional filter ${gameSearchDtoToString(gameSearchDTO)}`);
     const response = await axios.get(url);
     const games = response.data.games;
     for (const game of games) {
@@ -25,12 +41,16 @@ export const fetchBestAnalyzedGamesOverPastMonths = async (
         ignoredGames++;
         continue;
       }
-      if (gameFormat && game.time_class !== gameFormat.toString().toLowerCase()) {
+      if (gameSearchDTO.gameFormat && game.time_class !== gameSearchDTO.gameFormat.toString().toLowerCase()) {
         ignoredGames++;
         continue;
       }
-      const gameResult = parseGamesFromApiResponse(username, game);
-      if (gameResult.numberOfMoves < minNumberOfMoves) {
+      const gameResult = parseGamesFromApiResponse(userName, game);
+      if (gameResult.numberOfMoves < gameSearchDTO.minMoves) {
+        ignoredGames++;
+        continue;
+      }
+      if (gameResult.myPrecision < gameSearchDTO.minAccuracy) {
         ignoredGames++;
         continue;
       }
@@ -40,7 +60,7 @@ export const fetchBestAnalyzedGamesOverPastMonths = async (
     }
   }
 
-  return results.toArray().slice(0, numberOfGames);
+  return results.toArray().slice(0, gameSearchDTO.maxGames);
 };
 
 const parseMatchResult = (myResult: string, opponentResult: string): [MatchResult, EndMatchMode] => {
@@ -89,7 +109,7 @@ const parseGamesFromApiResponse = (userName: string, game: any): GameResult => {
     return null;
   }
   let time = convertEpochToFormattedDate(game.end_time);
-  const pgnParsedData: PGNParsedData = parseRelevantDataFromPGN(game.pgn,amIPlayingAsWhite);
+  const pgnParsedData: PGNParsedData = parseRelevantDataFromPGN(game.pgn, amIPlayingAsWhite);
 
   return {
     url: game.url,

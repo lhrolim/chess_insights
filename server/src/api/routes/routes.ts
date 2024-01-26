@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 
-import { GameFormat } from "@api/dtos/gamedto";
+import { GameFormat, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom";
 
 export const subRoute = "/api/games";
@@ -13,12 +13,14 @@ router.get("/best", async (req: Request, res: Response) => {
     format: gameFormat,
     months,
     minmoves,
-    maxGames: max
+    minprecision,
+    maxGames
   } = req.query as {
     user: string;
     format?: string;
     months?: string;
     minmoves?: string;
+    minprecision?: string;
     maxGames?: string;
   };
   if (!userName) {
@@ -28,17 +30,25 @@ router.get("/best", async (req: Request, res: Response) => {
   }
 
   let monthsToLookBack = months ? parseInt(months) : 1;
-  let maxGamesToReturn = max ? parseInt(max) : 20;
-  let minNumberOfMoves = max ? parseInt(minmoves) : 0;
+  let maxGamesToReturn = maxGames ? parseInt(maxGames) : 20;
+  let minNumberOfMoves = minmoves ? parseInt(minmoves) : 0;
+  let minPrecision = minprecision ? parseInt(minprecision) : 0;
   const gameFormatEnum: GameFormat = gameFormat ? (gameFormat.toLowerCase() as GameFormat) : null;
 
-  const games = await fetchBestAnalyzedGamesOverPastMonths(
-    userName,
-    monthsToLookBack,
-    maxGamesToReturn,
-    gameFormatEnum,
-    minNumberOfMoves
-  );
+  const searchDTO: GameSearchDto = {
+    user: userName,
+    months: monthsToLookBack,
+    minMoves: minNumberOfMoves,
+    gameFormat: gameFormatEnum,
+    maxGames: maxGamesToReturn,
+    minAccuracy: minPrecision,
+    sortDTO: {
+      criteria: SortCriteria.PRECISION,
+      desc: true
+    }
+  };
+
+  const games = await fetchBestAnalyzedGamesOverPastMonths(searchDTO);
 
   res.send(games);
   res.end();
