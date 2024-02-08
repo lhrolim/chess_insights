@@ -17,10 +17,6 @@ export const parseRelevantDataFromPGN = (pgn: string, amIPlayingAsWhite: boolean
 
   try {
     const pgnResult = pgnParser(pgn, { startRule: "game" }) as ParseTree;
-    if (pgnResult.moves.length < 2) {
-      // abandonement
-      return null;
-    }
     const tags = pgnResult.tags as any;
     const numberOfMoves = pgnResult.moves[pgnResult.moves.length - 1].moveNumber;
     const opening = tags.ECOUrl;
@@ -29,13 +25,15 @@ export const parseRelevantDataFromPGN = (pgn: string, amIPlayingAsWhite: boolean
       // time is more precise from pgn
       startTime = (tags.UTCDate.value + " " + tags.StartTime).replace(/\./g, "-");
     }
-    const isLastMoveWhite = (pgnResult.moves.length -1) % 2 === 0;
+    const isLastMoveWhite = (pgnResult.moves.length - 1) % 2 === 0;
     const lastMove = pgnResult.moves[pgnResult.moves.length - 1];
-    const moveBeforeLast = pgnResult.moves[pgnResult.moves.length - 2];
     let myClock = undefined;
     let opponentClock = undefined;
-    const whiteClock = isLastMoveWhite ? lastMove.commentDiag.clk : moveBeforeLast.commentDiag.clk;
-    const blackClock = isLastMoveWhite ? moveBeforeLast.commentDiag.clk : lastMove.commentDiag.clk;
+    //edge case when there's abandonement at first move
+    const moveBeforeLast = pgnResult.moves.length >= 2 ? pgnResult.moves[pgnResult.moves.length - 2] : null;
+    const moveBeforeLastClock = moveBeforeLast ? moveBeforeLast.commentDiag.clk : null;
+    const whiteClock = isLastMoveWhite ? lastMove.commentDiag.clk : moveBeforeLastClock;
+    const blackClock = isLastMoveWhite ? moveBeforeLastClock : lastMove.commentDiag.clk;
 
     myClock = amIPlayingAsWhite ? whiteClock : blackClock;
     opponentClock = amIPlayingAsWhite ? blackClock : whiteClock;

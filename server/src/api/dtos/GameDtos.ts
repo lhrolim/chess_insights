@@ -1,5 +1,6 @@
-export interface GameResult {
+export interface GameResultDTO {
   url: string;
+  user: string;
   myPrecision: number;
   opponentPrecision: number;
   opponentUserName: string;
@@ -46,7 +47,10 @@ export enum EndMatchMode {
   Resign = "resigned",
   Timeout = "timeout",
   StaleMate = "stalemate",
+  Agreed = "agreed",
+  Abandoned = "abandoned",
   TimeVsInsufficient = "timevsinsufficient",
+  Repetiion = "repetition",
   Insufficient = "insufficient",
   Unknown = "unknown"
 }

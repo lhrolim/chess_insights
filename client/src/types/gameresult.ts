@@ -1,7 +1,7 @@
-import { GameResult, GameSearchDto, SortDTO } from "../../../server/src/api/dtos/GameDtos";
+import { GameResultDTO, GameSearchDto, SortDTO } from "../../../server/src/api/dtos/GameDtos";
 import { PlayerData } from "../../../server/src/api/dtos/GameDtos";
 
-export type { GameResult, PlayerData, GameSearchDto, SortDTO };
+export type { GameResultDTO as GameResult, PlayerData, GameSearchDto, SortDTO };
 
 export enum GameFormat {
   Bullet = "bullet",

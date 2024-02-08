@@ -1,18 +1,43 @@
 {
     "version": "0.2.0",
     "configurations": [
-
         {
             "type": "pwa-node",
             "request": "launch",
             "name": "Debug",
             "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node-dev",
-            "args": ["--respawn", "--transpile-only", "src/main.ts"],
+            "args": [
+                "--respawn",
+                "--transpile-only",
+                "src/main.ts"
+            ],
             "protocol": "inspector",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
-            "skipFiles": ["<node_internals>/**"],
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
             "cwd": "${workspaceFolder}"
-          }
+        },
+        {
+            "type": "node",
+            "name": "vscode-jest-tests.v2",
+            "request": "launch",
+            "args": [
+                "test",
+                "--",
+                "--runInBand",
+                "--watchAll=false",
+                "--testNamePattern",
+                "${jest.testNamePattern}",
+                "--runTestsByPath",
+                "${jest.testFile}"
+            ],
+            "cwd": "/Users/lrolim/workspace/chess/server",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "disableOptimisticBPs": true,
+            "runtimeExecutable": "npm"
+        }
     ]
 }

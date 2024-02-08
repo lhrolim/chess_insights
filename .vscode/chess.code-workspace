@@ -1,25 +1,18 @@
 {
   "folders": [
     {
-      "name": "root",
-      "path": "."
+      "path": ".."
     },
     {
-      "name": "@chess/server",
-      "path": "../server"
-    },
-		{
-      "name": "@chess/client",
+      "name": "client",
       "path": "../client"
+    },
+    {
+      "name": "server",
+      "path": "../server"
     }
   ],
-
   "settings": {
-    "jest.pathToJest": "node_modules/.bin/jest",
-    "jest.pathToConfig": "./jest.config.js",
-    "jest.disabledWorkspaceFolders": [
-      "root",
-      "@chess/client"
-    ],
-  },
+    "jest.disabledWorkspaceFolders": ["chess"]
+  }
 }

@@ -1,5 +1,4 @@
 require("module-alias/register");
-
 import dotenv from "dotenv";
 dotenv.config(); // Setup .env
 
@@ -10,12 +9,12 @@ import cookieSession from "cookie-session";
 import path from "path";
 import Config from "./config";
 import gameRoutes, { subRoute as gameSubRoute } from "@api/routes/routes";
+import { connectToDatabase } from "@internal/database/MongoConnection";
 
 const app = express();
 const isProduction = app.get("env") === "production";
 
 app.set("trust proxy", 1); // Trust first proxy
-
 app.use(express.json());
 
 // Session
@@ -24,9 +23,10 @@ app.use(
     keys: Config.server.session_keys,
     maxAge: 48 * 60 * 60 * 1000, // Expires in 48 hours
     sameSite: "none",
-    secure: true // This is why we need SSL in dev
+    secure: isProduction // Adjusted to conditionally require SSL
   })
 );
+
 
 // CORS
 app.use((req, res, next) => {
@@ -42,6 +42,24 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((err:any, req:any, res:any, next:any) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+// Catch unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Here, you could log the error and continue the application instead of crashing it
+});
+
+// Catch uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Note: It's risky to continue running the application after an uncaught exception
+  // as it may be in an undefined state. Consider logging the error and restarting the application gracefully.
+});
+
 // Static files from the React app
 const clientBuildDirectory = path.join(__dirname, Config.client.relative_build_directory);
 app.use(express.static(clientBuildDirectory)); // Non-index.html files
@@ -50,23 +68,30 @@ Config.client.routes.forEach(route => app.use(route, express.static(path.join(cl
 // API Endpoints
 app.use(gameSubRoute, gameRoutes);
 
-const port = process.env.PORT || 5000;
+// Function to initialize application
+async function initializeApplication() {
+  await connectToDatabase(); // Connect to database asynchronously
 
-if (!isProduction) {
-  // Even when running locally, we need to use HTTPS.Read the README for details.
-  https
-    .createServer(
-      {
-        cert: fs.readFileSync("server.cert"),
-        key: fs.readFileSync("server.key")
-      },
-      app
-    )
-    .listen(port, () => {
+  // Static files, CORS, API endpoints setup...
+
+  const port = process.env.PORT || 5000;
+
+  if (!isProduction) {
+    https.createServer({
+      cert: fs.readFileSync("server.cert"),
+      key: fs.readFileSync("server.key")
+    }, app).listen(port, () => {
       console.log(`Listening on ${port} with HTTPS`);
     });
-} else {
-  app.listen(port, () => {
-    console.log(`Listening on ${port}`);
-  });
+  } else {
+    app.listen(port, () => {
+      console.log(`Listening on ${port}`);
+    });
+  }
 }
+
+// Immediately invoke the async function to start the application
+initializeApplication().catch(error => {
+  console.error('Failed to initialize the application', error);
+  process.exit(1); // Exit with failure in case of an error
+});

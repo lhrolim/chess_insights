@@ -14,14 +14,14 @@ router.get("/best", async (req: Request, res: Response) => {
     months,
     minmoves,
     minprecision,
-    maxGames
+    maxgames
   } = req.query as {
     user: string;
     format?: string;
     months?: string;
     minmoves?: string;
     minprecision?: string;
-    maxGames?: string;
+    maxgames?: string;
   };
   if (!userName) {
     res.status(400).send("Please provide a username");
@@ -30,7 +30,7 @@ router.get("/best", async (req: Request, res: Response) => {
   }
 
   let monthsToLookBack = months ? parseInt(months) : 1;
-  let maxGamesToReturn = maxGames ? parseInt(maxGames) : 20;
+  let maxGamesToReturn = maxgames ? parseInt(maxgames) : 20;
   let minNumberOfMoves = minmoves ? parseInt(minmoves) : 0;
   let minPrecision = minprecision ? parseInt(minprecision) : 0;
   const gameFormatEnum: GameFormat = gameFormat ? (gameFormat.toLowerCase() as GameFormat) : null;

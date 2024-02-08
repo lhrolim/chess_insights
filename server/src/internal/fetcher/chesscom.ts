@@ -1,152 +1,97 @@
 import axios from "axios";
 import * as Collections from "typescript-collections";
-import { convertEpochToFormattedDate } from "@util/dateutil";
-import { PGNParsedData, parseRelevantDataFromPGN } from "@util/pgnparserutil";
-import {
-  GameResult,
-  MatchResult,
-  EndMatchMode,
-  GameSearchDto,
-  SortCriteria,
-  gameSearchDtoToString
-} from "@api/dtos/GameDtos";
+import { YearAndMonth, formattedDate, getPastDate } from "@util/dateutil";
+import { GameResultDTO, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
+import { ChessGameDAO } from "@internal/database/ChessGameDAO";
+import { ChessGame } from "@internal/database/ChessGameModel";
+import { convertGameResultDTOToChessGame, convertToDTO, parseGamesFromApiResponse } from "@util/Converters";
+import { ChessGameScanDAO } from "@internal/database/ChessGameScanDAO";
+import { Site } from "@internal/database/ChessGameScanModel";
 
-export const fetchBestAnalyzedGamesOverPastMonths = async (gameSearchDTO: GameSearchDto): Promise<GameResult[]> => {
-  let ignoredGames = 0;
+export const fetchBestAnalyzedGamesOverPastMonths = async (gameSearchDTO: GameSearchDto): Promise<GameResultDTO[]> => {
+  // ChessGameScanDAO.deleteAllEntriesForUser(gameSearchDTO.user);
+  // ChessGameDAO.deleteAllEntriesForUser(gameSearchDTO.user);
   const userName = gameSearchDTO.user;
-  const sortFunction = (a: GameResult, b: GameResult) => {
+  const results = new Collections.BSTree<GameResultDTO>(sortFunction(gameSearchDTO));
+  const lastDateAvailable = await ChessGameScanDAO.locateDatesAlreadyScanned(userName, Site.chessCom);
+  await mergeGamesFromDBWithNewGames(userName, lastDateAvailable, gameSearchDTO.months);
+  const games = await ChessGameDAO.bringGamesMatchingCriteria(userName, gameSearchDTO);
+  for (const game of games) {
+    const gameResult = convertToDTO(game);
+    if (!!gameResult) {
+      results.add(gameResult);
+    }
+  }
+  console.log(`Found ${Math.min(gameSearchDTO.maxGames, results.size())} games matching the criteria`);
+  return results.toArray().slice(0, gameSearchDTO.maxGames);
+};
+
+const sortFunction = (gameSearchDTO: GameSearchDto) => {
+  return (a: GameResultDTO, b: GameResultDTO) => {
     const sortDTO = gameSearchDTO.sortDTO;
     const higherObject = sortDTO.desc ? b : a;
     const lowerObject = sortDTO.desc ? a : b;
+    const dateComparison = new Date(higherObject.timestamp).getTime() - new Date(lowerObject.timestamp).getTime();
     if (sortDTO.criteria === SortCriteria.PRECISION) {
-      return higherObject.myPrecision - lowerObject.myPrecision;
+      const basePrecisionComparision = higherObject.myPrecision - lowerObject.myPrecision;
+      return basePrecisionComparision === 0 ? dateComparison : basePrecisionComparision;
     }
     if (sortDTO.criteria === SortCriteria.DATE) {
       return new Date(higherObject.timestamp).getTime() - new Date(lowerObject.timestamp).getTime();
     }
     if (sortDTO.criteria === SortCriteria.MOVES) {
-      return higherObject.numberOfMoves - lowerObject.numberOfMoves;
+      const numberComparison = higherObject.numberOfMoves - lowerObject.numberOfMoves;
+      return numberComparison === 0 ? dateComparison : numberComparison;
     }
   };
-  const results = new Collections.BSTree<GameResult>(sortFunction);
-  for (let i = 0; i < gameSearchDTO.months; i++) {
+};
+
+const mergeGamesFromDBWithNewGames = async (
+  userName: string,
+  alreadyPresentAtDB: YearAndMonth[],
+  maxMonths: number
+) => {
+  for (let i = 0; i < maxMonths; i++) {
     const date = getPastDate(i);
-    const url = `https://api.chess.com/pub/player/${userName}/games/${date.year}/${date.month}`;
-    console.log(`Fetching games for ${gameSearchDTO.user} at ${url}`);
-    console.log(`applying additional filter ${gameSearchDtoToString(gameSearchDTO)}`);
-    const response = await axios.get(url);
-    const games = response.data.games;
-    for (const game of games) {
-      if (!game.accuracies) {
-        ignoredGames++;
-        continue;
-      }
-      if (gameSearchDTO.gameFormat && game.time_class !== gameSearchDTO.gameFormat.toString().toLowerCase()) {
-        ignoredGames++;
-        continue;
-      }
+    const presentAtDB = alreadyPresentAtDB.some(d => d.year === date.year && d.month === date.month);
+    console.log(`Fetching games for ${date.year}-${date.month} for ${userName}`);
+    if (presentAtDB) {
+      console.log(`Skipping api call ${date.year}-${date.month} as it is already present at the database`);
+      continue;
+    }
+    const allGames = await findAllgamesFromAPIAtDate(userName, date);
+    let bulkList: ChessGame[] = [];
+    let j = 1;
+    for (const game of allGames) {
       const gameResult = parseGamesFromApiResponse(userName, game);
-      if (gameResult.numberOfMoves < gameSearchDTO.minMoves) {
-        ignoredGames++;
+      if (gameResult === null) {
         continue;
       }
-      if (gameResult.myPrecision < gameSearchDTO.minAccuracy) {
-        ignoredGames++;
-        continue;
-      }
-      if (!!gameResult) {
-        results.add(gameResult);
+      bulkList.push(convertGameResultDTOToChessGame(gameResult, game.pgn));
+      if (bulkList.length === 50) {
+        console.log(`[Bulk${j}]: Inserting 50 games for ${userName} at ${date.year}-${date.month}`);
+        await ChessGameDAO.insertGamesBulk(bulkList);
+        bulkList = [];
+        j++;
       }
     }
-  }
-
-  return results.toArray().slice(0, gameSearchDTO.maxGames);
-};
-
-const parseMatchResult = (myResult: string, opponentResult: string): [MatchResult, EndMatchMode] => {
-  if (myResult === "win") {
-    return [MatchResult.Won, opponentResult as EndMatchMode];
-  }
-  if (
-    myResult === "insufficient" ||
-    myResult === "agreed" ||
-    myResult === "repetition" ||
-    myResult === "50move" ||
-    myResult === "stalemate" ||
-    myResult === "timevsinsufficient"
-  ) {
-    return [MatchResult.Draw, myResult as EndMatchMode];
-  }
-
-  if (myResult === "resigned" || myResult === "timeout" || myResult === "abandoned" || myResult === "checkmated") {
-    return [MatchResult.Lost, myResult as EndMatchMode];
-  }
-  return [MatchResult.Lost, EndMatchMode.Unknown];
-};
-
-const getPastDate = (months: number): YearAndMonth => {
-  const currentDate = new Date();
-  currentDate.setMonth(currentDate.getMonth() - months);
-
-  const year = currentDate.getFullYear().toString();
-  // Get the month and add 1 because getMonth() returns 0-11
-  const month = (currentDate.getMonth() + 1).toString();
-
-  // Pad the month with a leading zero if it is less than 10
-  const formattedMonth = month.padStart(2, "0");
-
-  return { year, month: formattedMonth };
-};
-
-const parseGamesFromApiResponse = (userName: string, game: any): GameResult => {
-  const amIPlayingAsWhite = game.white.username === userName ? true : false;
-  const opponentUserName = amIPlayingAsWhite ? game.black.username : game.white.username;
-  const myResult = amIPlayingAsWhite ? game.white.result : game.black.result;
-  const opponentResult = amIPlayingAsWhite ? game.black.result : game.white.result;
-  const matchResult = parseMatchResult(myResult, opponentResult);
-  if (!matchResult || matchResult[0] == MatchResult.Unknown) {
-    console.log("matchResult is null" + game);
-    return null;
-  }
-  let time = convertEpochToFormattedDate(game.end_time);
-  const pgnParsedData: PGNParsedData = parseRelevantDataFromPGN(game.pgn, amIPlayingAsWhite);
-
-  return {
-    url: game.url,
-    myPrecision: amIPlayingAsWhite ? game.accuracies.white : game.accuracies.black,
-    opponentPrecision: amIPlayingAsWhite ? game.accuracies.black : game.accuracies.white,
-    myRating: amIPlayingAsWhite ? game.white.rating : game.black.rating,
-    opponentRating: amIPlayingAsWhite ? game.black.rating : game.white.rating,
-    opponentUserName,
-    format: game.time_class,
-    timestamp: pgnParsedData.startTime ?? time,
-    result: matchResult[0],
-    endMatchMode: matchResult[1],
-    numberOfMoves: pgnParsedData.numberOfMoves,
-    opening: pgnParsedData.opening,
-    myClock: pgnParsedData.myClock,
-    opponentClock: pgnParsedData.opponentClock,
-    matchTimeInSeconds: game.time_control,
-    whiteData: {
-      username: game.white.username,
-      country: game.white.country,
-      rating: game.white.rating,
-      result: game.white.result,
-      precision: game.accuracies.white,
-      finalClock: pgnParsedData.whiteClock
-    },
-    blackData: {
-      username: game.black.username,
-      country: game.black.country,
-      rating: game.black.rating,
-      result: game.black.result,
-      precision: game.accuracies.black,
-      finalClock: pgnParsedData.blackClock
+    console.log(`[Bulk${j}]: Inserting ${bulkList.length} games for ${userName} at ${date.year}-${date.month}`);
+    await ChessGameDAO.insertGamesBulk(bulkList);
+    if (i !== 0) {
+      //avoid marking current month as scanned as users would play more games
+      await ChessGameScanDAO.markAsScanned(userName, Site.chessCom, date);
     }
-  };
+  }
 };
 
-interface YearAndMonth {
-  year: string;
-  month: string;
-}
+const findAllgamesFromAPIAtDate = async (userName: string, date: YearAndMonth): Promise<any[]> => {
+  const result: any[] = [];
+  const url = `https://api.chess.com/pub/player/${userName}/games/${date.year}/${date.month}`;
+  console.log(`Fetching at chess.com api for ${userName} at ${url}`);
+  const response = await axios.get(url);
+  const games = response.data.games;
+  for (const game of games) {
+    result.push(game);
+  }
+  return result;
+};
