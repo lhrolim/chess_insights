@@ -68,68 +68,68 @@ const GENERIC_GAME_2 = {
     uuid: "b79c822c-ac02-11e3-8006-000000000000"
   }
 };
-describe("fetchBestAnalyzedGamesOverPastMonths", () => {
-  // it("should fetch the best analyzed games over the past months", async () => {
-  //   // Mock the axios library
-  //   jest.mock("axios");
+describe.skip("fetchBestAnalyzedGamesOverPastMonths", () => {
+  it("should fetch the best analyzed games over the past months", async () => {
+    // Mock the axios library
+    jest.mock("axios");
 
-  //   const mockApiResponse = {
-  //     data: {
-  //       games: [GENERIC_GAME]
-  //     }
-  //   };
-  //   (axios.get as jest.Mock).mockResolvedValue(mockApiResponse);
+    const mockApiResponse = {
+      data: {
+        games: [GENERIC_GAME]
+      }
+    };
+    (axios.get as jest.Mock).mockResolvedValue(mockApiResponse);
 
-  //   // Call the function to be tested
-  //   const searchDTO: GameSearchDto = {
-  //     user: "myUsername",
-  //     months: 2,
-  //     minAccuracy: 5,
-  //     gameFormat: GameFormat.Rapid,
-  //     maxGames: 30,
-  //     sortDTO: {
-  //       criteria: SortCriteria.PRECISION,
-  //       desc: true
-  //     }
-  //   };
-  //   const games = await fetchBestAnalyzedGamesOverPastMonths(searchDTO);
+    // Call the function to be tested
+    const searchDTO: GameSearchDto = {
+      user: "myUsername",
+      months: 2,
+      minAccuracy: 5,
+      gameFormat: GameFormat.Rapid,
+      maxGames: 30,
+      sortDTO: {
+        criteria: SortCriteria.PRECISION,
+        desc: true
+      }
+    };
+    const games = await fetchBestAnalyzedGamesOverPastMonths(searchDTO);
 
-  //   // Assert the expected results
-  //   expect(games).toEqual([
-  //     {
-  //       url: "https://www.chess.com/game/live/97858866315",
-  //       myPrecision: 55.33,
-  //       opponentPrecision: 60.51,
-  //       opponentUserName: "2Grizzly",
-  //       myRating: 1937,
-  //       opponentRating: 1927,
-  //       format: GameFormat.Rapid,
-  //       timestamp: "2024-01-01 14:38:09",
-  //       opening: "https://www.chess.com/openings/Queens-Pawn-Opening-Chigorin-Variation-2...Nf6",
-  //       result: MatchResult.Lost,
-  //       endMatchMode: EndMatchMode.Resign,
-  //       numberOfMoves: 42,
-  //       myClock: "0:02:43.5",
-  //       opponentClock: "0:02:52.6",
-  //       matchTimeInSeconds: "600",
-  //       whiteData: {
-  //         country: undefined,
-  //         finalClock: "0:02:52.6",
-  //         precision: 60.51,
-  //         rating: 1927,
-  //         result: "win",
-  //         username: "2Grizzly"
-  //       },
-  //       blackData: {
-  //         country: undefined,
-  //         finalClock: "0:02:43.5",
-  //         precision: 55.33,
-  //         rating: 1937,
-  //         result: "resigned",
-  //         username: "lhrolim"
-  //       }
-  //     }
-  //     // Add more expected game results here
-  //   ]);
-  // });
+    // Assert the expected results
+    expect(games).toEqual([
+      {
+        url: "https://www.chess.com/game/live/97858866315",
+        myPrecision: 55.33,
+        opponentPrecision: 60.51,
+        opponentUserName: "2Grizzly",
+        myRating: 1937,
+        opponentRating: 1927,
+        format: GameFormat.Rapid,
+        timestamp: "2024-01-01 14:38:09",
+        opening: "https://www.chess.com/openings/Queens-Pawn-Opening-Chigorin-Variation-2...Nf6",
+        result: MatchResult.Lost,
+        endMatchMode: EndMatchMode.Resign,
+        numberOfMoves: 42,
+        myClock: "0:02:43.5",
+        opponentClock: "0:02:52.6",
+        matchTimeInSeconds: "600",
+        whiteData: {
+          country: undefined,
+          finalClock: "0:02:52.6",
+          precision: 60.51,
+          rating: 1927,
+          result: "win",
+          username: "2Grizzly"
+        },
+        blackData: {
+          country: undefined,
+          finalClock: "0:02:43.5",
+          precision: 55.33,
+          rating: 1937,
+          result: "resigned",
+          username: "lhrolim"
+        }
+      }
+      // Add more expected game results here
+    ]);
+  });
 });
