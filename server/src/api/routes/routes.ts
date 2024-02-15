@@ -2,7 +2,9 @@ import { Request, Response, Router } from "express";
 
 import { GameFormat, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom";
-
+import { analyzeMoves } from "@internal/analysis/SingleGameAnalyzer";
+import Stockfish from "stockfish";
+import { StockfishClient } from "@internal/engine/StockfishClient";
 export const subRoute = "/api/games";
 
 const router = Router();
@@ -52,6 +54,14 @@ router.get("/best", async (req: Request, res: Response) => {
 
   res.send(games);
   res.end();
+});
+
+router.get("/analyze", async (req: Request, res: Response) => {
+  // const engine = Stockfish();
+  // await analyzeMoves(["1. e4 e5", "2. Nf3 Nc6", "3. Bb5 a6"]);
+  const stockfishClient = new StockfishClient();
+  const result = await stockfishClient.myMovesAnalysis(["e2e4","e7e5","g1f3","b8c6","f1b5","a7a6"],true);
+  console.log("Analysis result:", result);
 });
 
 export default router;

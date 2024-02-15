@@ -9,6 +9,10 @@ export default {
     session_keys: process.env.SERVER_SESSION_KEYS.split(" "),
     database: {
       mongo_uri: process.env.MONGO_DB_CONNECTION_STRING
+    },
+    stockfish:{
+      port: process.env.STOCKFISH_PORT,
+      host: process.env.STOCKFISH_HOST
     }
   }
 };
