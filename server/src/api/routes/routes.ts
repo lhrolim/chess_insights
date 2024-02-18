@@ -5,6 +5,7 @@ import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom
 import { analyzeMoves } from "@internal/analysis/SingleGameAnalyzer";
 import Stockfish from "stockfish";
 import { StockfishClient } from "@internal/engine/StockfishClient";
+import { EngineAnalyzer } from "@internal/engine/EngineAnalyzer";
 export const subRoute = "/api/games";
 
 const router = Router();
@@ -59,8 +60,9 @@ router.get("/best", async (req: Request, res: Response) => {
 router.get("/analyze", async (req: Request, res: Response) => {
   // const engine = Stockfish();
   // await analyzeMoves(["1. e4 e5", "2. Nf3 Nc6", "3. Bb5 a6"]);
-  const stockfishClient = new StockfishClient();
-  const result = await stockfishClient.myMovesAnalysis(["e2e4","e7e5","g1f3","b8c6","f1b5","a7a6"],true);
+  const stockfishClient = new EngineAnalyzer();
+  // const result = await stockfishClient.myMovesAnalysis(["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6","b1c3"], true);
+  const result = await stockfishClient.myMovesAnalysis(["g2g4", "e7e5","f2f4","d8h4"], true);
   console.log("Analysis result:", result);
 });
 
