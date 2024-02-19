@@ -1,4 +1,5 @@
 import {
+  EndOfGameMode,
   EngineInput,
   GameAnalyzisOptions,
   GameAnalyzisResult,
@@ -31,32 +32,37 @@ export class EngineAnalyzer {
     engineInput: EngineInput,
     depth: number,
     lines: number,
-    previousScore: number
+    pastMoveAnalysis: MoveAnalysis
   ): Promise<MoveAnalysis> {
     return new Promise(resolve => {
       const bufferedAnalyzer = (data: Buffer) => {
         const output = data.toString().trim();
-        const outputLines = output.split("\n");
         const isWhiteToMove = engineInput.isWhiteToMove();
-        const result = new MoveAnalysis();
-        result.movePlayed = engineInput.lastMove();
-        result.isWhiteToMove = isWhiteToMove;
-        result.position = engineInput.startPos;
-        const isEndOfGame = UCIUtil.isEndOfGame(outputLines, isWhiteToMove);
         const analyzedNextMoves = this.parseUCIResult(output, depth, isWhiteToMove);
         if (analyzedNextMoves.ignored) {
           //ignoring received entry, could be a stockfish info result as a result of uci
           return;
         }
-        if (isEndOfGame) {
-          result.endOfGame = true;
-          resolve(result);
+        let previousScore = pastMoveAnalysis?.positionScore;
+        if (!previousScore) {
+          //first move ever
+          previousScore = { score: 0, mate: null, isWhiteToMove };
+        }
+        const outputLines = output.split("\n");
+        const result = new MoveAnalysis();
+        result.movePlayed = engineInput.lastMove();
+        result.isWhiteToMove = isWhiteToMove;
+        result.position = engineInput.startPos;
+        const isEndOfGame = UCIUtil.isEndOfGame(outputLines, isWhiteToMove);
+        result.endOfGame = isEndOfGame;
+        if (result.isEndOfGame()) {
+          return resolve(result);
         }
         // the score of the position assuming opponent will play the best move
         result.positionScore = analyzedNextMoves.moves[0].score;
         result.nextMoves = analyzedNextMoves.moves;
-        result.moveScoreDelta = UCIUtil.calculateDeltaScore(previousScore, result.positionScore);
-        result.result = UCIUtil.categorizeMove(result.moveScoreDelta, lines);
+        result.moveScoreDelta = UCIUtil.calculateDeltaScore(result.positionScore, previousScore);
+        result.category = UCIUtil.categorizeMove(result.moveScoreDelta, lines);
         console.log(result);
         resolve(result);
       };
@@ -95,46 +101,45 @@ export class EngineAnalyzer {
     amIWhite: boolean,
     options: GameAnalyzisOptions = { depth: 20, lines: 3 }
   ): Promise<GameAnalyzisResult> {
-    let analysisResults = { white: [], black: [] };
+    let analysisResults = [];
     let startPos = "";
-    let positionScore = 0;
+    let previousAnalyis: MoveAnalysis = null;
     for (let i = 0; i < moves.length; i++) {
       const move = moves[i];
       startPos += move + " ";
-      // Accumulate moves up to the current one for each analysis
-      const currentMoves = moves.slice(0, i + 1);
       const parityToCheck = amIWhite ? 0 : 1;
-      const adjusteLines = UCIUtil.getRecommendedLines(i, options.lines);
-      const adjustedDepth = UCIUtil.getRecommendedDepth(i, options.depth);
+      const adjusteLines = UCIUtil.getRecommendedLines(i, options.lines); //no point in bringing multiple lines at initial positions
+      const adjustedDepth = UCIUtil.getRecommendedDepth(i, options.depth); //no point in high depth at initial positions
       const logMsg = i % 2 === parityToCheck ? "my move" : "opponent's move";
       console.log(`Analyzing ${logMsg} ${startPos}`);
       const result = await this.analyzeSingleMove(
         EngineInput.fromStartPos(startPos),
         adjustedDepth,
         adjusteLines,
-        positionScore
+        previousAnalyis
       );
       console.log("analysis:" + result.toString());
-      // positionScore = result.positionScore;
+      analysisResults.push(result);
+      previousAnalyis = result;
     }
     try {
       this.client.disconnect();
     } catch (e) {
       console.error("Error disconnecting:", e);
     }
-    return analysisResults;
+    return { moves: analysisResults };
   }
 
   private parseUCIResult(uciAnswer: string, depth: number, isWhiteToMove: boolean): UCIResult {
     const lines = uciAnswer.split("\n"); //multi pv mode
     const endOfGameCheck = UCIUtil.isEndOfGame(lines, isWhiteToMove);
-    if (endOfGameCheck.isEndOfGame) {
+    if (endOfGameCheck && endOfGameCheck !== EndOfGameMode.NONE) {
       console.log("Received:\n" + lines);
       return { moves: [], endOfGame: endOfGameCheck, ignored: false };
     }
     const filteredLines = lines.filter(line => UCIUtil.matchesDepth(line, depth));
     if (filteredLines.length === 0) {
-      return { moves: [], endOfGame: null, ignored: true };
+      return { moves: [], endOfGame: endOfGameCheck, ignored: true };
     }
     console.log("Received:\n" + filteredLines);
     const movesResult: UCIMoveResult[] = [];
@@ -144,7 +149,7 @@ export class EngineAnalyzer {
       const move = UCIUtil.parseMove(line);
       movesResult.push({ move, score });
     }
-    return { moves: movesResult, endOfGame: null, ignored: false };
+    return { moves: movesResult, endOfGame: endOfGameCheck, ignored: false };
   }
 
   public returnMoveCandidates(engineInput: EngineInput, depth: number = 20, lines: number = 3): Promise<UCIResult> {

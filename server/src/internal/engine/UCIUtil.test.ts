@@ -70,8 +70,7 @@ describe("UCIUtil", () => {
   describe("isEndOfGame", () => {
     it("should return true if the outputLines indicate the end of the game", () => {
       const endOfGame = UCIUtil.isEndOfGame(DRAW_UCI_REPLY.split("\n"),true);
-      expect(endOfGame.isEndOfGame).toBe(true);
-      expect(endOfGame.mode).toBe(EndOfGameMode.STALEMATE);
+      expect(endOfGame).toBe(EndOfGameMode.STALEMATE);
     });
 
     it("should return false if the outputLines do not indicate the end of the game", () => {

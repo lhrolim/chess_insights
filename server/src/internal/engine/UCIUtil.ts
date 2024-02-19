@@ -1,6 +1,6 @@
-import { EndOfGameData, EndOfGameMode, MoveCategory, MoveScore } from "./EngineTypes";
+import { EndOfGameMode, MoveCategory, MoveScore } from "./EngineTypes";
 
-const MATE_CONSTANT = 1000;
+const MATE_CONSTANT = 10000;
 
 export class UCIUtil {
   static matchesDepth(line: string, depth: number): unknown {
@@ -55,10 +55,10 @@ export class UCIUtil {
     return moveMatch ? moveMatch[1] : "";
   }
 
-  static isEndOfGame(outputLines: string[], isWhiteToMove:boolean): EndOfGameData {
+  static isEndOfGame(outputLines: string[], isWhiteToMove:boolean): EndOfGameMode {
     const isEndOfGame = outputLines.some(line => line.includes("bestmove (none)"));
     if (!isEndOfGame) {
-      return { isEndOfGame: false, mode: null };
+      return EndOfGameMode.NONE;
     }
     for (const line of outputLines) {
       const score = this.parseScore(line,isWhiteToMove);
@@ -66,17 +66,21 @@ export class UCIUtil {
         continue;
       }
       if (score.score === 0) {
-        return { isEndOfGame: true, mode: EndOfGameMode.STALEMATE };
+        return EndOfGameMode.STALEMATE;
       }
+      return EndOfGameMode.MATE;
     }
-    return { isEndOfGame: true, mode: EndOfGameMode.STALEMATE };
+    return EndOfGameMode.MATE;
   }
 
-  static calculateDeltaScore(previousScore: number, moveScore: MoveScore): number {
+  static calculateDeltaScore(moveScore: MoveScore, pastScore?: MoveScore): number {
     if (moveScore.mate) {
       return moveScore.mate * MATE_CONSTANT;
     }
-    return previousScore - moveScore.score;
+    if (pastScore.mate) {
+      return -moveScore.score;
+    }
+    return pastScore.score - moveScore.score;
   }
 
   public static joinMoves(moves: string[]) {

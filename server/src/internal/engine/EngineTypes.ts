@@ -18,19 +18,16 @@ export enum MoveCategory {
 
 export type UCIResult = {
   moves: UCIMoveResult[];
-  endOfGame: EndOfGameData;
+  endOfGame: EndOfGameMode;
   ignored: boolean;
 };
 
-export type EndOfGameData = {
-  isEndOfGame: boolean;
-  mode: EndOfGameMode;
-};
 
 export enum EndOfGameMode {
   MATE = "mate",
   STALEMATE = "stalemate",
-  REPETITION = "repetition"
+  REPETITION = "repetition",
+  NONE = "none"
 }
 
 export type UCIMoveResult = {
@@ -48,11 +45,15 @@ export class MoveAnalysis {
   movePlayed: string;
   positionScore: MoveScore;
   moveScoreDelta: number;
-  result: MoveCategory;
+  category: MoveCategory;
   position?: string;
   nextMoves?: UCIMoveResult[];
-  endOfGame: boolean;
+  endOfGame: EndOfGameMode;
   isWhiteToMove: boolean;
+
+  isEndOfGame(): boolean {
+    return EndOfGameMode.NONE !== this.endOfGame;
+  }
 
   toString(): string {
     if (this.endOfGame) {
@@ -63,13 +64,12 @@ export class MoveAnalysis {
       ? `Score: ${this.positionScore.score}`
       : `Mate in ${this.positionScore.mate}`;
 
-    return `Move Played: ${this.movePlayed}, Next Best Move: ${this.nextMoves[0]?.move}, Position Score: ${positionScoreString}, Move Score Delta: ${this.moveScoreDelta}, Result: ${this.result}, Position: ${this.position}`;
+    return `Move Played: ${this.movePlayed}, Next Best Move: ${this.nextMoves[0]?.move}, Position Score: ${positionScoreString}, Move Score Delta: ${this.moveScoreDelta}, Result: ${this.category}, Position: ${this.position}`;
   }
 }
 
 export type GameAnalyzisResult = {
-  white: MoveAnalysis[];
-  black: MoveAnalysis[];
+  moves: MoveAnalysis[];
   whitePrecision?: number;
   blackPrecision?: number;
 };
