@@ -1,7 +1,7 @@
 import * as net from "net";
 import config from "../../config";
 import { UCIUtil } from "./UCIUtil";
-import { GameAnalyzisOptions, GameAnalyzisResult, MoveAnalysis, MoveResult } from "./EngineTypes";
+import { GameAnalyzisOptions, GameAnalyzisResult, MoveAnalysis, MoveCategory } from "./EngineTypes";
 
 export class StockfishClient {
   private client: net.Socket | null = null;

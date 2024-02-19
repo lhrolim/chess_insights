@@ -1,4 +1,4 @@
-import { MoveResult, MoveScore } from "./EngineTypes";
+import { EndOfGameData, EndOfGameMode, MoveCategory, MoveScore } from "./EngineTypes";
 
 const MATE_CONSTANT = 1000;
 
@@ -12,14 +12,14 @@ export class UCIUtil {
     return parsedLineDepth >= depth;
   }
 
-  public static categorizeMove(score: number, numberOfOptionsAvailableFromPrevious: number): MoveResult {
-    if (score > 900) return MoveResult.Brilliant;
-    else if (score > 600) return MoveResult.Great;
-    else if (score > 300) return MoveResult.Best;
-    else if (score > 100) return MoveResult.Good;
-    else if (score > -100) return MoveResult.Innacuracy;
-    else if (score > -300) return MoveResult.Mistake;
-    else return MoveResult.Blunder;
+  public static categorizeMove(score: number, numberOfOptionsAvailableFromPrevious: number): MoveCategory {
+    if (score > 900) return MoveCategory.Brilliant;
+    else if (score > 600) return MoveCategory.Great;
+    else if (score > 300) return MoveCategory.Best;
+    else if (score > 100) return MoveCategory.Good;
+    else if (score > -100) return MoveCategory.Innacuracy;
+    else if (score > -300) return MoveCategory.Mistake;
+    else return MoveCategory.Blunder;
   }
 
   public static getRecommendedDepth(moveNumber: number, informedDepth: number): number {
@@ -33,16 +33,18 @@ export class UCIUtil {
     return Math.min(lines, 3);
   }
 
-  public static parseScore(line: string): MoveScore {
+  public static parseScore(line: string, isWhiteToMove: boolean): MoveScore {
     let scoreMatch = line.match(/score cp (-?\d+)/);
+    let result = {isWhiteToMove: isWhiteToMove};
     if (scoreMatch) {
-      return { score: parseInt(scoreMatch[1], 10), mate: 0 };
+      const cpScore = parseInt(scoreMatch[1], 10);
+      return { score: cpScore, mate: null, isWhiteToMove };
     }
 
     // Try to match the "score mate" pattern
     scoreMatch = line.match(/score mate (-?\d+)/);
     if (scoreMatch) {
-      return { score: null, mate: parseInt(scoreMatch[1], 10) };
+      return { score: null, mate: parseInt(scoreMatch[1], 10), isWhiteToMove };
     }
 
     return null;
@@ -53,8 +55,21 @@ export class UCIUtil {
     return moveMatch ? moveMatch[1] : "";
   }
 
-  static isEndOfGame(outputLines: string[]): boolean {
-    return outputLines.some(line => line.includes("bestmove (none)"));
+  static isEndOfGame(outputLines: string[], isWhiteToMove:boolean): EndOfGameData {
+    const isEndOfGame = outputLines.some(line => line.includes("bestmove (none)"));
+    if (!isEndOfGame) {
+      return { isEndOfGame: false, mode: null };
+    }
+    for (const line of outputLines) {
+      const score = this.parseScore(line,isWhiteToMove);
+      if (!score) {
+        continue;
+      }
+      if (score.score === 0) {
+        return { isEndOfGame: true, mode: EndOfGameMode.STALEMATE };
+      }
+    }
+    return { isEndOfGame: true, mode: EndOfGameMode.STALEMATE };
   }
 
   static calculateDeltaScore(previousScore: number, moveScore: MoveScore): number {

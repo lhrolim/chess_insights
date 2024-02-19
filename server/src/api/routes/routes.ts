@@ -6,6 +6,7 @@ import { analyzeMoves } from "@internal/analysis/SingleGameAnalyzer";
 import Stockfish from "stockfish";
 import { StockfishClient } from "@internal/engine/StockfishClient";
 import { EngineAnalyzer } from "@internal/engine/EngineAnalyzer";
+import { EngineInput } from "@internal/engine/EngineTypes";
 export const subRoute = "/api/games";
 
 const router = Router();
@@ -61,9 +62,21 @@ router.get("/analyze", async (req: Request, res: Response) => {
   // const engine = Stockfish();
   // await analyzeMoves(["1. e4 e5", "2. Nf3 Nc6", "3. Bb5 a6"]);
   const stockfishClient = new EngineAnalyzer();
-  // const result = await stockfishClient.myMovesAnalysis(["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6","b1c3"], true);
-  const result = await stockfishClient.myMovesAnalysis(["g2g4", "e7e5","f2f4","d8h4"], true);
+  // const result = await stockfishClient.returnMoveCandidates(["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6","b1c3"], true);
+  // const result = await stockfishClient.returnMoveCandidates({
+  //   moves: ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6", "b1c3"]
+  // });
+
+  // const result = await stockfishClient.returnMoveCandidates(EngineInput.fromMoves(["f2f4", "e7e5", "g2g4"]));
+  const result = await stockfishClient.myMovesAnalysis(["f2f4", "e7e5", "g2g4"], true);
+
+  // const result = await stockfishClient.returnMoveCandidates({
+  //   fen: "4k3/4P3/4K3/8/8/8/8/8 b - - 0 1"
+  // });
   console.log("Analysis result:", result);
+
+  res.send(result);
+  res.end();
 });
 
 export default router;
