@@ -68,7 +68,7 @@ router.get("/analyze", async (req: Request, res: Response) => {
   // });
 
   // const result = await stockfishClient.returnMoveCandidates(EngineInput.fromMoves(["f2f4", "e7e5", "g2g4"]));
-  const result = await stockfishClient.myMovesAnalysis(["f2f4", "e7e5", "g2g4"], true);
+  const result = await stockfishClient.myMovesAnalysis(["f2f4", "e7e5", "g2g4"]);
 
   // const result = await stockfishClient.returnMoveCandidates({
   //   fen: "4k3/4P3/4K3/8/8/8/8/8 b - - 0 1"

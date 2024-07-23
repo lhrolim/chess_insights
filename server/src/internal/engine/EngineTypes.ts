@@ -10,6 +10,7 @@ export enum MoveCategory {
   Great = "great",
   Best = "best",
   Good = "good",
+  Book = "book",
   Innacuracy = "inaccuracy",
   Mistake = "mistake",
   Blunder = "blunder",
@@ -68,11 +69,6 @@ export class MoveAnalysis {
   }
 }
 
-export type GameAnalyzisResult = {
-  moves: MoveAnalysis[];
-  whitePrecision?: number;
-  blackPrecision?: number;
-};
 
 export class EngineInput {
   moves?: string[];

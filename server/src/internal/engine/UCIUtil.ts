@@ -1,4 +1,4 @@
-import { EndOfGameMode, MoveCategory, MoveScore } from "./EngineTypes";
+import { EndOfGameMode, MoveAnalysis, MoveCategory, MoveScore } from "./EngineTypes";
 
 const MATE_CONSTANT = 10000;
 
@@ -12,7 +12,15 @@ export class UCIUtil {
     return parsedLineDepth >= depth;
   }
 
-  public static categorizeMove(score: number, numberOfOptionsAvailableFromPrevious: number): MoveCategory {
+  public static categorizeMove(result: MoveAnalysis, previousAnalyses: MoveAnalysis): MoveCategory {
+    if (!previousAnalyses) {
+      return MoveCategory.Book;
+    }
+    const score = result.moveScoreDelta;
+    const previousSuggestedMoves = previousAnalyses.nextMoves.map(move => move.move);
+    if (previousSuggestedMoves.includes(result.movePlayed)) {
+      return MoveCategory.Best;
+    }
     if (score > 900) return MoveCategory.Brilliant;
     else if (score > 600) return MoveCategory.Great;
     else if (score > 300) return MoveCategory.Best;
@@ -35,7 +43,7 @@ export class UCIUtil {
 
   public static parseScore(line: string, isWhiteToMove: boolean): MoveScore {
     let scoreMatch = line.match(/score cp (-?\d+)/);
-    let result = {isWhiteToMove: isWhiteToMove};
+    let result = { isWhiteToMove: isWhiteToMove };
     if (scoreMatch) {
       const cpScore = parseInt(scoreMatch[1], 10);
       return { score: cpScore, mate: null, isWhiteToMove };
@@ -55,13 +63,14 @@ export class UCIUtil {
     return moveMatch ? moveMatch[1] : "";
   }
 
-  static isEndOfGame(outputLines: string[], isWhiteToMove:boolean): EndOfGameMode {
+  static isEndOfGame(output: string, isWhiteToMove: boolean): EndOfGameMode {
+    const outputLines = output.split("\n");
     const isEndOfGame = outputLines.some(line => line.includes("bestmove (none)"));
     if (!isEndOfGame) {
       return EndOfGameMode.NONE;
     }
     for (const line of outputLines) {
-      const score = this.parseScore(line,isWhiteToMove);
+      const score = this.parseScore(line, isWhiteToMove);
       if (!score) {
         continue;
       }

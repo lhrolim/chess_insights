@@ -1,11 +1,18 @@
 import { UCIUtil } from "./UCIUtil";
-import { EndOfGameMode, MoveCategory, MoveScore } from "./EngineTypes";
+import { EndOfGameMode, MoveAnalysis, MoveCategory, MoveScore } from "./EngineTypes";
 
 const DRAW_UCI_REPLY = `'info string NNUE evaluation using nn-5af11540bbfe.nnue enabled
 info depth 0 score cp 0
 bestmove (none)'`;
 
 const MATE_IN_1 = `'info depth 20 seldepth 2 multipv 1 score mate 1 nodes 832789 nps 601726 hashfull 349 tbhits 0 time 1384 pv d8h4`;
+
+// 
+const FULL_RESULT = 
+`
+info depth 20 seldepth 25 multipv 1 score cp 28 nodes 650811 nps 529114 hashfull 264 tbhits 0 time 1230 pv d7d5 g1f3 g7g6 d2d4 f8g7 c2c4 e7e6 e2e3 g8e7 b2b4 e8g8 f1d3 b7b6 e1g1 c7c5 b4c5
+bestmove d7d5 ponder g1f3
+`;
 
 describe("UCIUtil", () => {
   describe("matchesDepth", () => {
@@ -21,8 +28,11 @@ describe("UCIUtil", () => {
   });
 
   describe("categorizeMove", () => {
-    it("should return MoveResult if the score and numberOfOptionsAvailableFromPrevious are within certain ranges", () => {
-      // Test case
+    it("first move, return Book", () => {
+      const ma =new MoveAnalysis();
+      ma.positionScore = {score: 900, mate: 0};
+      const result = UCIUtil.categorizeMove(ma, null);
+      expect(result).toBe(MoveCategory.Book);
     });
 
     it("should return MoveResult if the score and numberOfOptionsAvailableFromPrevious are outside certain ranges", () => {
@@ -69,7 +79,7 @@ describe("UCIUtil", () => {
 
   describe("isEndOfGame", () => {
     it("should return true if the outputLines indicate the end of the game", () => {
-      const endOfGame = UCIUtil.isEndOfGame(DRAW_UCI_REPLY.split("\n"),true);
+      const endOfGame = UCIUtil.isEndOfGame(DRAW_UCI_REPLY,true);
       expect(endOfGame).toBe(EndOfGameMode.STALEMATE);
     });
 
