@@ -1,27 +1,21 @@
-import { EndOfGameMode, EngineInput, GameAnalyzisOptions, UCIMoveResult, UCIResult } from "./EngineTypes";
+import { EndOfGameMode, GameAnalyzisOptions, UCIMoveResult, UCIResult } from "./EngineTypes";
 import { GameAnalyzisResult, MoveAnalysis } from "./GameAnalyseResult";
 import { IEngineAnalyzer } from "./IEngineAnalyzer";
 import { StockfishClient } from "./StockfishClient";
 import { UCIUtil } from "./UCIUtil";
 import getLogger from "@infra/logging/logger";
 import config from "../../config";
+import { EngineInput } from "./EngineInput";
 
 const logger = getLogger(__filename);
 
 export class EngineAnalyzer implements IEngineAnalyzer {
   client: StockfishClient;
   private resolveAnalysis: ((result: string) => void) | null = null;
-  private currentBufferedAnalyzer: ((data: Buffer) => void) | null = null;
+  private currentBufferedAnalyzer: ((data: string) => void) | null = null;
 
-  constructor() {
-    this.client = new StockfishClient();
-  }
-
-  public fullGameAnalysis(
-    moves: string[],
-    options: GameAnalyzisOptions = { depth: 20, lines: 3 }
-  ): Promise<GameAnalyzisResult> {
-    return new Promise(resolve => {});
+  constructor(stockFishClient?: StockfishClient) {
+    this.client = stockFishClient;
   }
 
   // Async utility to analyze a single position
@@ -32,8 +26,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     pastMoveAnalysis: MoveAnalysis
   ): Promise<MoveAnalysis> {
     return new Promise(resolve => {
-      const bufferedAnalyzer = (data: Buffer) => {
-        const output = data.toString().trim();
+      const bufferedAnalyzer = (output: string) => {
         const isWhiteToMove = engineInput.isWhiteToMove();
         const analyzedNextMoves = UCIUtil.parseUCIResult(output, depth, isWhiteToMove);
         if (analyzedNextMoves.ignored) {
@@ -87,8 +80,13 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     this.client.sendCommand(`go depth ${depth}`);
   }
 
-  public async analyzeGame(EngineInput: EngineInput, options: GameAnalyzisOptions): Promise<GameAnalyzisResult> {
-    return await this.myMovesAnalysis(EngineInput.moves, options);
+  public async analyzeGame(engineInput: EngineInput, options?: GameAnalyzisOptions): Promise<GameAnalyzisResult> {
+    logger.info(`Analyzing game: ${engineInput.moves}`);
+    const start = performance.now();
+    const result = await this.myMovesAnalysis(engineInput.moves, options);
+    const finish = performance.now();
+    logger.info(`Analysis done took ${finish - start} milliseconds`);
+    return result;
   }
 
   // Method to analyze all moves
@@ -131,8 +129,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
   public returnMoveCandidates(engineInput: EngineInput, depth: number = 20, lines: number = 3): Promise<UCIResult> {
     return new Promise(resolve => {
       const result: MoveAnalysis[] = [];
-      const onDataHandler = (data: Buffer) => {
-        const output = data.toString().trim();
+      const onDataHandler = (output: string) => {
         const uciResult = UCIUtil.parseUCIResult(output, depth, engineInput.isWhiteToMove());
         if (uciResult.ignored) {
           //ignoring this line
@@ -150,7 +147,8 @@ export class EngineAnalyzer implements IEngineAnalyzer {
 function logFullStockFishOutput(analysisResults: Array<MoveAnalysis>) {
   logger.debug("Full analysis results:");
   analysisResults.forEach((analysis, index) => {
-    logger.debug(`Move ${index + 1}: ${analysis.movePlayed}`);
+    const moveNumber = Math.floor((index + 2) / 2);
+    logger.debug(`Move ${moveNumber} ${analysis.isWhiteToMove ? "W" : "B"}: ${analysis.movePlayed}`);
     logger.debug(`Position: ${analysis.position}`);
     logger.debug(`Output: ${analysis.rawStockfishOutput}`);
   });

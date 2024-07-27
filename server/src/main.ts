@@ -11,7 +11,8 @@ import Config from "./config";
 import gameRoutes, { subRoute as gameSubRoute } from "@api/routes/routes";
 import { connectToDatabase } from "@internal/database/MongoConnection";
 
-
+import { errorMiddleware } from "@infra/middlewares/errorMiddleware";
+import getLogger from "@infra/logging/logger";
 
 const app = express();
 const isProduction = app.get("env") === "production";
@@ -19,7 +20,7 @@ const isProduction = app.get("env") === "production";
 app.set("trust proxy", 1); // Trust first proxy
 app.use(express.json());
 
-
+const logger = getLogger(__filename);
 
 // Session
 app.use(
@@ -30,7 +31,6 @@ app.use(
     secure: isProduction // Adjusted to conditionally require SSL
   })
 );
-
 
 // CORS
 app.use((req, res, next) => {
@@ -46,20 +46,20 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((err:any, req:any, res:any, next:any) => {
+app.use((err: any, req: any, res: any, next: any) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!');
+  res.status(500).send("Something broke!");
 });
 
 // Catch unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
   // Here, you could log the error and continue the application instead of crashing it
 });
 
 // Catch uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+process.on("uncaughtException", error => {
+  console.error("Uncaught Exception:", error);
   // Note: It's risky to continue running the application after an uncaught exception
   // as it may be in an undefined state. Consider logging the error and restarting the application gracefully.
 });
@@ -72,6 +72,8 @@ Config.client.routes.forEach(route => app.use(route, express.static(path.join(cl
 // API Endpoints
 app.use(gameSubRoute, gameRoutes);
 
+app.use(errorMiddleware);
+
 // Function to initialize application
 async function initializeApplication() {
   await connectToDatabase(); // Connect to database asynchronously
@@ -81,17 +83,24 @@ async function initializeApplication() {
   const port = process.env.PORT || 5000;
 
   if (!isProduction) {
-    https.createServer({
-      cert: fs.readFileSync("server.cert"),
-      key: fs.readFileSync("server.key")
-    }, app).listen(port, () => {
-      console.log(`Listening on ${port} with HTTPS`);
-    });
+    https
+      .createServer(
+        {
+          cert: fs.readFileSync("server.cert"),
+          key: fs.readFileSync("server.key")
+        },
+        app
+      )
+      .listen(port, () => {
+        console.log(`Listening on ${port} with HTTPS`);
+      });
   } else {
     app.listen(port, () => {
       console.log(`Listening on ${port}`);
     });
   }
+  logger.debug(`Debug active...`);
+  logger.info(`Server started on port ${port}`);
 }
 
 // Immediately invoke the async function to start the application

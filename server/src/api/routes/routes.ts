@@ -2,11 +2,11 @@ import { Request, Response, Router } from "express";
 
 import { GameFormat, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom";
-import { analyzeMoves } from "@internal/analysis/SingleGameAnalyzer";
 import { StockfishClient } from "@internal/engine/StockfishClient";
 import { EngineAnalyzer } from "@internal/engine/EngineAnalyzer";
-import { EngineInput } from "@internal/engine/EngineTypes";
+import { EngineInput } from "@internal/engine/EngineInput";
 export const subRoute = "/api/games";
+import { asyncHandler } from "@infra/middlewares/asyncHandler";
 
 const router = Router();
 
@@ -60,7 +60,7 @@ router.get("/best", async (req: Request, res: Response) => {
 router.get("/analyze", async (req: Request, res: Response) => {
   // const engine = Stockfish();
   // await analyzeMoves(["1. e4 e5", "2. Nf3 Nc6", "3. Bb5 a6"]);
-  const stockfishClient = new EngineAnalyzer();
+  const stockfishClient = new EngineAnalyzer(new StockfishClient());
   // const result = await stockfishClient.returnMoveCandidates(["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6","b1c3"], true);
   // const result = await stockfishClient.returnMoveCandidates({
   //   moves: ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6", "b1c3"]
@@ -77,5 +77,18 @@ router.get("/analyze", async (req: Request, res: Response) => {
   res.send(result);
   res.end();
 });
+
+router.post(
+  "/analyzePGN",
+  asyncHandler(async (req: Request, res: Response) => {
+    const stockfishClient = new EngineAnalyzer(new StockfishClient());
+    const { pgn } = req.body;
+    const engineInput = EngineInput.fromPGN(pgn);
+    const result = await stockfishClient.analyzeGame(engineInput);
+
+    res.send(result);
+    res.end();
+  })
+);
 
 export default router;

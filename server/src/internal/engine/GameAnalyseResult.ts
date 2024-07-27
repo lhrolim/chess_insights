@@ -1,4 +1,4 @@
-import { EndOfGameMode, EngineInput, GameAnalyzisOptions, UCIMoveResult, MoveData, MoveCategory } from "./EngineTypes";
+import { EndOfGameMode, GameAnalyzisOptions, UCIMoveResult, MoveData, MoveCategory } from "./EngineTypes";
 
 export type GameAnalyzisResult = {
   moves: MoveAnalysis[];
@@ -40,7 +40,7 @@ export class MoveAnalysis {
   }
 
   toString(): string {
-    if (this.endOfGame) {
+    if (this.isEndOfGame()) {
       return `game ended with this move ${this.movePlayed}`;
     }
 

@@ -164,7 +164,8 @@ describe("UCIUtil", () => {
 
   describe("joinMoves", () => {
     it("should join the moves into a single string", () => {
-      // Test case
+      const result = UCIUtil.getStartPositionFromMoves(["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6"]);
+      expect(result).toBe(["e2e4 e7e5 g1f3 b8c6 f1c4 g8f6"].join(" "));
     });
 
     // Add more test cases for different scenarios

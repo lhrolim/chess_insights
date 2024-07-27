@@ -5,8 +5,8 @@ export default {
     subdirectory: process.env.CLIENT_DEPLOYMENT_SUBDIRECTORY || ""
   },
   server: {
-    allowed_origins: process.env.SERVER_ALLOWED_ORIGINS.split(","),
-    session_keys: process.env.SERVER_SESSION_KEYS.split(" "),
+    allowed_origins: (process.env.SERVER_ALLOWED_ORIGINS && process.env.SERVER_ALLOWED_ORIGINS.split(",")) || "",
+    session_keys: (process.env.SERVER_SESSION_KEYS && process.env.SERVER_SESSION_KEYS.split(" ")) || [],
     database: {
       mongo_uri: process.env.MONGO_DB_CONNECTION_STRING
     },

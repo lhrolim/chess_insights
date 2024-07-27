@@ -1,4 +1,6 @@
 import { ParseTree, parse as pgnParser } from "@mliebelt/pgn-parser";
+import getLogger from "@infra/logging/logger";
+const logger = getLogger(__filename);
 
 export type PGNParsedData = {
   startTime: string;
@@ -50,5 +52,15 @@ export const parseRelevantDataFromPGN = (pgn: string, amIPlayingAsWhite: boolean
   } catch (e) {
     console.error("unable to parse game pgn", e);
     return null;
+  }
+};
+
+export const parseMovesFromPGN = (pgn: string): string[] => {
+  try {
+    const pgnResult = pgnParser(pgn, { startRule: "game" }) as ParseTree;
+    const moveArray = pgnResult.moves.map(move => move.notation.notation);
+    return moveArray;
+  } catch (e) {
+    logger.error("unable to parse game pgn", e);
   }
 };

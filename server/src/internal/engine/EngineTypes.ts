@@ -47,40 +47,4 @@ export type MoveData = {
 
 
 
-export class EngineInput {
-  moves?: string[];
-  fen?: string;
-  startPos?: string;
 
-  private constructor(fen?: string, startPos?: string) {
-    this.fen = fen;
-    this.startPos = startPos;
-  }
-
-  public static fromFen(fen: string): EngineInput {
-    return new EngineInput(undefined, fen);
-  }
-  public static fromMoves(moves: string[]): EngineInput {
-    const startPos = UCIUtil.joinMoves(moves);
-    return new EngineInput(null,startPos);
-  }
-  public static fromStartPos(startPos: string): EngineInput {
-    return new EngineInput(undefined, startPos);
-  }
-
-  lastMove(): string {
-    if (!this.startPos) {
-      return null;
-    }
-    return this.startPos.trim().split(" ").pop();
-  }
-
-  isWhiteToMove(): boolean {
-    if (this.moves) {
-      return this.moves.length % 2 === 0;
-    } else if (this.fen) {
-      return this.fen.split(" ")[1] === "w";
-    }
-    return this.startPos.trim().split(" ").length % 2 === 0;
-  }
-}

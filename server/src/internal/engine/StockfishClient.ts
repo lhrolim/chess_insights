@@ -9,7 +9,6 @@ export class StockfishClient {
   private port: number;
   private host: string;
 
-
   constructor() {
     this.port = parseInt(config.server.stockfish.port);
     this.host = config.server.stockfish.host;
@@ -74,12 +73,14 @@ export class StockfishClient {
     }
   }
 
-  public addBufferedListener(listener: (data: Buffer) => void): void {
+  public addBufferedListener(listener: (data: string) => void): void {
     if (this.client) {
-      this.client.on("data", listener);
+      this.client.on("data", (data: Buffer) => {
+        const trimmedData = data.toString().trim();
+        listener(trimmedData);
+      });
     }
   }
-
 }
 
 

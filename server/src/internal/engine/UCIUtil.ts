@@ -129,10 +129,14 @@ export class UCIUtil {
     return pastScore.score - moveData.score;
   }
 
-  public static joinMoves(moves: string[]) {
+  public static getStartPositionFromMoves(moves: string[]): string {
     return moves
       .join(" ")
       .replace(/\d+\.\s*/g, "")
       .replace(/\s+/g, " ");
+  }
+
+  public static getMovesFromStartPosition(startPosition: string): string[] {
+    return startPosition.split(" ");
   }
 }
