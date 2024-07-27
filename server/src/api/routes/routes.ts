@@ -3,7 +3,6 @@ import { Request, Response, Router } from "express";
 import { GameFormat, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom";
 import { analyzeMoves } from "@internal/analysis/SingleGameAnalyzer";
-import Stockfish from "stockfish";
 import { StockfishClient } from "@internal/engine/StockfishClient";
 import { EngineAnalyzer } from "@internal/engine/EngineAnalyzer";
 import { EngineInput } from "@internal/engine/EngineTypes";

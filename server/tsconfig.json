@@ -14,6 +14,7 @@
       "@api/*": ["src/api/*"],
       "@internal/*": ["src/internal/*"],
       "@util/*": ["src/internal/util/*"],
+      "@infra/*": ["src/infra/*"]
     }
   },
   "include": ["src/**/*"]

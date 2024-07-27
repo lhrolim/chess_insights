@@ -1,9 +1,23 @@
 {
-    "editor.formatOnSave": true,
-    "editor.rulers": [100],
-    "editor.tabSize": 2,
-    "editor.codeActionsOnSave": {
-      "source.fixAll.tslint": "explicit"
+  "editor.formatOnSave": true,
+  "editor.rulers": [100],
+  "editor.tabSize": 2,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.tslint": "explicit"
+  },
+  "vsicons.associations.files": [
+    {
+      "icon": "test-js",
+      "extensions": ["test.ts"],
+      "filename": ["*.test.ts"],
+      "format": "svg"
+    },
+    {
+      "icon": "test-js",
+      "extensions": ["spec.ts"],
+      "filename": ["*.spec.ts"],
+      "format": "svg"
     }
-  }
+  ]
+}
   

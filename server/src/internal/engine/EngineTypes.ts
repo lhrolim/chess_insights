@@ -3,6 +3,7 @@ import { UCIUtil } from "./UCIUtil";
 export type GameAnalyzisOptions = {
   depth: number;
   lines: number;
+  firstErrorOnly?: boolean;
 };
 
 export enum MoveCategory {
@@ -23,51 +24,27 @@ export type UCIResult = {
   ignored: boolean;
 };
 
-
 export enum EndOfGameMode {
   MATE = "mate",
   STALEMATE = "stalemate",
   REPETITION = "repetition",
-  NONE = "none"
+  NONE = "none",
+  RESIGN = "resign",
+  DRAW = "draw",
+  TIMEOUT = "timeout"
 }
 
 export type UCIMoveResult = {
   move: string;
-  score: MoveScore;
+  data: MoveData;
 };
 
-export type MoveScore = {
+export type MoveData = {
   score: number;
   mate: number;
   isWhiteToMove?: boolean;
 };
 
-export class MoveAnalysis {
-  movePlayed: string;
-  positionScore: MoveScore;
-  moveScoreDelta: number;
-  category: MoveCategory;
-  position?: string;
-  nextMoves?: UCIMoveResult[];
-  endOfGame: EndOfGameMode;
-  isWhiteToMove: boolean;
-
-  isEndOfGame(): boolean {
-    return EndOfGameMode.NONE !== this.endOfGame;
-  }
-
-  toString(): string {
-    if (this.endOfGame) {
-      return `game ended with this move ${this.movePlayed}`;
-    }
-
-    const positionScoreString = this.positionScore.score
-      ? `Score: ${this.positionScore.score}`
-      : `Mate in ${this.positionScore.mate}`;
-
-    return `Move Played: ${this.movePlayed}, Next Best Move: ${this.nextMoves[0]?.move}, Position Score: ${positionScoreString}, Move Score Delta: ${this.moveScoreDelta}, Result: ${this.category}, Position: ${this.position}`;
-  }
-}
 
 
 export class EngineInput {

@@ -10,9 +10,16 @@ export default {
     database: {
       mongo_uri: process.env.MONGO_DB_CONNECTION_STRING
     },
-    stockfish:{
+    stockfish: {
       port: process.env.STOCKFISH_PORT,
       host: process.env.STOCKFISH_HOST
+    },
+    logging: {
+      level: process.env.LOG_LEVEL || "debug"
+    },
+    env: process.env.NODE_ENV || "dev",
+    isLocal: () => {
+      return !process.env.NODE_ENV || process.env.NODE_ENV === "dev";
     }
   }
 };

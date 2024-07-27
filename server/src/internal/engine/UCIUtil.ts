@@ -1,4 +1,5 @@
-import { EndOfGameMode, MoveAnalysis, MoveCategory, MoveScore } from "./EngineTypes";
+import { EndOfGameMode, MoveCategory, MoveData, UCIMoveResult, UCIResult } from "./EngineTypes";
+import { MoveAnalysis } from "./GameAnalyseResult";
 
 const MATE_CONSTANT = 10000;
 
@@ -18,8 +19,14 @@ export class UCIUtil {
     }
     const score = result.moveScoreDelta;
     const previousSuggestedMoves = previousAnalyses.nextMoves.map(move => move.move);
-    if (previousSuggestedMoves.includes(result.movePlayed)) {
+    if (previousAnalyses.inMateWeb() && !result.inMateWeb()) {
+      return MoveCategory.Miss;
+    }
+    if (previousSuggestedMoves[0] == result.movePlayed) {
       return MoveCategory.Best;
+    }
+    if (previousSuggestedMoves.includes(result.movePlayed)) {
+      return MoveCategory.Great;
     }
     if (score > 900) return MoveCategory.Brilliant;
     else if (score > 600) return MoveCategory.Great;
@@ -41,12 +48,13 @@ export class UCIUtil {
     return Math.min(lines, 3);
   }
 
-  public static parseScore(line: string, isWhiteToMove: boolean): MoveScore {
+  public static parseScore(line: string, isWhiteToMove: boolean): MoveData {
     let scoreMatch = line.match(/score cp (-?\d+)/);
     let result = { isWhiteToMove: isWhiteToMove };
     if (scoreMatch) {
       const cpScore = parseInt(scoreMatch[1], 10);
-      return { score: cpScore, mate: null, isWhiteToMove };
+      const whitePerspectiveScore = isWhiteToMove ? cpScore : -cpScore;
+      return { score: whitePerspectiveScore, mate: null, isWhiteToMove };
     }
 
     // Try to match the "score mate" pattern
@@ -82,14 +90,43 @@ export class UCIUtil {
     return EndOfGameMode.MATE;
   }
 
-  static calculateDeltaScore(moveScore: MoveScore, pastScore?: MoveScore): number {
-    if (moveScore.mate) {
-      return moveScore.mate * MATE_CONSTANT;
+  public static parseUCIResult(uciAnswer: string, depth: number, isWhiteToMove: boolean): UCIResult {
+    const endOfGameCheck = UCIUtil.isEndOfGame(uciAnswer, isWhiteToMove);
+    if (endOfGameCheck && endOfGameCheck !== EndOfGameMode.NONE) {
+      console.log("Received:\n" + uciAnswer);
+      return { moves: [], endOfGame: endOfGameCheck, ignored: false };
+    }
+    const filteredLines = uciAnswer.split("\n").filter(line => UCIUtil.matchesDepth(line, depth));
+    if (filteredLines.length === 0) {
+      return { moves: [], endOfGame: endOfGameCheck, ignored: true };
+    }
+    console.log("Received:\n" + filteredLines);
+    const movesResult: UCIMoveResult[] = [];
+    for (const line of filteredLines) {
+      //if multipv is enabled we will have several move options
+      const score = UCIUtil.parseScore(line, isWhiteToMove);
+      const move = UCIUtil.parseMove(line);
+      movesResult.push({ move, data: score });
+    }
+    movesResult.sort((a, b) => {
+      const firstElement = isWhiteToMove ? b : a;
+      const secondElement = isWhiteToMove ? a : b;
+      const mateScore = isWhiteToMove ? MATE_CONSTANT : -MATE_CONSTANT;
+      const firstElementScore = firstElement.data.score || mateScore;
+      const secondElementScore = secondElement.data.score || mateScore;
+      return firstElementScore - secondElementScore;
+    });
+    return { moves: movesResult, endOfGame: endOfGameCheck, ignored: false };
+  }
+
+  static calculateDeltaScore(moveData: MoveData, pastScore?: MoveData): number {
+    if (moveData.mate) {
+      return moveData.mate * MATE_CONSTANT;
     }
     if (pastScore.mate) {
-      return -moveScore.score;
+      return -moveData.score;
     }
-    return pastScore.score - moveScore.score;
+    return pastScore.score - moveData.score;
   }
 
   public static joinMoves(moves: string[]) {

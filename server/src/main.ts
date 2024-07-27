@@ -11,11 +11,15 @@ import Config from "./config";
 import gameRoutes, { subRoute as gameSubRoute } from "@api/routes/routes";
 import { connectToDatabase } from "@internal/database/MongoConnection";
 
+
+
 const app = express();
 const isProduction = app.get("env") === "production";
 
 app.set("trust proxy", 1); // Trust first proxy
 app.use(express.json());
+
+
 
 // Session
 app.use(

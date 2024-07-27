@@ -1,0 +1,17 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "vsicons.associations.files": [
+      {
+        "icon": "test-js",
+        "extensions": ["test.ts", "spec.ts"],
+        "filenameGlob": ["*.test.ts", "*.spec.ts"],
+        "format": "svg"
+      }
+    ]
+  }
+}

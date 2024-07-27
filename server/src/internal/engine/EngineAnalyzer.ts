@@ -1,16 +1,14 @@
-import {
-  EndOfGameMode,
-  EngineInput,
-  GameAnalyzisOptions,
-  MoveAnalysis,
-  UCIMoveResult,
-  UCIResult
-} from "./EngineTypes";
-import { GameAnalyzisResult } from "./GameAnalyseResult";
+import { EndOfGameMode, EngineInput, GameAnalyzisOptions, UCIMoveResult, UCIResult } from "./EngineTypes";
+import { GameAnalyzisResult, MoveAnalysis } from "./GameAnalyseResult";
+import { IEngineAnalyzer } from "./IEngineAnalyzer";
 import { StockfishClient } from "./StockfishClient";
 import { UCIUtil } from "./UCIUtil";
+import getLogger from "@infra/logging/logger";
+import config from "../../config";
 
-export class EngineAnalyzer {
+const logger = getLogger(__filename);
+
+export class EngineAnalyzer implements IEngineAnalyzer {
   client: StockfishClient;
   private resolveAnalysis: ((result: string) => void) | null = null;
   private currentBufferedAnalyzer: ((data: Buffer) => void) | null = null;
@@ -37,7 +35,7 @@ export class EngineAnalyzer {
       const bufferedAnalyzer = (data: Buffer) => {
         const output = data.toString().trim();
         const isWhiteToMove = engineInput.isWhiteToMove();
-        const analyzedNextMoves = this.parseUCIResult(output, depth, isWhiteToMove);
+        const analyzedNextMoves = UCIUtil.parseUCIResult(output, depth, isWhiteToMove);
         if (analyzedNextMoves.ignored) {
           //ignoring received entry, could be a stockfish info result as a result of uci
           return;
@@ -47,16 +45,17 @@ export class EngineAnalyzer {
         result.movePlayed = engineInput.lastMove();
         result.isWhiteToMove = isWhiteToMove;
         result.position = engineInput.startPos;
-        result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);;
+        result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);
         if (result.isEndOfGame()) {
           return resolve(result);
         }
         // the score of the position assuming opponent will play the best move
-        result.positionScore = analyzedNextMoves.moves[0].score;
+        result.positionScore = analyzedNextMoves.moves[0].data;
         result.nextMoves = analyzedNextMoves.moves;
         result.moveScoreDelta = UCIUtil.calculateDeltaScore(result.positionScore, previousScore);
         result.category = UCIUtil.categorizeMove(result, pastMoveAnalysis);
-        console.log(result);
+        result.rawStockfishOutput = output;
+        logger.debug(result);
         resolve(result);
       };
 
@@ -88,18 +87,23 @@ export class EngineAnalyzer {
     this.client.sendCommand(`go depth ${depth}`);
   }
 
+  public async analyzeGame(EngineInput: EngineInput, options: GameAnalyzisOptions): Promise<GameAnalyzisResult> {
+    return await this.myMovesAnalysis(EngineInput.moves, options);
+  }
+
   // Method to analyze all moves
   public async myMovesAnalysis(
     moves: string[],
     options: GameAnalyzisOptions = { depth: 20, lines: 3 }
   ): Promise<GameAnalyzisResult> {
-    let analysisResults = [];
+    let analysisResults = Array<MoveAnalysis>();
     let startPos = "";
     let previousAnalyis: MoveAnalysis = null;
     for (let i = 0; i < moves.length; i++) {
       const move = moves[i];
       startPos += move + " ";
-      const adjusteLines = UCIUtil.getRecommendedLines(i, options.lines); //no point in bringing multiple lines at initial positions
+      // const adjusteLines = UCIUtil.getRecommendedLines(i, options.lines); //no point in bringing multiple lines at initial positions
+      const adjusteLines = 3;
       const adjustedDepth = UCIUtil.getRecommendedDepth(i, options.depth); //no point in high depth at initial positions
       console.log(`Analyzing game ${startPos}`);
       const result = await this.analyzeSingleMove(
@@ -117,28 +121,11 @@ export class EngineAnalyzer {
     } catch (e) {
       console.error("Error disconnecting:", e);
     }
+    console.log(config.server.env);
+    if (config.server.isLocal()) {
+      logFullStockFishOutput(analysisResults);
+    }
     return { moves: analysisResults };
-  }
-
-  private parseUCIResult(uciAnswer: string, depth: number, isWhiteToMove: boolean): UCIResult {
-    const endOfGameCheck = UCIUtil.isEndOfGame(uciAnswer, isWhiteToMove);
-    if (endOfGameCheck && endOfGameCheck !== EndOfGameMode.NONE) {
-      console.log("Received:\n" + uciAnswer);
-      return { moves: [], endOfGame: endOfGameCheck, ignored: false };
-    }
-    const filteredLines = uciAnswer.split("\n").filter(line => UCIUtil.matchesDepth(line, depth));
-    if (filteredLines.length === 0) {
-      return { moves: [], endOfGame: endOfGameCheck, ignored: true };
-    }
-    console.log("Received:\n" + filteredLines);
-    const movesResult: UCIMoveResult[] = [];
-    for (const line of filteredLines) {
-      //if multipv is enabled we will have several move options
-      const score = UCIUtil.parseScore(line, isWhiteToMove);
-      const move = UCIUtil.parseMove(line);
-      movesResult.push({ move, score });
-    }
-    return { moves: movesResult, endOfGame: endOfGameCheck, ignored: false };
   }
 
   public returnMoveCandidates(engineInput: EngineInput, depth: number = 20, lines: number = 3): Promise<UCIResult> {
@@ -146,7 +133,7 @@ export class EngineAnalyzer {
       const result: MoveAnalysis[] = [];
       const onDataHandler = (data: Buffer) => {
         const output = data.toString().trim();
-        const uciResult = this.parseUCIResult(output, depth, engineInput.isWhiteToMove());
+        const uciResult = UCIUtil.parseUCIResult(output, depth, engineInput.isWhiteToMove());
         if (uciResult.ignored) {
           //ignoring this line
           return;
@@ -159,4 +146,12 @@ export class EngineAnalyzer {
   }
 
   // Additional methods as needed...
+}
+function logFullStockFishOutput(analysisResults: Array<MoveAnalysis>) {
+  logger.debug("Full analysis results:");
+  analysisResults.forEach((analysis, index) => {
+    logger.debug(`Move ${index + 1}: ${analysis.movePlayed}`);
+    logger.debug(`Position: ${analysis.position}`);
+    logger.debug(`Output: ${analysis.rawStockfishOutput}`);
+  });
 }
