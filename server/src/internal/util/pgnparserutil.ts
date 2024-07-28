@@ -2,6 +2,10 @@ import { ParseTree, parse as pgnParser } from "@mliebelt/pgn-parser";
 import getLogger from "@infra/logging/logger";
 const logger = getLogger(__filename);
 
+import { Chess } from "chess.js";
+import { EngineMove } from "@internal/engine/EngineInput";
+const chess = new Chess();
+
 export type PGNParsedData = {
   startTime: string;
   myClock: string;
@@ -55,7 +59,31 @@ export const parseRelevantDataFromPGN = (pgn: string, amIPlayingAsWhite: boolean
   }
 };
 
-export const parseMovesFromPGN = (pgn: string): string[] => {
+export const parseMovesFromPGN = (pgn: string): EngineMove[] => {
+  const moves = parseRawMoves(pgn);
+  return buildEngineMoves(moves);
+};
+
+export const buildEngineMoves = (moves: string[]): EngineMove[] => {
+  const engineMoves = Array<EngineMove>();
+  chess.reset();
+
+  let startPos = "";
+  moves.forEach(move => {
+    startPos += move + " ";
+    const validMove = chess.move(move);
+    if (!validMove) {
+      throw new Error("Invalid move");
+    }
+    const { from, to } = validMove;
+    const coordinateMove = from + to;
+    engineMoves.push(new EngineMove(coordinateMove, chess.fen(), startPos));
+  });
+
+  return engineMoves;
+};
+
+const parseRawMoves = (pgn: string): string[] => {
   try {
     const pgnResult = pgnParser(pgn, { startRule: "game" }) as ParseTree;
     const moveArray = pgnResult.moves.map(move => move.notation.notation);

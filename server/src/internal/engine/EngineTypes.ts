@@ -4,6 +4,8 @@ export type GameAnalyzisOptions = {
   depth: number;
   lines: number;
   firstErrorOnly?: boolean;
+  eloRating?: number;
+  threads?: number;
 };
 
 export enum MoveCategory {

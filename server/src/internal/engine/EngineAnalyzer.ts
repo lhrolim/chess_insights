@@ -5,7 +5,7 @@ import { StockfishClient } from "./StockfishClient";
 import { UCIUtil } from "./UCIUtil";
 import getLogger from "@infra/logging/logger";
 import config from "../../config";
-import { EngineInput } from "./EngineInput";
+import { EngineInput, EngineMove } from "./EngineInput";
 
 const logger = getLogger(__filename);
 
@@ -20,14 +20,14 @@ export class EngineAnalyzer implements IEngineAnalyzer {
 
   // Async utility to analyze a single position
   private async analyzeSingleMove(
-    engineInput: EngineInput,
+    engineMove: EngineMove,
     depth: number,
     lines: number,
     pastMoveAnalysis: MoveAnalysis
   ): Promise<MoveAnalysis> {
     return new Promise(resolve => {
       const bufferedAnalyzer = (output: string) => {
-        const isWhiteToMove = engineInput.isWhiteToMove();
+        const isWhiteToMove = engineMove.isWhiteToMove();
         const analyzedNextMoves = UCIUtil.parseUCIResult(output, depth, isWhiteToMove);
         if (analyzedNextMoves.ignored) {
           //ignoring received entry, could be a stockfish info result as a result of uci
@@ -35,13 +35,14 @@ export class EngineAnalyzer implements IEngineAnalyzer {
         }
         let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: null, isWhiteToMove };
         const result = new MoveAnalysis();
-        result.movePlayed = engineInput.lastMove();
+        result.movePlayed = engineMove.lastMove();
         result.isWhiteToMove = isWhiteToMove;
-        result.position = engineInput.startPos;
+        result.position = engineMove.cumulativeStartPos;
         result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);
         if (result.isEndOfGame()) {
           return resolve(result);
         }
+
         // the score of the position assuming opponent will play the best move
         result.positionScore = analyzedNextMoves.moves[0].data;
         result.nextMoves = analyzedNextMoves.moves;
@@ -51,25 +52,22 @@ export class EngineAnalyzer implements IEngineAnalyzer {
         logger.debug(result);
         resolve(result);
       };
-
       if (this.currentBufferedAnalyzer) {
         this.client?.removeDataListener(this.currentBufferedAnalyzer);
       }
       // Attach the new listener
       this.client?.addBufferedListener(bufferedAnalyzer);
       this.currentBufferedAnalyzer = bufferedAnalyzer; // Store the reference
-      this.sendUCICommandsForAnalyzis(engineInput, lines, depth);
+      this.sendUCICommandsForAnalyzis(engineMove, lines, depth);
     });
   }
 
-  private sendUCICommandsForAnalyzis(input: EngineInput, lines: number, depth: number) {
+  private sendUCICommandsForAnalyzis(input: EngineMove, lines: number, depth: number) {
     let command = "position";
-    if (input.startPos) {
-      command += ` startpos moves ${input.startPos}`;
-    } else if (input.fen) {
-      command += ` fen ${input.fen}`;
-    } else {
-      command += ` startpos moves ${input.moves.join(" ")}`;
+    if (input.fenPosition) {
+      command += ` fen ${input.fenPosition}`;
+    } else if (input.cumulativeStartPos) {
+      command += ` startpos moves ${input.cumulativeStartPos}`;
     }
     console.log(`Sending command: ${command}`);
     this.client.sendCommand(command);
@@ -81,35 +79,34 @@ export class EngineAnalyzer implements IEngineAnalyzer {
   }
 
   public async analyzeGame(engineInput: EngineInput, options?: GameAnalyzisOptions): Promise<GameAnalyzisResult> {
-    logger.info(`Analyzing game: ${engineInput.moves}`);
+    logger.info(`Starting game analysis`);
     const start = performance.now();
-    const result = await this.myMovesAnalysis(engineInput.moves, options);
+    this.client.setStockfishOptions({
+      moveTime: 1000,
+      eloRating: options.eloRating,
+      threads: options.threads,
+      hashSize: 128
+    });
+    const result = await this.doAnalyze(engineInput.moves, options);
     const finish = performance.now();
     logger.info(`Analysis done took ${finish - start} milliseconds`);
     return result;
   }
 
   // Method to analyze all moves
-  public async myMovesAnalysis(
-    moves: string[],
+  public async doAnalyze(
+    moves: EngineMove[],
     options: GameAnalyzisOptions = { depth: 20, lines: 3 }
   ): Promise<GameAnalyzisResult> {
     let analysisResults = Array<MoveAnalysis>();
-    let startPos = "";
     let previousAnalyis: MoveAnalysis = null;
     for (let i = 0; i < moves.length; i++) {
       const move = moves[i];
-      startPos += move + " ";
       // const adjusteLines = UCIUtil.getRecommendedLines(i, options.lines); //no point in bringing multiple lines at initial positions
       const adjusteLines = 3;
       const adjustedDepth = UCIUtil.getRecommendedDepth(i, options.depth); //no point in high depth at initial positions
-      console.log(`Analyzing game ${startPos}`);
-      const result = await this.analyzeSingleMove(
-        EngineInput.fromStartPos(startPos),
-        adjustedDepth,
-        adjusteLines,
-        previousAnalyis
-      );
+      console.log(`${i}:Analyzing game at move ${move.cumulativeStartPos}`);
+      const result = await this.analyzeSingleMove(move, options.depth, adjusteLines, previousAnalyis);
       console.log("analysis:" + result.toString());
       analysisResults.push(result);
       previousAnalyis = result;
@@ -126,7 +123,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     return { moves: analysisResults };
   }
 
-  public returnMoveCandidates(engineInput: EngineInput, depth: number = 20, lines: number = 3): Promise<UCIResult> {
+  public returnMoveCandidates(engineInput: EngineMove, depth: number = 20, lines: number = 3): Promise<UCIResult> {
     return new Promise(resolve => {
       const result: MoveAnalysis[] = [];
       const onDataHandler = (output: string) => {

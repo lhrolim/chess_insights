@@ -81,6 +81,47 @@ export class StockfishClient {
       });
     }
   }
+
+  public setSkillLevel = (level: number) => {
+    if (level < 0 || level > 20) {
+      throw new Error("Skill level must be between 0 and 20");
+    }
+    this.sendCommand(`setoption name Skill Level value ${level}`);
+  };
+
+  public setMoveTime = (timeMs: number) => {
+    this.sendCommand(`go movetime ${timeMs}`);
+  };
+
+  public setEloRating = (elo: number) => {
+    // if (elo < 1350 || elo > 2850) {
+    //   throw new Error("Elo rating must be between 1350 and 2850");
+    // }
+    this.sendCommand(`setoption name UCI_LimitStrength value true`);
+    this.sendCommand(`setoption name UCI_Elo value ${elo}`);
+  };
+
+  public setThreads = (threads: number) => {
+    this.sendCommand(`setoption name Threads value ${threads}`);
+  };
+
+  private setHashSize = (sizeMb: number) => {
+    this.sendCommand(`setoption name Hash value ${sizeMb}`);
+  };
+
+  public setStockfishOptions(options: {
+    skillLevel?: number;
+    moveTime?: number;
+    eloRating?: number;
+    threads?: number;
+    hashSize?: number;
+  }) {
+    if (options.skillLevel !== undefined) this.setSkillLevel(options.skillLevel);
+    if (options.moveTime !== undefined) this.setMoveTime(options.moveTime);
+    if (options.eloRating !== undefined) this.setEloRating(options.eloRating);
+    if (options.threads !== undefined) this.setThreads(options.threads);
+    if (options.hashSize !== undefined) this.setHashSize(options.hashSize);
+  }
 }
 
 
