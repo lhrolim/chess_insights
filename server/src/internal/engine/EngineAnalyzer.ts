@@ -70,7 +70,6 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     logger.info(`Starting game analysis`);
     const start = performance.now();
     this.client.setStockfishOptions({
-      moveTime: 1000,
       eloRating: options.eloRating,
       threads: options.threads,
       hashSize: 128
@@ -104,7 +103,6 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     } catch (e) {
       console.error("Error disconnecting:", e);
     }
-    console.log(config.server.env);
     if (config.server.isLocal()) {
       logFullStockFishOutput(analysisResults);
     }
@@ -113,11 +111,18 @@ export class EngineAnalyzer implements IEngineAnalyzer {
 
   public async findCandidateMoves(engineInput: EngineMove, options?: GameAnalyzisOptions): Promise<MoveAnalysis> {
     try {
+      this.client.setStockfishOptions({
+        eloRating: options.eloRating,
+        threads: options.threads,
+        hashSize: 128
+      });
       const result = await this.analyzeSingleMove(engineInput, options.depth, options.lines, null);
       return result;
     } catch (error) {
       logger.error("Error finding candidate moves:", error);
       throw error;
+    }finally{
+      this.client.disconnect();
     }
   }
 

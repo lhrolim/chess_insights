@@ -1,6 +1,9 @@
 import * as net from "net";
 import config from "../../config";
 import { EngineMove } from "./EngineInput";
+import getLogger from "@infra/logging/logger";
+
+const logger = getLogger(__filename);
 
 export class StockfishClient {
   private client: net.Socket | null = null;
@@ -9,6 +12,12 @@ export class StockfishClient {
   private retryCount: number = 0;
   private port: number;
   private host: string;
+  private commands = [];
+  private skillLevel: number;
+  private eloRating: number;
+  private threads: number;
+  private hashSize: number;
+  private optionsSet: boolean = false;
 
   constructor() {
     this.port = parseInt(config.server.stockfish.port);
@@ -18,7 +27,7 @@ export class StockfishClient {
 
   private connect(): void {
     this.client = net.createConnection({ port: this.port, host: this.host }, () => {
-      console.log("Connected to Stockfish engine.");
+      logger.debug("Connected to Stockfish engine.");
       this.retryCount = 0;
     });
 
@@ -54,7 +63,11 @@ export class StockfishClient {
     }
   }
 
-  public sendCommand(command: string): void {
+  public bufferCommand(command: string): void {
+    this.commands.push(command);
+  }
+
+  private sendCommand(command: string): void {
     if (this.client) {
       this.client.write(`${command}\n`);
     } else {
@@ -91,57 +104,70 @@ export class StockfishClient {
     if (level < 0 || level > 20) {
       throw new Error("Skill level must be between 0 and 20");
     }
-    this.sendCommand(`setoption name Skill Level value ${level}`);
-  };
-
-  public setMoveTime = (timeMs: number) => {
-    this.sendCommand(`go movetime ${timeMs}`);
+    this.bufferCommand(`setoption name Skill Level value ${level}`);
   };
 
   public setEloRating = (elo: number) => {
     // if (elo < 1350 || elo > 2850) {
     //   throw new Error("Elo rating must be between 1350 and 2850");
     // }
-    this.sendCommand(`setoption name UCI_LimitStrength value true`);
-    this.sendCommand(`setoption name UCI_Elo value ${elo}`);
+    this.bufferCommand(`setoption name UCI_LimitStrength value true`);
+    this.bufferCommand(`setoption name UCI_Elo value ${elo}`);
   };
 
   public setThreads = (threads: number) => {
-    this.sendCommand(`setoption name Threads value ${threads}`);
+    this.bufferCommand(`setoption name Threads value ${threads}`);
   };
 
   private setHashSize = (sizeMb: number) => {
-    this.sendCommand(`setoption name Hash value ${sizeMb}`);
+    this.bufferCommand(`setoption name Hash value ${sizeMb}`);
   };
 
   public setStockfishOptions(options: {
     skillLevel?: number;
-    moveTime?: number;
     eloRating?: number;
     threads?: number;
     hashSize?: number;
   }) {
-    if (options.skillLevel !== undefined) this.setSkillLevel(options.skillLevel);
-    if (options.moveTime !== undefined) this.setMoveTime(options.moveTime);
-    if (options.eloRating !== undefined) this.setEloRating(options.eloRating);
-    if (options.threads !== undefined) this.setThreads(options.threads);
-    if (options.hashSize !== undefined) this.setHashSize(options.hashSize);
+    this.skillLevel = options.skillLevel;
+    this.eloRating = options.eloRating;
+    this.threads = options.threads;
+    this.hashSize = options.hashSize;
+  }
+
+  private setOptions() {
+    if (this.skillLevel !== undefined) this.setSkillLevel(this.skillLevel);
+    if (this.eloRating !== undefined) this.setEloRating(this.eloRating);
+    if (this.threads !== undefined) this.setThreads(this.threads);
+    if (this.hashSize !== undefined) this.setHashSize(this.hashSize);
+  }
+
+  public flush(): void {
+    for (let i = 0; i < this.commands.length; i++) {
+      this.sendCommand(this.commands[i]);
+    }
+    logger.debug(`Commands sent to Stockfish:\n ${this.commands.join("\n ")}`);
+    this.commands = [];
+    this.optionsSet = false;
   }
 
   public sendUCICommandsForAnalyzis(input: EngineMove, lines: number, depth: number) {
+    if (!this.optionsSet) {
+      this.setOptions();
+      this.optionsSet = true;
+    }
     let command = "position";
     if (input.fenPosition) {
-      command += ` fen ${input.fenPosition}`;
+      command += ` fen ${input.fenPosition.trim()}`;
     } else if (input.cumulativeStartPos) {
-      command += ` startpos moves ${input.cumulativeStartPos}`;
+      command += ` startpos moves ${input.cumulativeStartPos.trim()}`;
     }
-    console.log(`Sending command: ${command}`);
-    this.sendCommand(command);
-    // this.client.sendCommand("d");
+    this.commands.push(command);
     if (lines > 1) {
-      this.sendCommand(`setoption name MultiPV value ${lines}`);
+      this.commands.push(`setoption name MultiPV value ${lines}`);
     }
-    this.sendCommand(`go depth ${depth}`);
+    this.commands.push(`go depth ${depth}`);
+    this.flush();
   }
 }
 
