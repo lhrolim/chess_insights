@@ -1,5 +1,6 @@
 import * as net from "net";
 import config from "../../config";
+import { EngineMove } from "./EngineInput";
 
 export class StockfishClient {
   private client: net.Socket | null = null;
@@ -77,7 +78,11 @@ export class StockfishClient {
     if (this.client) {
       this.client.on("data", (data: Buffer) => {
         const trimmedData = data.toString().trim();
-        listener(trimmedData);
+        try {
+          listener(trimmedData);
+        } catch (err) {
+          console.error("Error in listener:", err);
+        }
       });
     }
   }
@@ -122,6 +127,24 @@ export class StockfishClient {
     if (options.threads !== undefined) this.setThreads(options.threads);
     if (options.hashSize !== undefined) this.setHashSize(options.hashSize);
   }
+
+  public sendUCICommandsForAnalyzis(input: EngineMove, lines: number, depth: number) {
+    let command = "position";
+    if (input.fenPosition) {
+      command += ` fen ${input.fenPosition}`;
+    } else if (input.cumulativeStartPos) {
+      command += ` startpos moves ${input.cumulativeStartPos}`;
+    }
+    console.log(`Sending command: ${command}`);
+    this.sendCommand(command);
+    // this.client.sendCommand("d");
+    if (lines > 1) {
+      this.sendCommand(`setoption name MultiPV value ${lines}`);
+    }
+    this.sendCommand(`go depth ${depth}`);
+  }
 }
+
+
 
 

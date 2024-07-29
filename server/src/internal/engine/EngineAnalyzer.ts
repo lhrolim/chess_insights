@@ -25,32 +25,36 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     lines: number,
     pastMoveAnalysis: MoveAnalysis
   ): Promise<MoveAnalysis> {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const bufferedAnalyzer = (output: string) => {
-        const isWhiteToMove = engineMove.isWhiteToMove();
-        const analyzedNextMoves = UCIUtil.parseUCIResult(output, depth, isWhiteToMove);
-        if (analyzedNextMoves.ignored) {
-          //ignoring received entry, could be a stockfish info result as a result of uci
-          return;
-        }
-        let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: null, isWhiteToMove };
-        const result = new MoveAnalysis();
-        result.movePlayed = engineMove.lastMove();
-        result.isWhiteToMove = isWhiteToMove;
-        result.position = engineMove.cumulativeStartPos;
-        result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);
-        if (result.isEndOfGame()) {
-          return resolve(result);
-        }
+        try {
+          const isWhiteToMove = engineMove.isWhiteToMove();
+          const analyzedNextMoves = UCIUtil.parseUCIResult(output, depth, isWhiteToMove);
+          if (analyzedNextMoves.ignored) {
+            //ignoring received entry, could be a stockfish info result as a result of uci
+            return;
+          }
+          let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: null, isWhiteToMove };
+          const result = new MoveAnalysis();
+          result.movePlayed = engineMove.lastMove();
+          result.isWhiteToMove = isWhiteToMove;
+          result.position = engineMove.cumulativeStartPos;
+          result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);
+          if (result.isEndOfGame()) {
+            return resolve(result);
+          }
 
-        // the score of the position assuming opponent will play the best move
-        result.positionScore = analyzedNextMoves.moves[0].data;
-        result.nextMoves = analyzedNextMoves.moves;
-        result.moveScoreDelta = UCIUtil.calculateDeltaScore(result.positionScore, previousScore);
-        result.category = UCIUtil.categorizeMove(result, pastMoveAnalysis);
-        result.rawStockfishOutput = output;
-        logger.debug(result);
-        resolve(result);
+          // the score of the position assuming opponent will play the best move
+          result.positionScore = analyzedNextMoves.moves[0].data;
+          result.nextMoves = analyzedNextMoves.moves;
+          result.moveScoreDelta = UCIUtil.calculateDeltaScore(result.positionScore, previousScore);
+          result.category = UCIUtil.categorizeMove(result, pastMoveAnalysis);
+          result.rawStockfishOutput = output;
+          // logger.debug(result);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
       };
       if (this.currentBufferedAnalyzer) {
         this.client?.removeDataListener(this.currentBufferedAnalyzer);
@@ -58,24 +62,8 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       // Attach the new listener
       this.client?.addBufferedListener(bufferedAnalyzer);
       this.currentBufferedAnalyzer = bufferedAnalyzer; // Store the reference
-      this.sendUCICommandsForAnalyzis(engineMove, lines, depth);
+      this.client.sendUCICommandsForAnalyzis(engineMove, lines, depth);
     });
-  }
-
-  private sendUCICommandsForAnalyzis(input: EngineMove, lines: number, depth: number) {
-    let command = "position";
-    if (input.fenPosition) {
-      command += ` fen ${input.fenPosition}`;
-    } else if (input.cumulativeStartPos) {
-      command += ` startpos moves ${input.cumulativeStartPos}`;
-    }
-    console.log(`Sending command: ${command}`);
-    this.client.sendCommand(command);
-    // this.client.sendCommand("d");
-    if (lines > 1) {
-      this.client.sendCommand(`setoption name MultiPV value ${lines}`);
-    }
-    this.client.sendCommand(`go depth ${depth}`);
   }
 
   public async analyzeGame(engineInput: EngineInput, options?: GameAnalyzisOptions): Promise<GameAnalyzisResult> {
@@ -94,7 +82,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
   }
 
   // Method to analyze all moves
-  public async doAnalyze(
+  private async doAnalyze(
     moves: EngineMove[],
     options: GameAnalyzisOptions = { depth: 20, lines: 3 }
   ): Promise<GameAnalyzisResult> {
@@ -105,9 +93,9 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       // const adjusteLines = UCIUtil.getRecommendedLines(i, options.lines); //no point in bringing multiple lines at initial positions
       const adjusteLines = 3;
       const adjustedDepth = UCIUtil.getRecommendedDepth(i, options.depth); //no point in high depth at initial positions
-      console.log(`${i}:Analyzing game at move ${move.cumulativeStartPos}`);
+      logger.debug(`${i}:Analyzing game at move ${move.cumulativeStartPos} fen: ${move.fenPosition}`);
       const result = await this.analyzeSingleMove(move, options.depth, adjusteLines, previousAnalyis);
-      console.log("analysis:" + result.toString());
+      logger.debug("analysis:" + result.toString());
       analysisResults.push(result);
       previousAnalyis = result;
     }
@@ -123,20 +111,14 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     return { moves: analysisResults };
   }
 
-  public returnMoveCandidates(engineInput: EngineMove, depth: number = 20, lines: number = 3): Promise<UCIResult> {
-    return new Promise(resolve => {
-      const result: MoveAnalysis[] = [];
-      const onDataHandler = (output: string) => {
-        const uciResult = UCIUtil.parseUCIResult(output, depth, engineInput.isWhiteToMove());
-        if (uciResult.ignored) {
-          //ignoring this line
-          return;
-        }
-        resolve(uciResult);
-      };
-      this.sendUCICommandsForAnalyzis(engineInput, lines, depth);
-      this.client?.addBufferedListener(onDataHandler);
-    });
+  public async findCandidateMoves(engineInput: EngineMove, options?: GameAnalyzisOptions): Promise<MoveAnalysis> {
+    try {
+      const result = await this.analyzeSingleMove(engineInput, options.depth, options.lines, null);
+      return result;
+    } catch (error) {
+      logger.error("Error finding candidate moves:", error);
+      throw error;
+    }
   }
 
   // Additional methods as needed...

@@ -13,7 +13,9 @@ export class EngineInput {
   }
 
   public static fromFen(fen: string): EngineInput {
-    return new EngineInput(fen);
+    const moves = new Array<EngineMove>();
+    moves.push(new EngineMove(null, fen, null));
+    return new EngineInput(fen, null, moves);
   }
 
   public static fromMoves(moves: string[]): EngineInput {

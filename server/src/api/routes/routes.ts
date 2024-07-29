@@ -68,7 +68,8 @@ router.get("/analyze", async (req: Request, res: Response) => {
 
   // const result = await stockfishClient.returnMoveCandidates(EngineInput.fromMoves(["f2f4", "e7e5", "g2g4"]));
   const options = { depth: 10, lines: 3 };
-  const result = await stockfishClient.doAnalyze(EngineInput.fromMoves(["f2f4", "e7e5", "g2g4"]).moves, options);
+  const input = EngineInput.fromMoves(["f2f4", "e7e5", "g2g4"]);
+  const result = await stockfishClient.analyzeGame(input, options);
 
   // const result = await stockfishClient.returnMoveCandidates({
   //   fen: "4k3/4P3/4K3/8/8/8/8/8 b - - 0 1"
@@ -87,6 +88,25 @@ router.post(
     const engineInput = EngineInput.fromPGN(pgn);
     const options = { depth: 15, lines: 3, eloRating: 3200, threads: 8 };
     const result = await engineAnalyzer.analyzeGame(engineInput, options);
+
+    res.send(result);
+    res.end();
+  })
+);
+
+router.post(
+  "/candidateMoves",
+  asyncHandler(async (req: Request, res: Response) => {
+    const engineAnalyzer = new EngineAnalyzer(new StockfishClient());
+    const { fen, position } = req.body;
+    let engineInput: EngineInput;
+    if (fen) {
+      engineInput = EngineInput.fromFen(fen);
+    } else if (position) {
+      engineInput = EngineInput.fromStartPos(position);
+    }
+    const options = { depth: 15, lines: 3, eloRating: 3200, threads: 8 };
+    const result = await engineAnalyzer.findCandidateMoves(engineInput.moves[engineInput.moves.length - 1], options);
 
     res.send(result);
     res.end();
