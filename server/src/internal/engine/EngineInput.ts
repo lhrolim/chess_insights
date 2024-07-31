@@ -61,4 +61,5 @@ export class EngineMove {
     }
     return this.cumulativeStartPos.trim().split(" ").length % 2 === 0;
   }
+
 };

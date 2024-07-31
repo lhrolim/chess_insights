@@ -1,7 +1,7 @@
 import { MoveCategory } from "../EngineTypes";
 import { MoveAnalysis } from "../GameAnalyseResult";
 import { MoveAnalyzer } from "../MoveAnalyzer";
-import { MoveAnalysisThresholds } from "../MoveAnalyzisConstants";
+import { MoveAnalysisThresholds } from "../MoveAnalyzisThresholds";
 import { MoveAnalysisPOTO } from "./MoveTestHelper";
 
 describe("categorizeMove", () => {

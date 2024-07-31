@@ -99,7 +99,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       const adjusteLines = 3;
       const adjustedDepth = UCIUtil.getRecommendedDepth(i, options.depth); //no point in high depth at initial positions
       logger.debug(`${i}:Analyzing game at move ${move.cumulativeStartPos} fen: ${move.fenPosition}`);
-      const result = await this.analyzeSingleMove(move, options.depth, adjusteLines, previousAnalyis);
+      const result = await this.analyzeSingleMove(move, adjustedDepth, adjusteLines, previousAnalyis);
       logger.debug("analysis:" + result.toString());
       analysisResults.push(result);
       previousAnalyis = result;

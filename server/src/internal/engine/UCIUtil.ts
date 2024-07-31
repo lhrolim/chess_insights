@@ -1,6 +1,7 @@
 import getLogger, { LogTypes } from "@infra/logging/logger";
 import { EndOfGameMode, MoveCategory, MoveData, UCIMoveResult, UCIResult } from "./EngineTypes";
 import { MoveAnalysis } from "./GameAnalyseResult";
+import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
 const logger = getLogger(__filename, LogTypes.Analysis);
 
 const MATE_CONSTANT = 10000;
@@ -16,8 +17,12 @@ export class UCIUtil {
   }
 
   public static getRecommendedDepth(moveNumber: number, informedDepth: number): number {
-    if (moveNumber < 5) return 20;
-    if (moveNumber > 5 && moveNumber < 10) return Math.min(informedDepth, 20);
+    if (moveNumber < MoveAnalysisThresholds.OPENING_THRESHOLD) {
+      return Math.min(informedDepth, 10); // limiting initial moves to lower depth to make it faster
+    }
+    if (moveNumber > 5 && moveNumber < 10) {
+      return Math.min(informedDepth, 20);
+    }
     return informedDepth;
   }
 

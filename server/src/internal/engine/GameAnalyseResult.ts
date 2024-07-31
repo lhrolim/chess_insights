@@ -1,5 +1,5 @@
 import { EndOfGameMode, GameAnalyzisOptions, UCIMoveResult, MoveData, MoveCategory } from "./EngineTypes";
-import { MoveAnalysisThresholds } from "./MoveAnalyzisConstants";
+import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
 
 export type GameAnalyzisResult = {
   moves: MoveAnalysis[];

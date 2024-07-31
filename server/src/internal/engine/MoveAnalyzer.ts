@@ -1,6 +1,6 @@
 import { MoveCategory, MoveData, UCIMoveResult } from "./EngineTypes";
 import { MoveAnalysis } from "./GameAnalyseResult";
-import { MoveAnalysisThresholds } from "./MoveAnalyzisConstants";
+import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
 const MATE_CONSTANT = 10000;
 
 export class MoveAnalyzer {
