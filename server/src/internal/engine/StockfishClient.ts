@@ -184,11 +184,11 @@ export class StockfishClient {
       }
     }
     let command = "position";
-    if (input.fenPosition) {
-      command += ` fen ${input.fenPosition.trim()}`;
-    } else if (input.cumulativeStartPos) {
+    if (input.cumulativeStartPos) {
       command += ` startpos moves ${input.cumulativeStartPos.trim()}`;
-    }
+    } else if (input.fenPosition) {
+      command += ` fen ${input.fenPosition.trim()}`;
+    } 
     this.commands.push(command);
     this.commands.push(`go depth ${depth}`);
     await this.flush();
