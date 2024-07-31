@@ -40,8 +40,8 @@ describe("EngineAnalyzer", () => {
     const result = await engineAnalyzer.analyzeGame(engineInput);
 
     expect(result.moves).toBeDefined();
-    expect(mockStockfishClient.sendUCICommandsForAnalysis).toHaveBeenCalledWith(engineInput.moves[0], 3, 20);
-    expect(mockStockfishClient.sendUCICommandsForAnalysis).toHaveBeenCalledWith(engineInput.moves[1], 3, 20);
+    expect(mockStockfishClient.sendUCICommandsForAnalysis).toHaveBeenCalledWith(engineInput.moves[0], 3, 10);
+    expect(mockStockfishClient.sendUCICommandsForAnalysis).toHaveBeenCalledWith(engineInput.moves[1], 3, 10);
   });
 
   // Add more test cases for other methods of the EngineAnalyzer class

@@ -54,9 +54,7 @@ export class EngineMove {
   }
 
   public isWhiteToMove(): boolean {
-    if (this.cumulativeStartPos) {
-      return this.cumulativeStartPos.length % 2 === 0;
-    } else if (this.fenPosition) {
+    if (this.fenPosition) {
       return this.fenPosition.split(" ")[1] === "w";
     }
     return this.cumulativeStartPos.trim().split(" ").length % 2 === 0;

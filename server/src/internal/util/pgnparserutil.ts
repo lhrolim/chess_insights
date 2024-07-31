@@ -70,14 +70,14 @@ export const buildEngineMoves = (moves: string[]): EngineMove[] => {
 
   let startPos = "";
   moves.forEach(move => {
-    startPos += move + " ";
     const validMove = chess.move(move);
     if (!validMove) {
       throw new Error("Invalid move");
     }
     const { from, to } = validMove;
     const coordinateMove = from + to;
-    engineMoves.push(new EngineMove(coordinateMove, chess.fen(), startPos));
+    startPos += " " + coordinateMove;
+    engineMoves.push(new EngineMove(coordinateMove, chess.fen(), startPos.trim()));
   });
 
   return engineMoves;

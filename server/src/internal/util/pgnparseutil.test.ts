@@ -52,4 +52,12 @@ describe("parseMovesFromPGN", () => {
     expect(result.map(m => m.move)).toContain("d7d6");
     expect(result.length).toBe(36);
   });
+
+  it("should parse moves from PGN adding coordinated moves", () => {
+    const result = parseMovesFromPGN(PGN_1);
+    expect(result).toBeDefined();
+    expect(result.map(m => m.move)).toContain("e2e4");
+    expect(result.map(m => m.cumulativeStartPos)).toContain("e2e4");
+    expect(result.length).toBe(36);
+  });
 });

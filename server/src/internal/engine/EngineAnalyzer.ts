@@ -7,6 +7,7 @@ import getLogger, { LogTypes } from "@infra/logging/logger";
 import config from "../../config";
 import { EngineInput, EngineMove } from "./EngineInput";
 import { MoveAnalyzer } from "./MoveAnalyzer";
+import { GameAnalyzerBuilder } from "@internal/analysis/GameAnalyzerBuilder";
 
 const logger = getLogger(__filename, LogTypes.Analysis);
 
@@ -38,7 +39,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
           let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: null, isWhiteToMove };
           const result = new MoveAnalysis();
           result.movePlayed = engineMove.lastMove();
-          result.wasWhiteMove = isWhiteToMove;
+          result.wasWhiteMove = !isWhiteToMove;
           result.position = engineMove.cumulativeStartPos;
           result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);
           if (result.isEndOfGame()) {
@@ -112,7 +113,8 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     if (config.server.isLocal()) {
       logFullStockFishOutput(analysisResults);
     }
-    return { moves: analysisResults };
+    const consolidatedResult = GameAnalyzerBuilder.buildConsolidatedAnalysis(analysisResults);
+    return new GameAnalyzisResult(analysisResults, consolidatedResult);
   }
 
   public async findCandidateMoves(engineInput: EngineMove, options?: GameAnalyzisOptions): Promise<MoveAnalysis> {

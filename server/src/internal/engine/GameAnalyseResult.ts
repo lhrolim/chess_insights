@@ -1,13 +1,31 @@
 import { EndOfGameMode, GameAnalyzisOptions, UCIMoveResult, MoveData, MoveCategory } from "./EngineTypes";
 import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
 
-export type GameAnalyzisResult = {
+export class GameAnalyzisResult {
+  constructor(moves: MoveAnalysis[], consolidateMoveAnalysis: ConsolidateMoveAnalysis[]) {
+    this.whiteAnalysis = consolidateMoveAnalysis[0];
+    this.blackAnalysis = consolidateMoveAnalysis[1];
+    this.moves = moves;
+  }
+
+  whiteAnalysis: ConsolidateMoveAnalysis;
+  blackAnalysis: ConsolidateMoveAnalysis;
   moves: MoveAnalysis[];
   whitePrecision?: number;
   blackPrecision?: number;
   myFirstMistake?: MoveAnalysis;
-  consolidateMoveAnalysis?: ConsolidateMoveAnalysis;
-};
+
+  toJSON() {
+    return {
+      whiteAnalysis: this.whiteAnalysis,
+      blackAnalysis: this.blackAnalysis,
+      moves: this.moves,
+      whitePrecision: this.whitePrecision,
+      blackPrecision: this.blackPrecision,
+      myFirstMistake: this.myFirstMistake
+    };
+  }
+}
 
 export type ConsolidateMoveAnalysis = {
   numberOfBrilliantMoves: number;
@@ -18,8 +36,22 @@ export type ConsolidateMoveAnalysis = {
   numberOfMistakes: number;
   numberOfBlunders: number;
   numberOfMisses: number;
+  numberOfBookMoves: number;
   totalMoves: number;
 };
+
+export const createDefaultConsolidateMoveAnalysis = (): ConsolidateMoveAnalysis => ({
+  numberOfBrilliantMoves: 0,
+  numberOfGreatMoves: 0,
+  numberOfExcellentMoves: 0,
+  numberOfGoodMoves: 0,
+  numberOfInaccuracies: 0,
+  numberOfMistakes: 0,
+  numberOfBlunders: 0,
+  numberOfMisses: 0,
+  numberOfBookMoves: 0,
+  totalMoves: 0
+});
 
 export class MoveAnalysis {
   movePlayed: string; // e2e4
