@@ -18,6 +18,7 @@ export class StockfishClient {
   private threads: number;
   private hashSize: number;
   private optionsSet: boolean = false;
+  private connected: boolean = false;
 
   constructor() {
     this.port = parseInt(config.server.stockfish.port);
@@ -29,6 +30,7 @@ export class StockfishClient {
     this.client = net.createConnection({ port: this.port, host: this.host }, () => {
       logger.debug("Connected to Stockfish engine.");
       this.retryCount = 0;
+      this.connected = true;
     });
 
     this.client.on("error", err => {
@@ -42,7 +44,7 @@ export class StockfishClient {
           this.connect();
         }, this.retryInterval);
       } else {
-        console.log("Maximum retry attempts reached. Giving up.");
+        logger.error("Maximum retry attempts reached. Giving up.");
       }
     });
 
@@ -68,10 +70,10 @@ export class StockfishClient {
   }
 
   private sendCommand(command: string): void {
-    if (this.client) {
+    if (this.client && this.connected) {
       this.client.write(`${command}\n`);
     } else {
-      console.log("Not connected to Stockfish engine.");
+      throw new Error("Not connected to Stockfish engine.");
     }
   }
 
