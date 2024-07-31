@@ -99,20 +99,19 @@ export class StockfishClient {
     }
   }
 
-  public removeListener(event: string, listener: (...args: any[]) => void): void {
+  private removeListener(event: string, listener: (...args: any[]) => void): void {
     if (this.client) {
       this.client.removeListener(event, listener);
     }
   }
 
   public removeDataListener(listener: (...args: any[]) => void): void {
-    if (this.client) {
-      this.client.removeListener("data", listener);
-    }
+    this.removeListener("data", listener);
   }
 
   public addBufferedListener(listener: (data: string) => void): void {
     if (this.client) {
+      this.client.removeAllListeners("data");
       this.client.on("data", (data: Buffer) => {
         const trimmedData = data.toString().trim();
         try {

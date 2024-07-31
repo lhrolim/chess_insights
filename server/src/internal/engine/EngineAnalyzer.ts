@@ -32,7 +32,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
           const isWhiteToMove = engineMove.isWhiteToMove();
           const analyzedNextMoves = UCIUtil.parseUCIResult(output, depth, isWhiteToMove);
           if (analyzedNextMoves.ignored) {
-            //ignoring received entry, could be a stockfish info result as a result of uci
+            // Ignoring received entry, could be a Stockfish info result as a result of uci
             return;
           }
           let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: null, isWhiteToMove };
@@ -45,9 +45,9 @@ export class EngineAnalyzer implements IEngineAnalyzer {
             return resolve(result);
           }
 
-          // the score of the position assuming opponent will play the best move
+          // The score of the position assuming the opponent will play the best move
           result.nextMoves = analyzedNextMoves.moves;
-          const moveAnalysisResult = MoveAnalyzer.analyzeMove(result, pastMoveAnalysis); //e.g it was 0.8 before, so scoreDelta = 0.5 - 0.8 = -0.3
+          const moveAnalysisResult = MoveAnalyzer.analyzeMove(result, pastMoveAnalysis); // e.g., it was 0.8 before, so scoreDelta = 0.5 - 0.8 = -0.3
           result.category = moveAnalysisResult.category;
           result.moveScoreDelta = moveAnalysisResult.moveScoreDelta;
           result.rawStockfishOutput = output;
@@ -56,14 +56,17 @@ export class EngineAnalyzer implements IEngineAnalyzer {
         } catch (error) {
           reject(error);
         } finally {
-          this.client?.removeDataListener(this.currentBufferedAnalyzer);
+          this.client.removeDataListener(this.currentBufferedAnalyzer);
         }
       };
+
+      // Remove the previous listener if it exists
       if (this.currentBufferedAnalyzer) {
-        this.client?.removeDataListener(this.currentBufferedAnalyzer);
+        this.client.removeDataListener(this.currentBufferedAnalyzer);
       }
+
       // Attach the new listener
-      this.client?.addBufferedListener(bufferedAnalyzer);
+      this.client.addBufferedListener(bufferedAnalyzer);
       this.currentBufferedAnalyzer = bufferedAnalyzer; // Store the reference
       await this.client.sendUCICommandsForAnalysis(engineMove, lines, depth);
     });
