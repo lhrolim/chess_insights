@@ -45,25 +45,6 @@ describe("UCIUtil", () => {
     // Add more test cases for different scenarios
   });
 
-  describe("categorizeMove", () => {
-    it("first move, return Book", () => {
-      const ma = new MoveAnalysis();
-      ma.positionScore = { score: 900, mate: 0 };
-      const result = UCIUtil.categorizeMove(ma, null);
-      expect(result).toBe(MoveCategory.Book);
-    });
-
-    it("slipped out of mate web, return miss", () => {
-      const pastMove = MoveAnalysisPOTO.inMateWeb();
-      const ma = new MoveAnalysis();
-      ma.positionScore = { score: 300, mate: 0 };
-      const result = UCIUtil.categorizeMove(ma, pastMove);
-      expect(result).toBe(MoveCategory.Miss);
-    });
-
-    // Add more test cases for different scenarios
-  });
-
   describe("getRecommendedDepth", () => {
     it("should return the recommended depth based on the moveNumber and informedDepth", () => {
       // Test case

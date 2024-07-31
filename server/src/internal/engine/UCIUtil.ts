@@ -13,30 +13,6 @@ export class UCIUtil {
     return parsedLineDepth >= depth;
   }
 
-  public static categorizeMove(result: MoveAnalysis, previousAnalyses: MoveAnalysis): MoveCategory {
-    if (!previousAnalyses) {
-      return MoveCategory.Book;
-    }
-    const score = result.moveScoreDelta;
-    const previousSuggestedMoves = previousAnalyses.nextMoves.map(move => move.move);
-    if (previousAnalyses.inMateWeb() && !result.inMateWeb()) {
-      return MoveCategory.Miss;
-    }
-    if (previousSuggestedMoves[0] == result.movePlayed) {
-      return MoveCategory.Best;
-    }
-    if (previousSuggestedMoves.includes(result.movePlayed)) {
-      return MoveCategory.Great;
-    }
-    if (score > 900) return MoveCategory.Brilliant;
-    else if (score > 600) return MoveCategory.Great;
-    else if (score > 300) return MoveCategory.Best;
-    else if (score > 100) return MoveCategory.Good;
-    else if (score > -100) return MoveCategory.Innacuracy;
-    else if (score > -300) return MoveCategory.Mistake;
-    else return MoveCategory.Blunder;
-  }
-
   public static getRecommendedDepth(moveNumber: number, informedDepth: number): number {
     if (moveNumber < 5) return 20;
     if (moveNumber > 5 && moveNumber < 10) return Math.min(informedDepth, 20);
@@ -117,16 +93,6 @@ export class UCIUtil {
       return firstElementScore - secondElementScore;
     });
     return { moves: movesResult, endOfGame: endOfGameCheck, ignored: false };
-  }
-
-  static calculateDeltaScore(moveData: MoveData, pastScore?: MoveData): number {
-    if (moveData.mate) {
-      return moveData.mate * MATE_CONSTANT;
-    }
-    if (pastScore.mate) {
-      return -moveData.score;
-    }
-    return pastScore.score - moveData.score;
   }
 
   public static getStartPositionFromMoves(moves: string[]): string {

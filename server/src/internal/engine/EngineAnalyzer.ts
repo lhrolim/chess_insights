@@ -6,6 +6,7 @@ import { UCIUtil } from "./UCIUtil";
 import getLogger from "@infra/logging/logger";
 import config from "../../config";
 import { EngineInput, EngineMove } from "./EngineInput";
+import { MoveAnalyzer } from "./MoveAnalyzer";
 
 const logger = getLogger(__filename);
 
@@ -37,7 +38,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
           let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: null, isWhiteToMove };
           const result = new MoveAnalysis();
           result.movePlayed = engineMove.lastMove();
-          result.isWhiteToMove = isWhiteToMove;
+          result.wasWhiteMove = isWhiteToMove;
           result.position = engineMove.cumulativeStartPos;
           result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);
           if (result.isEndOfGame()) {
@@ -45,10 +46,10 @@ export class EngineAnalyzer implements IEngineAnalyzer {
           }
 
           // the score of the position assuming opponent will play the best move
-          result.positionScore = analyzedNextMoves.moves[0].data;
           result.nextMoves = analyzedNextMoves.moves;
-          result.moveScoreDelta = UCIUtil.calculateDeltaScore(result.positionScore, previousScore);
-          result.category = UCIUtil.categorizeMove(result, pastMoveAnalysis);
+          const moveAnalysisResult = MoveAnalyzer.analyzeMove(result, pastMoveAnalysis); //e.g it was 0.8 before, so scoreDelta = 0.5 - 0.8 = -0.3
+          result.category = moveAnalysisResult.category;
+          result.moveScoreDelta = moveAnalysisResult.moveScoreDelta;
           result.rawStockfishOutput = output;
           // logger.debug(result);
           resolve(result);
@@ -70,8 +71,8 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     logger.info(`Starting game analysis`);
     const start = performance.now();
     this.client.setStockfishOptions({
-      eloRating: options.eloRating,
-      threads: options.threads,
+      eloRating: options?.eloRating,
+      threads: options?.threads,
       hashSize: 128
     });
     const result = await this.doAnalyze(engineInput.moves, options);
@@ -121,7 +122,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     } catch (error) {
       logger.error("Error finding candidate moves:", error);
       throw error;
-    }finally{
+    } finally {
       this.client.disconnect();
     }
   }
@@ -132,7 +133,7 @@ function logFullStockFishOutput(analysisResults: Array<MoveAnalysis>) {
   logger.debug("Full analysis results:");
   analysisResults.forEach((analysis, index) => {
     const moveNumber = Math.floor((index + 2) / 2);
-    logger.debug(`Move ${moveNumber} ${analysis.isWhiteToMove ? "W" : "B"}: ${analysis.movePlayed}`);
+    logger.debug(`Move ${moveNumber} ${analysis.wasWhiteMove ? "W" : "B"}: ${analysis.movePlayed}`);
     logger.debug(`Position: ${analysis.position}`);
     logger.debug(`Output: ${analysis.rawStockfishOutput}`);
   });

@@ -49,7 +49,7 @@ describe("parseMovesFromPGN", () => {
   it("should parse moves from PGN", () => {
     const result = parseMovesFromPGN(PGN_1);
     expect(result).toBeDefined();
-    expect(result).toContain("O-O");
+    expect(result.map(m => m.move)).toContain("d7d6");
     expect(result.length).toBe(36);
   });
 });

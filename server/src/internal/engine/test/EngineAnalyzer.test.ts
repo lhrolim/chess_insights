@@ -13,9 +13,10 @@ describe("EngineAnalyzer", () => {
   beforeEach(() => {
     mockStockfishClient = new StockfishClient() as jest.Mocked<StockfishClient>;
     mockStockfishClient.addBufferedListener = jest.fn();
-    mockStockfishClient.sendCommand = jest.fn();
+    mockStockfishClient.flush = jest.fn();
     mockStockfishClient.removeDataListener = jest.fn();
     mockStockfishClient.disconnect = jest.fn();
+    mockStockfishClient.sendUCICommandsForAnalyzis = jest.fn();
 
     engineAnalyzer = new EngineAnalyzer(mockStockfishClient);
   });
@@ -39,10 +40,8 @@ describe("EngineAnalyzer", () => {
     const result = await engineAnalyzer.analyzeGame(engineInput);
 
     expect(result.moves).toBeDefined();
-    expect(mockStockfishClient.sendCommand).toHaveBeenCalledWith(
-      expect.stringContaining("position startpos moves e2e4 e7e5")
-    );
-    expect(mockStockfishClient.sendCommand).toHaveBeenCalledWith("go depth 20");
+    expect(mockStockfishClient.sendUCICommandsForAnalyzis).toHaveBeenCalledWith(engineInput.moves[0], 3, 20);
+    expect(mockStockfishClient.sendUCICommandsForAnalyzis).toHaveBeenCalledWith(engineInput.moves[1], 3, 20);
   });
 
   // Add more test cases for other methods of the EngineAnalyzer class

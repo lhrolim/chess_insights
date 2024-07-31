@@ -1,5 +1,3 @@
-import { UCIUtil } from "./UCIUtil";
-
 export type GameAnalyzisOptions = {
   depth: number;
   lines: number;
@@ -12,6 +10,7 @@ export enum MoveCategory {
   Brilliant = "brilliant",
   Great = "great",
   Best = "best",
+  Excellent = "excellent",
   Good = "good",
   Book = "book",
   Innacuracy = "inaccuracy",
@@ -46,7 +45,3 @@ export type MoveData = {
   mate: number;
   isWhiteToMove?: boolean;
 };
-
-
-
-
