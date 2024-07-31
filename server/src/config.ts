@@ -15,7 +15,8 @@ export default {
       host: process.env.STOCKFISH_HOST
     },
     logging: {
-      level: process.env.LOG_LEVEL || "debug"
+      level: process.env.LOG_LEVEL || "debug",
+      analysis_level: process.env.ANALYSIS_LOG_LEVEL || "info"
     },
     env: process.env.NODE_ENV || "dev",
     isLocal: () => {

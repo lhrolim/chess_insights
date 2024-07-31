@@ -86,7 +86,7 @@ router.post(
     const engineAnalyzer = new EngineAnalyzer(new StockfishClient());
     const { pgn } = req.body;
     const engineInput = EngineInput.fromPGN(pgn);
-    const options = { depth: 15, lines: 3, eloRating: 2500, threads: 8 };
+    const options = { depth: 10, lines: 3, eloRating: 2500, threads: 8 };
     const result = await engineAnalyzer.analyzeGame(engineInput, options);
 
     res.send(result);

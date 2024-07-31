@@ -3,12 +3,12 @@ import { GameAnalyzisResult, MoveAnalysis } from "./GameAnalyseResult";
 import { IEngineAnalyzer } from "./IEngineAnalyzer";
 import { StockfishClient } from "./StockfishClient";
 import { UCIUtil } from "./UCIUtil";
-import getLogger from "@infra/logging/logger";
+import getLogger, { LogTypes } from "@infra/logging/logger";
 import config from "../../config";
 import { EngineInput, EngineMove } from "./EngineInput";
 import { MoveAnalyzer } from "./MoveAnalyzer";
 
-const logger = getLogger(__filename);
+const logger = getLogger(__filename, LogTypes.Analysis);
 
 export class EngineAnalyzer implements IEngineAnalyzer {
   client: StockfishClient;
@@ -26,7 +26,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     lines: number,
     pastMoveAnalysis: MoveAnalysis
   ): Promise<MoveAnalysis> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const bufferedAnalyzer = (output: string) => {
         try {
           const isWhiteToMove = engineMove.isWhiteToMove();
@@ -55,6 +55,8 @@ export class EngineAnalyzer implements IEngineAnalyzer {
           resolve(result);
         } catch (error) {
           reject(error);
+        } finally {
+          this.client?.removeDataListener(this.currentBufferedAnalyzer);
         }
       };
       if (this.currentBufferedAnalyzer) {
@@ -63,7 +65,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       // Attach the new listener
       this.client?.addBufferedListener(bufferedAnalyzer);
       this.currentBufferedAnalyzer = bufferedAnalyzer; // Store the reference
-      this.client.sendUCICommandsForAnalyzis(engineMove, lines, depth);
+      await this.client.sendUCICommandsForAnalysis(engineMove, lines, depth);
     });
   }
 

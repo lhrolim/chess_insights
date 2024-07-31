@@ -1,5 +1,7 @@
+import getLogger, { LogTypes } from "@infra/logging/logger";
 import { EndOfGameMode, MoveCategory, MoveData, UCIMoveResult, UCIResult } from "./EngineTypes";
 import { MoveAnalysis } from "./GameAnalyseResult";
+const logger = getLogger(__filename, LogTypes.Analysis);
 
 const MATE_CONSTANT = 10000;
 
@@ -69,14 +71,14 @@ export class UCIUtil {
   public static parseUCIResult(uciAnswer: string, depth: number, isWhiteToMove: boolean): UCIResult {
     const endOfGameCheck = UCIUtil.isEndOfGame(uciAnswer, isWhiteToMove);
     if (endOfGameCheck && endOfGameCheck !== EndOfGameMode.NONE) {
-      console.log("Received:\n" + uciAnswer);
+      logger.debug("Received:\n" + uciAnswer);
       return { moves: [], endOfGame: endOfGameCheck, ignored: false };
     }
     const filteredLines = uciAnswer.split("\n").filter(line => UCIUtil.matchesDepth(line, depth));
     if (filteredLines.length === 0) {
       return { moves: [], endOfGame: endOfGameCheck, ignored: true };
     }
-    console.log("Received:\n" + filteredLines);
+    logger.debug("Received:\n" + filteredLines);
     const movesResult: UCIMoveResult[] = [];
     for (const line of filteredLines) {
       //if multipv is enabled we will have several move options

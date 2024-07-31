@@ -12,7 +12,7 @@ export class StockfishClient {
   private retryCount: number = 0;
   private port: number;
   private host: string;
-  private commands = [];
+  private commands: string[] = [];
   private skillLevel: number;
   private eloRating: number;
   private threads: number;
@@ -34,12 +34,12 @@ export class StockfishClient {
     });
 
     this.client.on("error", err => {
-      console.error("Connection error:", err);
+      logger.error("Connection error:", err);
       this.client = null;
-      // Try to reconnect if maximum retries has not been reached
+      this.connected = false;
       if (this.retryCount < this.maxRetries) {
         setTimeout(() => {
-          console.log(`Retrying connection attempt ${this.retryCount + 1}/${this.maxRetries}...`);
+          logger.info(`Retrying connection attempt ${this.retryCount + 1}/${this.maxRetries}...`);
           this.retryCount++;
           this.connect();
         }, this.retryInterval);
@@ -49,19 +49,19 @@ export class StockfishClient {
     });
 
     this.client.on("end", () => {
-      console.log("Disconnected from Stockfish engine.");
-      // Handle disconnection if needed
+      logger.info("Disconnected from Stockfish engine.");
+      this.connected = false;
     });
   }
 
   public disconnect(): void {
     if (this.client) {
       this.client.end(() => {
-        console.log("Connection to Stockfish engine closed.");
+        logger.info("Connection to Stockfish engine closed.");
       });
-      this.client = null; // Clear the reference to the socket
+      this.client = null;
     } else {
-      console.log("Not connected to Stockfish engine.");
+      logger.info("Not connected to Stockfish engine.");
     }
   }
 
@@ -69,11 +69,33 @@ export class StockfishClient {
     this.commands.push(command);
   }
 
+  private async waitForConnection(timeout: number): Promise<void> {
+    const checkInterval = 100;
+    let elapsedTime = 0;
+
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(() => {
+        if (this.connected) {
+          clearInterval(interval);
+          resolve();
+        } else if (elapsedTime >= timeout) {
+          clearInterval(interval);
+          reject(new Error("Connection timeout."));
+        }
+        elapsedTime += checkInterval;
+      }, checkInterval);
+    });
+  }
+
   private sendCommand(command: string): void {
-    if (this.client && this.connected) {
-      this.client.write(`${command}\n`);
-    } else {
-      throw new Error("Not connected to Stockfish engine.");
+    try {
+      if (this.client) {
+        this.client.write(`${command}\n`);
+      } else {
+        throw new Error("Not connected to Stockfish engine.");
+      }
+    } catch (error) {
+      throw new Error(`Failed to send command: ${error.message}`);
     }
   }
 
@@ -96,7 +118,7 @@ export class StockfishClient {
         try {
           listener(trimmedData);
         } catch (err) {
-          console.error("Error in listener:", err);
+          logger.error("Error in listener:", err);
         }
       });
     }
@@ -144,19 +166,23 @@ export class StockfishClient {
     if (this.hashSize !== undefined) this.setHashSize(this.hashSize);
   }
 
-  public flush(): void {
-    for (let i = 0; i < this.commands.length; i++) {
-      this.sendCommand(this.commands[i]);
+  public async flush(): Promise<void> {
+    if (!this.connected) {
+      await this.waitForConnection(5000); // Wait up to 5 seconds for the connection
     }
+    const batchedCommands = this.commands.join("\n") + "\n";
+    this.sendCommand(batchedCommands);
     logger.debug(`Commands sent to Stockfish:\n ${this.commands.join("\n ")}`);
     this.commands = [];
-    this.optionsSet = false;
   }
 
-  public sendUCICommandsForAnalyzis(input: EngineMove, lines: number, depth: number) {
+  public async sendUCICommandsForAnalysis(input: EngineMove, lines: number, depth: number) {
     if (!this.optionsSet) {
       this.setOptions();
       this.optionsSet = true;
+      if (lines > 1) {
+        this.commands.push(`setoption name MultiPV value ${lines}`);
+      }
     }
     let command = "position";
     if (input.fenPosition) {
@@ -165,14 +191,7 @@ export class StockfishClient {
       command += ` startpos moves ${input.cumulativeStartPos.trim()}`;
     }
     this.commands.push(command);
-    if (lines > 1) {
-      this.commands.push(`setoption name MultiPV value ${lines}`);
-    }
     this.commands.push(`go depth ${depth}`);
-    this.flush();
+    await this.flush();
   }
 }
-
-
-
-
