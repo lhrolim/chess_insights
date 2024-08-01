@@ -30,6 +30,7 @@ export class GameAnalyzisResult {
 export type ConsolidateMoveAnalysis = {
   numberOfBrilliantMoves: number;
   numberOfGreatMoves: number;
+  numberOfBestMoves: number;
   numberOfExcellentMoves: number;
   numberOfGoodMoves: number;
   numberOfInaccuracies: number;
@@ -43,6 +44,7 @@ export type ConsolidateMoveAnalysis = {
 export const createDefaultConsolidateMoveAnalysis = (): ConsolidateMoveAnalysis => ({
   numberOfBrilliantMoves: 0,
   numberOfGreatMoves: 0,
+  numberOfBestMoves: 0,
   numberOfExcellentMoves: 0,
   numberOfGoodMoves: 0,
   numberOfInaccuracies: 0,
@@ -127,6 +129,13 @@ export class MoveAnalysis {
       : this.positionScore().score < -MoveAnalysisThresholds.DECISIVE_ADVANTAGE;
   }
 
+  moveNumber(): number {
+    if (!this.position) {
+      return 0;
+    }
+    return Math.ceil(this.position.split(" ").length / 2);
+  }
+
   toString(): string {
     if (this.isEndOfGame()) {
       return `game ended with this move ${this.movePlayed}`;
@@ -136,5 +145,25 @@ export class MoveAnalysis {
     const positionScoreString = score.score ? `Score: ${score.score}` : `Mate in ${score.mate}`;
 
     return `Move Played: ${this.movePlayed}, Next Best Move: ${this.nextMoves[0]?.move}, Position Score: ${positionScoreString}, Move Score Delta: ${this.moveScoreDelta}, Result: ${this.category}, Position: ${this.position}`;
+  }
+
+  previousScore(): number {
+    const delta = this.moveScoreDelta || 0;
+    return this.positionScore().score - delta;
+  }
+
+  toJSON() {
+    return {
+      movePlayed: this.movePlayed,
+      previousScore: this.previousScore(),
+      positionScore: this.positionScore().score,
+      moveScoreDelta: this.moveScoreDelta,
+      moveNumber: this.moveNumber(),
+      category: this.category,
+      position: this.position,
+      nextMoves: this.nextMoves,
+      endOfGame: this.endOfGame,
+      wasWhiteMove: this.wasWhiteMove
+    };
   }
 }

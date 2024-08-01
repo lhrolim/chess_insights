@@ -62,22 +62,37 @@ describe("categorizeMove", () => {
   });
 
   describe("tables turned scenario", () => {
-    it("tables turned for white and larger than constant ==> mistake", () => {
-      const pastMove = MoveAnalysisPOTO.with3EqualOptionsForWhite();
-      const ma = MoveAnalysisPOTO.withScore(-10);
-      ma.wasWhiteMove = true;
-      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
-      expect(result.moveScoreDelta).toBe(-60);
-      expect(result.category).toBe(MoveCategory.Mistake);
+    describe("had decisive advantage", () => {
+      it("tables turned but within equality ==> miss", () => {
+        const pastMove = MoveAnalysisPOTO.with3OptionsBlackAdvantage250();
+        const ma = MoveAnalysisPOTO.withScore(MoveAnalysisThresholds.EQUALITY_CONSTANT - 1);
+        ma.wasWhiteMove = false;
+        const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+        expect(result.moveScoreDelta).toBe(
+          MoveAnalysisThresholds.EQUALITY_CONSTANT - 1 - pastMove.positionScore().score
+        );
+        expect(result.category).toBe(MoveCategory.Miss);
+      });
     });
 
-    it("tables turned for black and larger than constant ==> mistake", () => {
-      const pastMove = MoveAnalysisPOTO.with3EqualOptionsForBlack();
-      const ma = MoveAnalysisPOTO.withScore(10);
-      ma.wasWhiteMove = false;
-      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
-      expect(result.moveScoreDelta).toBe(60);
-      expect(result.category).toBe(MoveCategory.Mistake);
+    describe("about equal advantage", () => {
+      it("tables turned for white and larger than constant and not equal anymore ==> mistake", () => {
+        const pastMove = MoveAnalysisPOTO.with3EqualOptionsForWhite();
+        const ma = MoveAnalysisPOTO.withScore(-80);
+        ma.wasWhiteMove = true;
+        const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+        expect(result.moveScoreDelta).toBe(-130);
+        expect(result.category).toBe(MoveCategory.Mistake);
+      });
+
+      it("tables turned for black and larger than constant and not equal anymore ==> mistake", () => {
+        const pastMove = MoveAnalysisPOTO.with3EqualOptionsForBlack();
+        const ma = MoveAnalysisPOTO.withScore(80);
+        ma.wasWhiteMove = false;
+        const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+        expect(result.moveScoreDelta).toBe(130);
+        expect(result.category).toBe(MoveCategory.Mistake);
+      });
     });
   });
 
@@ -140,6 +155,65 @@ describe("categorizeMove", () => {
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.moveScoreDelta).toBe(0);
       expect(result.category).toBe(MoveCategory.Brilliant);
+    });
+  });
+
+  describe("had decisive advantage", () => {
+    it("lost decisive advantage, still about equal ==> return miss", () => {
+      const pastMove = MoveAnalysisPOTO.with3OptionsWhiteAdvantage350();
+      const ma = MoveAnalysisPOTO.withScore(MoveAnalysisThresholds.EQUALITY_CONSTANT - 1);
+      ma.wasWhiteMove = true;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(MoveAnalysisThresholds.EQUALITY_CONSTANT - 1 - pastMove.positionScore().score);
+      expect(result.category).toBe(MoveCategory.Miss);
+    });
+
+    // it("still had decisive, losing 180 ==> innacuracy", () => {
+    //   const pastMove = MoveAnalysisPOTO.with3OptionsBlackAdvantage250();
+    //   pastMove.nextMoves[0].data.score = 430;
+    //   const ma = MoveAnalysisPOTO.withScore(MoveAnalysisThresholds.DECISIVE_ADVANTAGE + 1);
+    //   ma.wasWhiteMove = false;
+    //   const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+    //   expect(result.moveScoreDelta).toBe(
+    //     MoveAnalysisThresholds.DECISIVE_ADVANTAGE + 1 - pastMove.positionScore().score
+    //   );
+    //   expect(result.category).toBe(MoveCategory.Innacuracy);
+    // });
+
+    it("still has decisive, losing tons ==> innacuracy", () => {
+      const pastMove = MoveAnalysisPOTO.decisiveBlack();
+      pastMove.nextMoves[0].data.score = -630;
+      const ma = MoveAnalysisPOTO.withScore(-1 * (MoveAnalysisThresholds.DECISIVE_ADVANTAGE + 1));
+      ma.wasWhiteMove = false;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(
+        -MoveAnalysisThresholds.DECISIVE_ADVANTAGE - 1 - pastMove.positionScore().score
+      );
+      expect(result.category).toBe(MoveCategory.Innacuracy);
+    });
+
+    it("still has decisive, losing tons ==> innacuracy", () => {
+      const pastMove = MoveAnalysisPOTO.withScore(-478);
+      const ma = MoveAnalysisPOTO.withScore(-259, false, "f6g5");
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(219);
+      expect(result.category).toBe(MoveCategory.Innacuracy);
+    });
+
+    it("lost decisive, kept advantage ==> miss", () => {
+      const pastMove = MoveAnalysisPOTO.withScore(-483);
+      const ma = MoveAnalysisPOTO.withScore(-224, false, "f6g5");
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(259);
+      expect(result.category).toBe(MoveCategory.Miss);
+    });
+
+    it("lost decisive, kept advantage ==> miss", () => {
+      const pastMove = MoveAnalysisPOTO.withScore(-483);
+      const ma = MoveAnalysisPOTO.withScore(-224, false, "f6g5");
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(259);
+      expect(result.category).toBe(MoveCategory.Miss);
     });
   });
 

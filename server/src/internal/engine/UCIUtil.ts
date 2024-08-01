@@ -37,13 +37,13 @@ export class UCIUtil {
     if (scoreMatch) {
       const cpScore = parseInt(scoreMatch[1], 10);
       const whitePerspectiveScore = isWhiteToMove ? cpScore : -cpScore;
-      return { score: whitePerspectiveScore, mate: null, isWhiteToMove };
+      return new MoveData(whitePerspectiveScore, null, isWhiteToMove);
     }
 
     // Try to match the "score mate" pattern
     scoreMatch = line.match(/score mate (-?\d+)/);
     if (scoreMatch) {
-      return { score: null, mate: parseInt(scoreMatch[1], 10), isWhiteToMove };
+      return new MoveData(null, parseInt(scoreMatch[1], 10), isWhiteToMove);
     }
 
     return null;
@@ -52,6 +52,21 @@ export class UCIUtil {
   public static parseMove(line: string): string {
     const moveMatch = line.match(/pv\s+([a-h][1-8][a-h][1-8](?:[qrbn])?)/);
     return moveMatch ? moveMatch[1] : "";
+  }
+
+  private static logHashInfo(response: string): void {
+    const hashfullMatch = response.match(/hashfull (\d+)/);
+    const tbhitsMatch = response.match(/tbhits (\d+)/);
+
+    if (hashfullMatch) {
+      const hashfull = parseInt(hashfullMatch[1], 10);
+      // logger.debug(`Hash table fullness: ${hashfull / 10}%`);
+    }
+
+    if (tbhitsMatch) {
+      const tbhits = parseInt(tbhitsMatch[1], 10);
+      // logger.debug(`Transposition table hits: ${tbhits}`);
+    }
   }
 
   static isEndOfGame(output: string, isWhiteToMove: boolean): EndOfGameMode {
@@ -75,21 +90,25 @@ export class UCIUtil {
 
   public static parseUCIResult(uciAnswer: string, depth: number, isWhiteToMove: boolean): UCIResult {
     const endOfGameCheck = UCIUtil.isEndOfGame(uciAnswer, isWhiteToMove);
+    this.logHashInfo(uciAnswer);
     if (endOfGameCheck && endOfGameCheck !== EndOfGameMode.NONE) {
       logger.debug("Received:\n" + uciAnswer);
       return { moves: [], endOfGame: endOfGameCheck, ignored: false };
     }
-    const filteredLines = uciAnswer.split("\n").filter(line => UCIUtil.matchesDepth(line, depth));
+    let filteredLines = uciAnswer.split("\n").filter(line => UCIUtil.matchesDepth(line, depth));
+    filteredLines = filteredLines.filter(line => !line.includes("currmovenumber"));
     if (filteredLines.length === 0) {
       return { moves: [], endOfGame: endOfGameCheck, ignored: true };
     }
     logger.debug("Received:\n" + filteredLines);
-    const movesResult: UCIMoveResult[] = [];
+    const movesResult = new Array<UCIMoveResult>();
     for (const line of filteredLines) {
       //if multipv is enabled we will have several move options
       const score = UCIUtil.parseScore(line, isWhiteToMove);
-      const move = UCIUtil.parseMove(line);
-      movesResult.push({ move, data: score });
+      if (score != null) {
+        const move = UCIUtil.parseMove(line);
+        movesResult.push(new UCIMoveResult(move, score));
+      }
     }
     movesResult.sort((a, b) => {
       const firstElement = isWhiteToMove ? b : a;

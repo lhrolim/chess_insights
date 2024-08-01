@@ -34,14 +34,32 @@ export enum EndOfGameMode {
   DRAW = "draw",
   TIMEOUT = "timeout"
 }
-
-export type UCIMoveResult = {
+export class UCIMoveResult {
   move: string;
   data: MoveData;
-};
 
-export type MoveData = {
+  constructor(move: string, data: MoveData) {
+    this.move = move;
+    this.data = data;
+  }
+
+  toString(): string {
+    return `Move: ${this.move}, Data: ${this.data.toString()}`;
+  }
+}
+
+export class MoveData {
   score: number;
   mate: number;
   isWhiteToMove?: boolean;
-};
+
+  constructor(score: number, mate: number, isWhiteToMove?: boolean) {
+    this.score = score;
+    this.mate = mate;
+    this.isWhiteToMove = isWhiteToMove;
+  }
+
+  toString(): string {
+    return `Score: ${this.score}, Mate: ${this.mate}, IsWhiteToMove: ${this.isWhiteToMove}`;
+  }
+}

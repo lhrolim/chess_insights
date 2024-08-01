@@ -19,6 +19,7 @@ export class StockfishClient {
   private hashSize: number;
   private optionsSet: boolean = false;
   private connected: boolean = false;
+  private initialized: boolean = false;
 
   constructor() {
     this.port = parseInt(config.server.stockfish.port);
@@ -26,11 +27,29 @@ export class StockfishClient {
     this.connect();
   }
 
+  private initialize(): void {
+    if (this.client && !this.initialized) {
+      this.bufferCommand("uci");
+      this.bufferCommand("isready");
+      this.flush();
+      this.client.on("data", data => {
+        const response = data.toString();
+        if (response.includes("readyok")) {
+          this.bufferCommand("setoption name Threads value 2"); // Use 2 threads
+          this.bufferCommand("setoption name Hash value 1024"); // Set hash size to 128 MB
+          this.flush();
+          this.initialized = true;
+        }
+      });
+    }
+  }
+
   private connect(): void {
     this.client = net.createConnection({ port: this.port, host: this.host }, () => {
       logger.debug("Connected to Stockfish engine.");
       this.retryCount = 0;
       this.connected = true;
+      this.initialize();
     });
 
     this.client.on("error", err => {
@@ -184,11 +203,11 @@ export class StockfishClient {
       }
     }
     let command = "position";
-    if (input.cumulativeStartPos) {
-      command += ` startpos moves ${input.cumulativeStartPos.trim()}`;
-    } else if (input.fenPosition) {
+    if (input.fenPosition) {
       command += ` fen ${input.fenPosition.trim()}`;
-    } 
+    } else if (input.cumulativeStartPos) {
+      command += ` startpos moves ${input.cumulativeStartPos.trim()}`;
+    }
     this.commands.push(command);
     this.commands.push(`go depth ${depth}`);
     await this.flush();

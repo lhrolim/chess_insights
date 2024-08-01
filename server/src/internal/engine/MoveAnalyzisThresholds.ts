@@ -7,8 +7,10 @@ export class MoveAnalysisThresholds {
   public static GREAT_CONSTANT = 150;
   public static BRILLIANT_CONSTANT = 300;
 
-  public static EQUALITY_CONSTANT = 50;
+  public static EQUALITY_CONSTANT = 70;
   public static DECISIVE_ADVANTAGE = 250;
 
   public static OPENING_THRESHOLD = 5; //number of moves to consider under a lower depth
+
+  public static BOOK_MOVE_THRESHOLD = 7; //max number of moves to consider a book move
 }

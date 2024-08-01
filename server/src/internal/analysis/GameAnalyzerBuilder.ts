@@ -27,6 +27,9 @@ export class GameAnalyzerBuilder {
         case MoveCategory.Great:
           analysis.numberOfGreatMoves++;
           break;
+        case MoveCategory.Best:
+          analysis.numberOfBestMoves++;
+          break;
         case MoveCategory.Excellent:
           analysis.numberOfExcellentMoves++;
           break;

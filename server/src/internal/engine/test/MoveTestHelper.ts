@@ -103,9 +103,20 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static withScore(score: number, whiteMove?: boolean): MoveAnalysis {
+  public static decisiveBlack(): MoveAnalysis {
     const moveAnalysis = new MoveAnalysis();
-    moveAnalysis.nextMoves = [{ move: "e6e7", data: { score, mate: null } }];
+    moveAnalysis.nextMoves = [
+      { move: "e6e7", data: { score: -450, mate: null } },
+      { move: "d6d8", data: { score: -440, mate: null } },
+      { move: "d6d7", data: { score: -430, mate: null } }
+    ];
+    return moveAnalysis;
+  }
+
+  public static withScore(score: number, whiteMove?: boolean, move = "e6e7"): MoveAnalysis {
+    const moveAnalysis = new MoveAnalysis();
+    moveAnalysis.nextMoves = [{ move: move, data: { score, mate: null } }];
+    moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
     moveAnalysis.wasWhiteMove = whiteMove;
     return moveAnalysis;
   }

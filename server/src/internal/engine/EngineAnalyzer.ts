@@ -79,7 +79,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     this.client.setStockfishOptions({
       eloRating: options?.eloRating,
       threads: options?.threads,
-      hashSize: 128
+      hashSize: 256
     });
     const result = await this.doAnalyze(engineInput.moves, options);
     const finish = performance.now();
@@ -105,11 +105,11 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       analysisResults.push(result);
       previousAnalyis = result;
     }
-    try {
-      this.client.disconnect();
-    } catch (e) {
-      console.error("Error disconnecting:", e);
-    }
+    // try {
+    //   this.client.disconnect();
+    // } catch (e) {
+    //   console.error("Error disconnecting:", e);
+    // }
     if (config.server.isLocal()) {
       logFullStockFishOutput(analysisResults);
     }
@@ -122,7 +122,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       this.client.setStockfishOptions({
         eloRating: options.eloRating,
         threads: options.threads,
-        hashSize: 128
+        hashSize: 256
       });
       const result = await this.analyzeSingleMove(engineInput, options.depth, options.lines, null);
       return result;
@@ -130,7 +130,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       logger.error("Error finding candidate moves:", error);
       throw error;
     } finally {
-      this.client.disconnect();
+      // this.client.disconnect();
     }
   }
 

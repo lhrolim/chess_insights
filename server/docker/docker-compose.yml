@@ -22,6 +22,6 @@ services:
       ports:
         - "23249:23249"
       volumes:
-        - ./data:/stockfish/data # Optional: mount a local directory to the container
+        - ./sfdata:/stockfish/data # Optional: mount a local directory to the container
 volumes:
   mongodb_data_container:

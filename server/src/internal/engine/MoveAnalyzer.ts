@@ -31,7 +31,7 @@ export class MoveAnalyzer {
     moveAnalysis: MoveAnalysis,
     whiteMove: boolean
   ): MoveCategory {
-    if (!previousAnalysis) {
+    if (!previousAnalysis || checkForBookMoves(moveAnalysis)) {
       return MoveCategory.Book;
     }
     const normalizedDelta = whiteMove ? -deltaScore : deltaScore; // if black is moving a positive is score is actually really bad as white is now better
@@ -50,7 +50,7 @@ export class MoveAnalyzer {
     }
     const tablesTurned = moveAnalysis.didTablesTurn(previousAnalysis);
     if (tablesTurned) {
-      return MoveAnalyzer.tablesTurnedScenario(normalizedDelta, whiteMove);
+      return MoveAnalyzer.tablesTurnedScenario(moveAnalysis,normalizedDelta, whiteMove);
     }
 
     if (positionGotWorse) {
@@ -65,12 +65,29 @@ export class MoveAnalyzer {
     moveAnalysis: MoveAnalysis
   ): MoveCategory {
     const lostDecisiveAdvantage = previousAnalysis.hasDecisiveAdvantage() && !moveAnalysis.hasDecisiveAdvantage();
+    const keptDeciseAdvantage = previousAnalysis.hasDecisiveAdvantage() && moveAnalysis.hasDecisiveAdvantage();
     const stillHasAdvantage = moveAnalysis.hasClearAdvantage();
+    const stillAboutEqual = moveAnalysis.aboutEqual();
     if (normalizedDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT) {
-      return lostDecisiveAdvantage && stillHasAdvantage ? MoveCategory.Miss : MoveCategory.Blunder;
+      if (lostDecisiveAdvantage && (stillHasAdvantage || stillAboutEqual)) {
+        return MoveCategory.Miss;
+      }
+      if (keptDeciseAdvantage) {
+        return MoveCategory.Innacuracy;
+      }
+      if (stillHasAdvantage) {
+        return MoveCategory.Mistake;
+      }
+      return MoveCategory.Blunder;
     }
     if (normalizedDelta > MoveAnalysisThresholds.INNACURACY_CONSTANT) {
-      return lostDecisiveAdvantage && stillHasAdvantage ? MoveCategory.Miss : MoveCategory.Mistake;
+      if (lostDecisiveAdvantage && (stillHasAdvantage || stillAboutEqual)) {
+        return MoveCategory.Miss;
+      }
+      if (keptDeciseAdvantage) {
+        return MoveCategory.Innacuracy;
+      }
+      return MoveCategory.Mistake;
     }
     if (normalizedDelta > MoveAnalysisThresholds.GOOD_CONSTANT) {
       return MoveCategory.Innacuracy;
@@ -81,8 +98,11 @@ export class MoveAnalyzer {
     return MoveCategory.Excellent;
   }
 
-  private static tablesTurnedScenario(delta: number, whiteMove: boolean): MoveCategory {
+  private static tablesTurnedScenario(moveAnalysis:MoveAnalysis,delta: number, whiteMove: boolean): MoveCategory {
     const absDelta = Math.abs(delta);
+    if (moveAnalysis.aboutEqual()) {
+      return MoveCategory.Miss;
+    }
     if (absDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT) {
       return MoveCategory.Blunder;
     }
@@ -114,3 +134,9 @@ const brilliantGreatOrBest = (previousAnalyses: MoveAnalysis, whiteMove: boolean
   }
   return MoveCategory.Best;
 };
+
+function checkForBookMoves(moveAnalysis: MoveAnalysis): boolean {
+  //TODO: implement a database of book moves
+  return moveAnalysis.moveNumber() < MoveAnalysisThresholds.BOOK_MOVE_THRESHOLD && moveAnalysis.aboutEqual();
+}
+
