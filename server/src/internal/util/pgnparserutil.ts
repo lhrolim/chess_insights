@@ -3,7 +3,7 @@ import getLogger from "@infra/logging/logger";
 const logger = getLogger(__filename);
 
 import { Chess } from "chess.js";
-import { EngineMove } from "@internal/engine/EngineInput";
+import { EngineMove } from "@internal/engine/domain/EngineInput";
 const chess = new Chess();
 
 export type PGNParsedData = {

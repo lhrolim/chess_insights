@@ -1,13 +1,13 @@
-import { MoveCategory } from "@internal/engine/EngineTypes";
+import { MoveCategory } from "@internal/engine/domain/EngineTypes";
 import {
   ConsolidateMoveAnalysis,
   createDefaultConsolidateMoveAnalysis,
-  GameAnalyzisResult,
-  MoveAnalysis
-} from "@internal/engine/GameAnalyseResult";
+  GameAnalyzisResult
+} from "@internal/engine/domain/GameAnalyseResult";
+import { MoveAnalysisDTO } from "@internal/engine/domain/MoveAnalysisDTO";
 
 export class GameAnalyzerBuilder {
-  public static buildConsolidatedAnalysis(engineMoveResults: MoveAnalysis[]): Array<ConsolidateMoveAnalysis> {
+  public static buildConsolidatedAnalysis(engineMoveResults: MoveAnalysisDTO[]): Array<ConsolidateMoveAnalysis> {
     const result = new Array<ConsolidateMoveAnalysis>();
     const whiteAnalysis = createDefaultConsolidateMoveAnalysis();
     const blackAnalysis = createDefaultConsolidateMoveAnalysis();

@@ -2,11 +2,11 @@ import { Request, Response, Router } from "express";
 
 import { GameFormat, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom";
-import { StockfishClient } from "@internal/engine/StockfishClient";
-import { EngineAnalyzer } from "@internal/engine/EngineAnalyzer";
-import { EngineInput } from "@internal/engine/EngineInput";
+import { EngineInput } from "@internal/engine/domain/EngineInput";
 export const subRoute = "/api/games";
 import { asyncHandler } from "@infra/middlewares/asyncHandler";
+import { EngineAnalyzer } from "@internal/engine/core/EngineAnalyzer";
+import { StockfishClient } from "@internal/engine/core/StockfishClient";
 
 const router = Router();
 const engineAnalyzer = new EngineAnalyzer(new StockfishClient());

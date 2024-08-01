@@ -1,6 +1,5 @@
-import { UCIUtil } from "../UCIUtil";
-import { EndOfGameMode, MoveCategory, MoveData } from "../EngineTypes";
-import { MoveAnalysis } from "../GameAnalyseResult";
+import { EndOfGameMode, MoveCategory, MoveData } from "../domain/EngineTypes";
+import { UCIUtil } from "../util/UCIUtil";
 import { MoveAnalysisPOTO } from "./MoveTestHelper";
 
 const DRAW_UCI_REPLY = `'info string NNUE evaluation using nn-5af11540bbfe.nnue enabled

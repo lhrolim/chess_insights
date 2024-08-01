@@ -1,61 +1,7 @@
-import { EndOfGameMode, GameAnalyzisOptions, UCIMoveResult, MoveData, MoveCategory } from "./EngineTypes";
+import { MoveCategory, UCIMoveResult, EndOfGameMode, MoveData } from "./EngineTypes";
 import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
 
-export class GameAnalyzisResult {
-  constructor(moves: MoveAnalysis[], consolidateMoveAnalysis: ConsolidateMoveAnalysis[]) {
-    this.whiteAnalysis = consolidateMoveAnalysis[0];
-    this.blackAnalysis = consolidateMoveAnalysis[1];
-    this.moves = moves;
-  }
-
-  whiteAnalysis: ConsolidateMoveAnalysis;
-  blackAnalysis: ConsolidateMoveAnalysis;
-  moves: MoveAnalysis[];
-  whitePrecision?: number;
-  blackPrecision?: number;
-  myFirstMistake?: MoveAnalysis;
-
-  toJSON() {
-    return {
-      whiteAnalysis: this.whiteAnalysis,
-      blackAnalysis: this.blackAnalysis,
-      moves: this.moves,
-      whitePrecision: this.whitePrecision,
-      blackPrecision: this.blackPrecision,
-      myFirstMistake: this.myFirstMistake
-    };
-  }
-}
-
-export type ConsolidateMoveAnalysis = {
-  numberOfBrilliantMoves: number;
-  numberOfGreatMoves: number;
-  numberOfBestMoves: number;
-  numberOfExcellentMoves: number;
-  numberOfGoodMoves: number;
-  numberOfInaccuracies: number;
-  numberOfMistakes: number;
-  numberOfBlunders: number;
-  numberOfMisses: number;
-  numberOfBookMoves: number;
-  totalMoves: number;
-};
-
-export const createDefaultConsolidateMoveAnalysis = (): ConsolidateMoveAnalysis => ({
-  numberOfBrilliantMoves: 0,
-  numberOfGreatMoves: 0,
-  numberOfBestMoves: 0,
-  numberOfExcellentMoves: 0,
-  numberOfGoodMoves: 0,
-  numberOfInaccuracies: 0,
-  numberOfMistakes: 0,
-  numberOfBlunders: 0,
-  numberOfMisses: 0,
-  numberOfBookMoves: 0,
-  totalMoves: 0
-});
-
-export class MoveAnalysis {
+export class MoveAnalysisDTO {
   movePlayed: string; // e2e4
   moveScoreDelta: number; // how did the score varied after this move has been played
   category: MoveCategory;
@@ -78,7 +24,7 @@ export class MoveAnalysis {
     return this.positionScore().mate !== null && this.positionScore().mate > 0;
   }
 
-  didTablesTurn(previousAnalyses: MoveAnalysis): boolean {
+  didTablesTurn(previousAnalyses: MoveAnalysisDTO): boolean {
     const thisMoveScore = this.positionScore().score;
     const pastMoveScore = previousAnalyses.positionScore().score;
     if (this.wasWhiteMove) {
@@ -117,14 +63,14 @@ export class MoveAnalysis {
     return Math.abs(this.positionScore().score) <= MoveAnalysisThresholds.EQUALITY_CONSTANT;
   }
 
-  hasClearAdvantage(): boolean {
-    return this.wasWhiteMove
+  hasClearAdvantage(whitePerspective: boolean): boolean {
+    return whitePerspective
       ? this.positionScore().score > MoveAnalysisThresholds.EQUALITY_CONSTANT
       : this.positionScore().score < -MoveAnalysisThresholds.EQUALITY_CONSTANT;
   }
 
-  hasDecisiveAdvantage(): boolean {
-    return this.wasWhiteMove
+  hasDecisiveAdvantage(whitePerspective: boolean): boolean {
+    return whitePerspective
       ? this.positionScore().score > MoveAnalysisThresholds.DECISIVE_ADVANTAGE
       : this.positionScore().score < -MoveAnalysisThresholds.DECISIVE_ADVANTAGE;
   }

@@ -1,5 +1,5 @@
-import { UCIUtil } from "./UCIUtil";
 import { parseMovesFromPGN, buildEngineMoves } from "@internal/util/pgnparserutil";
+import { UCIUtil } from "../util/UCIUtil";
 
 export class EngineInput {
   moves: EngineMove[];
@@ -59,5 +59,4 @@ export class EngineMove {
     }
     return this.cumulativeStartPos.trim().split(" ").length % 2 === 0;
   }
-
-};
+}

@@ -1,6 +1,7 @@
-import { MoveCategory, MoveData, UCIMoveResult } from "./EngineTypes";
-import { MoveAnalysis } from "./GameAnalyseResult";
-import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
+import { MoveData, MoveCategory } from "../domain/EngineTypes";
+import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
+import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
+
 const MATE_CONSTANT = 10000;
 
 export class MoveAnalyzer {
@@ -17,7 +18,7 @@ export class MoveAnalyzer {
     return moveData.score - pastScore.score;
   }
 
-  public static analyzeMove(uciAnalysis: MoveAnalysis, previousAnalyses: MoveAnalysis): MoveAnalysisData {
+  public static analyzeMove(uciAnalysis: MoveAnalysisDTO, previousAnalyses: MoveAnalysisDTO): MoveAnalysisData {
     const whiteMove = uciAnalysis.wasWhiteMove;
     const positionScore = uciAnalysis.positionScore();
     const moveScoreDelta = MoveAnalyzer.calculateDeltaScore(positionScore, previousAnalyses?.positionScore());
@@ -27,8 +28,8 @@ export class MoveAnalyzer {
 
   private static getMoveCategory(
     deltaScore: number,
-    previousAnalysis: MoveAnalysis,
-    moveAnalysis: MoveAnalysis,
+    previousAnalysis: MoveAnalysisDTO,
+    moveAnalysis: MoveAnalysisDTO,
     whiteMove: boolean
   ): MoveCategory {
     if (!previousAnalysis || checkForBookMoves(moveAnalysis)) {
@@ -50,7 +51,7 @@ export class MoveAnalyzer {
     }
     const tablesTurned = moveAnalysis.didTablesTurn(previousAnalysis);
     if (tablesTurned) {
-      return MoveAnalyzer.tablesTurnedScenario(moveAnalysis,normalizedDelta, whiteMove);
+      return MoveAnalyzer.tablesTurnedScenario(moveAnalysis, normalizedDelta, whiteMove);
     }
 
     if (positionGotWorse) {
@@ -61,12 +62,16 @@ export class MoveAnalyzer {
   }
   static positionGotWorseScenario(
     normalizedDelta: number,
-    previousAnalysis: MoveAnalysis,
-    moveAnalysis: MoveAnalysis
+    previousAnalysis: MoveAnalysisDTO,
+    moveAnalysis: MoveAnalysisDTO
   ): MoveCategory {
-    const lostDecisiveAdvantage = previousAnalysis.hasDecisiveAdvantage() && !moveAnalysis.hasDecisiveAdvantage();
-    const keptDeciseAdvantage = previousAnalysis.hasDecisiveAdvantage() && moveAnalysis.hasDecisiveAdvantage();
-    const stillHasAdvantage = moveAnalysis.hasClearAdvantage();
+    const lostDecisiveAdvantage =
+      previousAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove) &&
+      !moveAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove);
+    const keptDeciseAdvantage =
+      previousAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove) &&
+      moveAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove);
+    const stillHasAdvantage = moveAnalysis.hasClearAdvantage(moveAnalysis.wasWhiteMove);
     const stillAboutEqual = moveAnalysis.aboutEqual();
     if (normalizedDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT) {
       if (lostDecisiveAdvantage && (stillHasAdvantage || stillAboutEqual)) {
@@ -98,7 +103,7 @@ export class MoveAnalyzer {
     return MoveCategory.Excellent;
   }
 
-  private static tablesTurnedScenario(moveAnalysis:MoveAnalysis,delta: number, whiteMove: boolean): MoveCategory {
+  private static tablesTurnedScenario(moveAnalysis: MoveAnalysisDTO, delta: number, whiteMove: boolean): MoveCategory {
     const absDelta = Math.abs(delta);
     if (moveAnalysis.aboutEqual()) {
       return MoveCategory.Miss;
@@ -119,7 +124,7 @@ export type MoveAnalysisData = {
   moveScoreDelta: number;
 };
 
-const brilliantGreatOrBest = (previousAnalyses: MoveAnalysis, whiteMove: boolean): MoveCategory => {
+const brilliantGreatOrBest = (previousAnalyses: MoveAnalysisDTO, whiteMove: boolean): MoveCategory => {
   const deltaBetweenSuggestedMoves = previousAnalyses.deltaBetweenSuggestedMoves();
   const secondBestKeepsEquality = previousAnalyses.secondBestKeepsEquality();
   const normalizedDelta = whiteMove ? deltaBetweenSuggestedMoves : -deltaBetweenSuggestedMoves; //delta between top choices of engine
@@ -135,8 +140,7 @@ const brilliantGreatOrBest = (previousAnalyses: MoveAnalysis, whiteMove: boolean
   return MoveCategory.Best;
 };
 
-function checkForBookMoves(moveAnalysis: MoveAnalysis): boolean {
+function checkForBookMoves(moveAnalysis: MoveAnalysisDTO): boolean {
   //TODO: implement a database of book moves
   return moveAnalysis.moveNumber() < MoveAnalysisThresholds.BOOK_MOVE_THRESHOLD && moveAnalysis.aboutEqual();
 }
-

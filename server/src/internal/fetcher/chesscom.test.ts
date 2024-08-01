@@ -1,6 +1,6 @@
 import axios from "axios";
 import { fetchBestAnalyzedGamesOverPastMonths } from "./chesscom"; // Adjust the import path accordingly
-import { GameFormat, GameResultDTO, MatchResult, EndMatchMode, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
+import { GameFormat, MatchResult, EndMatchMode, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 
 // Mock the axios module
 jest.mock("axios");

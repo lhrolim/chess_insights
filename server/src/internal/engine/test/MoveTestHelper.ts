@@ -1,9 +1,9 @@
-import { MoveAnalysis } from "../GameAnalyseResult";
-import { UCIMoveResult } from "../EngineTypes";
+import { UCIMoveResult } from "../domain/EngineTypes";
+import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 
 export class MoveAnalysisPOTO {
-  public static inMateWeb(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static inMateWeb(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: 900, mate: 2 } },
       { move: "d6d8", data: { score: 900, mate: 4 } }
@@ -11,8 +11,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static with3EqualOptionsForWhite(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static with3EqualOptionsForWhite(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: 50, mate: null } },
       { move: "d6d8", data: { score: 20, mate: null } },
@@ -21,8 +21,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static withOnlyOneDecent(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static withOnlyOneDecent(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: 150, mate: null } },
       { move: "d6d8", data: { score: -120, mate: null } },
@@ -31,8 +31,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static withOnlyOneVeryGood(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static withOnlyOneVeryGood(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: 350, mate: null } },
       { move: "d6d8", data: { score: -200, mate: null } },
@@ -41,8 +41,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static withOnlyOneVeryGoodBlack(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static withOnlyOneVeryGoodBlack(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: -350, mate: null } },
       { move: "d6d8", data: { score: 200, mate: null } },
@@ -51,8 +51,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static with3MovesLostPositionForWhite(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static with3MovesLostPositionForWhite(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: -210, mate: null } },
       { move: "d6d8", data: { score: -220, mate: null } },
@@ -61,8 +61,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static with3EqualOptionsForBlack(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static with3EqualOptionsForBlack(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: -50, mate: null } },
       { move: "d6d8", data: { score: -20, mate: null } },
@@ -71,8 +71,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static with3OptionsWhiteAdvantage250(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static with3OptionsWhiteAdvantage250(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.wasWhiteMove = true;
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: 250, mate: null } },
@@ -82,8 +82,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static with3OptionsWhiteAdvantage350(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static with3OptionsWhiteAdvantage350(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.wasWhiteMove = true;
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: 350, mate: null } },
@@ -93,8 +93,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static with3OptionsBlackAdvantage250(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static with3OptionsBlackAdvantage250(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: -250, mate: null } },
       { move: "d6d8", data: { score: -220, mate: null } },
@@ -103,8 +103,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static decisiveBlack(): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static decisiveBlack(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: { score: -450, mate: null } },
       { move: "d6d8", data: { score: -440, mate: null } },
@@ -113,8 +113,8 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static withScore(score: number, whiteMove?: boolean, move = "e6e7"): MoveAnalysis {
-    const moveAnalysis = new MoveAnalysis();
+  public static withScore(score: number, whiteMove: boolean = true, move = "e6e7"): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [{ move: move, data: { score, mate: null } }];
     moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
     moveAnalysis.wasWhiteMove = whiteMove;

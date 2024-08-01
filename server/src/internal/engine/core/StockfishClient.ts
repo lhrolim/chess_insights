@@ -1,7 +1,7 @@
 import * as net from "net";
-import config from "../../config";
-import { EngineMove } from "./EngineInput";
+import config from "../../../config";
 import getLogger from "@infra/logging/logger";
+import { EngineMove } from "../domain/EngineInput";
 
 const logger = getLogger(__filename);
 

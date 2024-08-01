@@ -1,13 +1,14 @@
-import { EndOfGameMode, GameAnalyzisOptions, UCIMoveResult, UCIResult } from "./EngineTypes";
-import { GameAnalyzisResult, MoveAnalysis } from "./GameAnalyseResult";
-import { IEngineAnalyzer } from "./IEngineAnalyzer";
-import { StockfishClient } from "./StockfishClient";
-import { UCIUtil } from "./UCIUtil";
 import getLogger, { LogTypes } from "@infra/logging/logger";
-import config from "../../config";
-import { EngineInput, EngineMove } from "./EngineInput";
-import { MoveAnalyzer } from "./MoveAnalyzer";
 import { GameAnalyzerBuilder } from "@internal/analysis/GameAnalyzerBuilder";
+import { EngineMove, EngineInput } from "../domain/EngineInput";
+import { GameAnalyzisOptions } from "../domain/EngineTypes";
+import { GameAnalyzisResult } from "../domain/GameAnalyseResult";
+import { MoveAnalyzer } from "./MoveAnalyzer";
+import { StockfishClient } from "./StockfishClient";
+import { UCIUtil } from "../util/UCIUtil";
+import { IEngineAnalyzer } from "../IEngineAnalyzer";
+import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
+import config from "../../../config";
 
 const logger = getLogger(__filename, LogTypes.Analysis);
 
@@ -25,8 +26,8 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     engineMove: EngineMove,
     depth: number,
     lines: number,
-    pastMoveAnalysis: MoveAnalysis
-  ): Promise<MoveAnalysis> {
+    pastMoveAnalysis: MoveAnalysisDTO
+  ): Promise<MoveAnalysisDTO> {
     return new Promise(async (resolve, reject) => {
       const bufferedAnalyzer = (output: string) => {
         try {
@@ -37,7 +38,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
             return;
           }
           let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: null, isWhiteToMove };
-          const result = new MoveAnalysis();
+          const result = new MoveAnalysisDTO();
           result.movePlayed = engineMove.lastMove();
           result.wasWhiteMove = !isWhiteToMove;
           result.position = engineMove.cumulativeStartPos;
@@ -92,8 +93,8 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     moves: EngineMove[],
     options: GameAnalyzisOptions = { depth: 20, lines: 3 }
   ): Promise<GameAnalyzisResult> {
-    let analysisResults = Array<MoveAnalysis>();
-    let previousAnalyis: MoveAnalysis = null;
+    let analysisResults = Array<MoveAnalysisDTO>();
+    let previousAnalyis: MoveAnalysisDTO = null;
     for (let i = 0; i < moves.length; i++) {
       const move = moves[i];
       // const adjusteLines = UCIUtil.getRecommendedLines(i, options.lines); //no point in bringing multiple lines at initial positions
@@ -117,7 +118,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     return new GameAnalyzisResult(analysisResults, consolidatedResult);
   }
 
-  public async findCandidateMoves(engineInput: EngineMove, options?: GameAnalyzisOptions): Promise<MoveAnalysis> {
+  public async findCandidateMoves(engineInput: EngineMove, options?: GameAnalyzisOptions): Promise<MoveAnalysisDTO> {
     try {
       this.client.setStockfishOptions({
         eloRating: options.eloRating,
@@ -136,7 +137,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
 
   // Additional methods as needed...
 }
-function logFullStockFishOutput(analysisResults: Array<MoveAnalysis>) {
+function logFullStockFishOutput(analysisResults: Array<MoveAnalysisDTO>) {
   logger.debug("Full analysis results:");
   analysisResults.forEach((analysis, index) => {
     const moveNumber = Math.floor((index + 2) / 2);

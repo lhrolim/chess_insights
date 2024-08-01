@@ -1,7 +1,6 @@
 import getLogger, { LogTypes } from "@infra/logging/logger";
-import { EndOfGameMode, MoveCategory, MoveData, UCIMoveResult, UCIResult } from "./EngineTypes";
-import { MoveAnalysis } from "./GameAnalyseResult";
-import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
+import { EndOfGameMode, MoveCategory, MoveData, UCIMoveResult, UCIResult } from "../domain/EngineTypes";
+import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 const logger = getLogger(__filename, LogTypes.Analysis);
 
 const MATE_CONSTANT = 10000;
