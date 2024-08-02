@@ -37,7 +37,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
             // Ignoring received entry, could be a Stockfish info result as a result of uci
             return;
           }
-          let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: null, isWhiteToMove };
+          let previousScore = pastMoveAnalysis?.positionScore || { score: 0, mate: NaN, isWhiteToMove };
           const result = new MoveAnalysisDTO();
           result.movePlayed = engineMove.lastMove();
           result.wasWhiteMove = !isWhiteToMove;

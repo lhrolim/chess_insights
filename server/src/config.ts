@@ -18,6 +18,19 @@ export default {
       level: process.env.LOG_LEVEL || "debug",
       analysis_level: process.env.ANALYSIS_LOG_LEVEL || "info"
     },
+    aws: {
+      accountID: process.env.AWS_ACCOUNT_ID,
+      accesskey: process.env.AWS_ACCESS_KEY,
+      secretkey: process.env.AWS_SECRET_KEY,
+      region: process.env.SQS_REGION,
+      sqs: {
+        url: process.env.SQS_URL,
+        port: process.env.SQS_PORT,
+        topic_names: {
+          pgn: process.env.SQS_PGN_TOPIC_NAME
+        }
+      }
+    },
     env: process.env.NODE_ENV || "dev",
     isLocal: () => {
       return !process.env.NODE_ENV || process.env.NODE_ENV === "dev";

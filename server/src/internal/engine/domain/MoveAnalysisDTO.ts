@@ -1,12 +1,18 @@
 import { MoveCategory, UCIMoveResult, EndOfGameMode, MoveData } from "./EngineTypes";
 import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
 
+export type MoveAnalysisDTOForPrecision = {
+  moveScoreDelta: number;
+  category: MoveCategory;
+  wasWhiteMove: boolean;
+};
+
 export class MoveAnalysisDTO {
   movePlayed: string; // e2e4
-  moveScoreDelta: number; // how did the score varied after this move has been played
+  moveScoreDelta: number; // how did the score varied after this move has been played from a white perspective
   category: MoveCategory;
   position?: string;
-  nextMoves?: UCIMoveResult[];
+  nextMoves?: Array<UCIMoveResult>;
   endOfGame: EndOfGameMode;
   wasWhiteMove: boolean;
   rawStockfishOutput?: string;
@@ -75,6 +81,10 @@ export class MoveAnalysisDTO {
       : this.positionScore().score < -MoveAnalysisThresholds.DECISIVE_ADVANTAGE;
   }
 
+  pointsLost(): number {
+    return this.wasWhiteMove ? this.moveScoreDelta : -1 * this.moveScoreDelta;
+  }
+
   moveNumber(): number {
     if (!this.position) {
       return 0;
@@ -109,6 +119,14 @@ export class MoveAnalysisDTO {
       position: this.position,
       nextMoves: this.nextMoves,
       endOfGame: this.endOfGame,
+      wasWhiteMove: this.wasWhiteMove
+    };
+  }
+
+  getSimplifiedDTOForPrecision(): MoveAnalysisDTOForPrecision {
+    return {
+      moveScoreDelta: this.moveScoreDelta,
+      category: this.category,
       wasWhiteMove: this.wasWhiteMove
     };
   }
