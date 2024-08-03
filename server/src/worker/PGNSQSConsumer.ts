@@ -15,6 +15,7 @@ const app = Consumer.create({
   queueUrl: `${awsConfig.sqs.url}/${awsConfig.accountID}/${awsConfig.sqs.topic_names.pgn}`,
   handleMessage: async message => {
     logger.info(`Received message: ${message.Body}`);
+    const gameURL = message.Body;
   },
   extendedAWSErrors: true,
   sqs: new SQSClient({

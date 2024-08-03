@@ -10,6 +10,13 @@ export class ChessGameDAO {
     return game;
   }
 
+  public static async insertOrUpdateGame(gameData: ChessGame): Promise<ChessGame> {
+    const options = { upsert: true, new: true, setDefaultsOnInsert: true }; // Upsert option
+
+    const game = await ChessGameModel.findByIdAndUpdate(gameData.url, options).exec();
+    return game;
+  }
+
   public static async insertGamesBulk(games: ChessGame[]): Promise<void> {
     try {
       const operations = games.map(game => ({
@@ -76,5 +83,10 @@ export class ChessGameDAO {
       console.error("Error in getLastMonthAndYearForUser:", error);
       throw error; // Re-throw the error or handle it as preferred
     }
+  }
+
+  public static async findById(url: string): Promise<ChessGame | null> {
+    const game = await ChessGameModel.findOne({ url }).exec();
+    return game;
   }
 }

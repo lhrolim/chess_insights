@@ -5,6 +5,9 @@ export enum Site {
   lichess = "lichess.org"
 }
 
+/**
+ * Represents a Chess Game Scan, used to keep track of the dates already scanned for a user
+ */
 export interface ChessGameScan extends Document {
   user: string;
   site: Site;

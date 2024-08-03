@@ -8,11 +8,14 @@ import fs from "fs";
 import cookieSession from "cookie-session";
 import path from "path";
 import Config from "./config";
-import gameRoutes, { subRoute as gameSubRoute } from "@api/routes/routes";
+import singleGameRoutes, { subRoute as gameSubRoute } from "@api/routes/singleGameRoutes";
+import batchGameRoutes, { subRoute as batchGameSubRoute } from "@api/routes/batchGamesRoutes";
 import { connectToDatabase } from "@internal/database/MongoConnection";
 
 import { errorMiddleware } from "@infra/middlewares/errorMiddleware";
 import getLogger from "@infra/logging/logger";
+
+// import "@infra/middlewares/unhandledRejectionsHandler"; // Import the unhandledRejectionsHandler to catch unhandled promise rejections
 
 const app = express();
 const isProduction = app.get("env") === "production";
@@ -70,7 +73,8 @@ app.use(express.static(clientBuildDirectory)); // Non-index.html files
 Config.client.routes.forEach(route => app.use(route, express.static(path.join(clientBuildDirectory, "index.html"))));
 
 // API Endpoints
-app.use(gameSubRoute, gameRoutes);
+app.use(gameSubRoute, singleGameRoutes);
+app.use(batchGameSubRoute, batchGameRoutes);
 
 app.use(errorMiddleware);
 

@@ -1,6 +1,4 @@
-import { EndOfGameMode, GameAnalyzisOptions, UCIMoveResult, MoveData, MoveCategory } from "./EngineTypes";
 import { MoveAnalysisDTO } from "./MoveAnalysisDTO";
-import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
 
 export class GameAnalyzisResult {
   constructor(moves: MoveAnalysisDTO[], consolidateMoveAnalysis: ConsolidateMoveAnalysis[]) {

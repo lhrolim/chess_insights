@@ -1,5 +1,6 @@
 import { EndMatchMode, GameFormat, MatchResult } from "@api/dtos/GameDtos";
 import mongoose, { Schema, Document } from "mongoose";
+import { cwAnalytics, CWANalytics as CWAnalytics } from "./CWAnalyticsModel";
 
 // Assuming GameFormat, MatchResult, and EndMatchMode are enums or types defined elsewhere
 
@@ -10,6 +11,7 @@ interface PlayerData {
   rating: number;
   result: string;
   username: string;
+  cwAnalytics?: CWAnalytics;
 }
 
 export interface ChessGame extends Document {
@@ -34,8 +36,6 @@ export interface ChessGame extends Document {
   blackData: PlayerData;
 }
 
-
-
 const playerDataSchema = new Schema<PlayerData>(
   {
     country: { type: String, required: false },
@@ -43,7 +43,8 @@ const playerDataSchema = new Schema<PlayerData>(
     precision: { type: Number, required: false },
     rating: { type: Number, required: true },
     result: { type: String, required: true },
-    username: { type: String, required: true }
+    username: { type: String, required: true },
+    cwAnalytics: { type: cwAnalytics, required: false }
   },
   { _id: false }
 );
