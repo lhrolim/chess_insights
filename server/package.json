@@ -4,10 +4,10 @@
   "description": "",
   "scripts": {
     "dev": "ts-node-dev --inspect --respawn --transpile-only src/main.ts",
-    "dev-worker": "ts-node-dev --inspect --respawn --transpile-only src/worker/PGNSQSConsumer.ts",
+    "dev-worker": "ts-node-dev --inspect --respawn --transpile-only src/worker/PGNWorkerMain.ts",
     "build": "tsc",
     "start": "node build/main.js",
-    "start-worker": "node build/worker/PGNSQSConsumer.js",
+    "start-worker": "node build/worker/PGNWorkerMain.js",
     "test": "jest --watch"
   },
   "_moduleAliases": {
