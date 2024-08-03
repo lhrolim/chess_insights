@@ -44,7 +44,10 @@ describe("GameAnalyzerBuilder.calculatePrecision", () => {
   });
 
   test("calculates precision scores with rating", () => {
-    const [whitePrecisionScore, blackPrecisionScore] = GameAnalyzerBuilder.calculatePrecision(moveAnalysis, 1638);
+    const [whitePrecisionScore, blackPrecisionScore] = GameAnalyzerBuilder.calculatePrecision(
+      moveAnalysis,
+      [1638, 1700]
+    );
     expect(whitePrecisionScore).toBeGreaterThan(0);
     expect(whitePrecisionScore).toBeLessThanOrEqual(100);
     expect(blackPrecisionScore).toBeGreaterThan(0);
@@ -56,7 +59,10 @@ describe("GameAnalyzerBuilder.calculatePrecision", () => {
   });
 
   test("handles edge case of very high rating", () => {
-    const [whitePrecisionScore, blackPrecisionScore] = GameAnalyzerBuilder.calculatePrecision(moveAnalysis, 3300);
+    const [whitePrecisionScore, blackPrecisionScore] = GameAnalyzerBuilder.calculatePrecision(
+      moveAnalysis,
+      [3300, 3100]
+    );
     expect(whitePrecisionScore).toBeGreaterThan(0);
     expect(whitePrecisionScore).toBeLessThanOrEqual(100);
     expect(blackPrecisionScore).toBeGreaterThan(0);
@@ -64,7 +70,7 @@ describe("GameAnalyzerBuilder.calculatePrecision", () => {
   });
 
   test("handles edge case of very low rating", () => {
-    const [whitePrecisionScore, blackPrecisionScore] = GameAnalyzerBuilder.calculatePrecision(moveAnalysis, 700);
+    const [whitePrecisionScore, blackPrecisionScore] = GameAnalyzerBuilder.calculatePrecision(moveAnalysis, [700, 650]);
     expect(whitePrecisionScore).toBeGreaterThan(0);
     expect(whitePrecisionScore).toBeLessThanOrEqual(100);
     expect(blackPrecisionScore).toBeGreaterThan(0);

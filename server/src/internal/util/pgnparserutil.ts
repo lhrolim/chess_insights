@@ -4,6 +4,8 @@ const logger = getLogger(__filename);
 
 import { Chess } from "chess.js";
 import { EngineMove } from "@internal/engine/domain/EngineInput";
+import { forEach } from "typescript-collections/dist/lib/arrays";
+import { ClockUtil } from "./ClockUtil";
 const chess = new Chess();
 
 export type PGNParsedData = {
@@ -64,12 +66,22 @@ export const parseMovesFromPGN = (pgn: string): EngineMove[] => {
   return buildEngineMoves(moves);
 };
 
-export const buildEngineMoves = (moves: string[]): EngineMove[] => {
+export const buildEngineMoves = (moves: PGNMove[] | string[]): EngineMove[] => {
   const engineMoves = Array<EngineMove>();
   chess.reset();
-
   let startPos = "";
-  moves.forEach(move => {
+  moves.forEach(pgnMove => {
+    let adjustedMove: PGNMove;
+
+    if (typeof pgnMove === "string") {
+      // If move is a string, create a PGNMove with an empty clock
+      adjustedMove = { move: pgnMove, timeTaken: NaN };
+    } else {
+      // If move is already a PGNMove, use it directly
+      adjustedMove = pgnMove;
+    }
+
+    const move = adjustedMove.move;
     const validMove = chess.move(move);
     if (!validMove) {
       throw new Error("Invalid move");
@@ -77,18 +89,44 @@ export const buildEngineMoves = (moves: string[]): EngineMove[] => {
     const { from, to } = validMove;
     const coordinateMove = from + to;
     startPos += " " + coordinateMove;
-    engineMoves.push(new EngineMove(coordinateMove, chess.fen(), startPos.trim()));
+    engineMoves.push(new EngineMove(coordinateMove, chess.fen(), startPos.trim(), adjustedMove.timeTaken));
   });
 
   return engineMoves;
 };
 
-const parseRawMoves = (pgn: string): string[] => {
+const parseRawMoves = (pgn: string): Array<PGNMove> => {
   try {
+    const moveArray = new Array<PGNMove>();
     const pgnResult = pgnParser(pgn, { startRule: "game" }) as ParseTree;
-    const moveArray = pgnResult.moves.map(move => move.notation.notation);
+    let currentClockWhite = NaN;
+    let currentClockBlack = NaN;
+    for (let i = 0; i < pgnResult.moves.length; i++) {
+      const move = pgnResult.moves[i];
+      const moveString = move.notation.notation;
+      const currentClock = ClockUtil.timeStringToMilliseconds(move.commentDiag.clk);
+      const isWhiteMove = i % 2 === 0;
+      let timeTaken = NaN;
+      if (i % 2 === 0) {
+        timeTaken = isNaN(currentClockWhite) ? 0 : currentClockWhite - currentClock;
+        currentClockWhite = currentClock;
+        if (isNaN(currentClockBlack)) {
+          //TODO: fix cases where there are different times
+          currentClockBlack = currentClock;
+        }
+      } else {
+        timeTaken = isNaN(currentClockBlack) ? 0 : Math.max(currentClockBlack - currentClock, 0); //avoid negative time which could arise due to different timers
+        currentClockBlack = currentClock;
+      }
+      moveArray.push({ move: moveString, timeTaken: timeTaken });
+    }
     return moveArray;
   } catch (e) {
     logger.error("unable to parse game pgn", e);
   }
+};
+
+type PGNMove = {
+  move: string;
+  timeTaken: number;
 };

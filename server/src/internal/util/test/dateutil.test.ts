@@ -1,4 +1,4 @@
-import { getPastDate, numberOfMonthsToCheck } from "./dateutil";
+import { getPastDate, numberOfMonthsToCheck } from "../dateutil";
 
 describe("getPastDate", () => {
   it("returns the correct year and month for a given number of months back", () => {

@@ -4,6 +4,7 @@ export type GameAnalyzisOptions = {
   firstErrorOnly?: boolean;
   eloRating?: number;
   threads?: number;
+  playerRatings?: number[];
 };
 
 export enum MoveCategory {

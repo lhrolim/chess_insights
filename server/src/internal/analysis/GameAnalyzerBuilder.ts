@@ -1,3 +1,4 @@
+import { EngineMove } from "@internal/engine/domain/EngineInput";
 import { MoveCategory } from "@internal/engine/domain/EngineTypes";
 import {
   ConsolidateMoveAnalysis,
@@ -38,7 +39,19 @@ const ratingToCPL: RatingToCPLMapping = {
   3200: 0.02
 };
 export class GameAnalyzerBuilder {
-  public static buildConsolidatedAnalysis(engineMoveResults: MoveAnalysisDTO[]): Array<ConsolidateMoveAnalysis> {
+  public static buildConsolidatedAnalysis(
+    moves: EngineMove[],
+    engineMoveResults: MoveAnalysisDTO[]
+  ): GameAnalyzisResult {
+    const consolidatedResults = GameAnalyzerBuilder.buildConsolidatedArray(engineMoveResults);
+    const calculatedPrecision = GameAnalyzerBuilder.calculatePrecision(engineMoveResults);
+    const result = new GameAnalyzisResult(engineMoveResults, consolidatedResults);
+    result.whitePrecision = calculatedPrecision[0];
+    result.blackPrecision = calculatedPrecision[1];
+    return result;
+  }
+
+  private static buildConsolidatedArray(engineMoveResults: MoveAnalysisDTO[]) {
     const result = new Array<ConsolidateMoveAnalysis>();
     const whiteAnalysis = createDefaultConsolidateMoveAnalysis();
     const blackAnalysis = createDefaultConsolidateMoveAnalysis();
@@ -118,7 +131,10 @@ export class GameAnalyzerBuilder {
     return interpolatedCPL;
   }
 
-  public static calculatePrecision(moveAnalysis: MoveAnalysisDTOForPrecision[], rating?: number): [number, number] {
+  public static calculatePrecision(
+    moveAnalysis: MoveAnalysisDTOForPrecision[],
+    playerRatings?: number[]
+  ): [number, number] {
     // Check if the array is empty
     if (moveAnalysis.length === 0) {
       throw new Error("The array of move analysis is empty");
@@ -149,10 +165,11 @@ export class GameAnalyzerBuilder {
       100 * Math.max(0, (beginnerLevelDelta - averageBlackDelta) / (beginnerLevelDelta - grandmasterLevelDelta));
 
     // Adjust precision scores based on player's rating CPL if provided
-    if (rating !== undefined) {
-      const cplForRating = this.getCPLForRating(rating);
-      whitePrecisionScore *= cplForRating / averageWhiteDelta;
-      blackPrecisionScore *= cplForRating / averageBlackDelta;
+    if (playerRatings !== undefined) {
+      const whiteCPLForRating = this.getCPLForRating(playerRatings[0]);
+      const blackCPLForRating = this.getCPLForRating(playerRatings[1]);
+      whitePrecisionScore *= whiteCPLForRating / averageWhiteDelta;
+      blackPrecisionScore *= blackCPLForRating / averageBlackDelta;
     }
 
     // Ensure the scores are within the range of 0 to 100

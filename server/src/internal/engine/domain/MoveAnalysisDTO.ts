@@ -1,3 +1,4 @@
+import { time } from "console";
 import { MoveCategory, UCIMoveResult, EndOfGameMode, MoveData } from "./EngineTypes";
 import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
 
@@ -16,6 +17,7 @@ export class MoveAnalysisDTO {
   endOfGame: EndOfGameMode;
   wasWhiteMove: boolean;
   rawStockfishOutput?: string;
+  timeTook?: number;
 
   // { score: 900, mate: 0 } ==> "barrilda!" should be equal of the best reply of next moves
   positionScore(): MoveData {
@@ -114,6 +116,7 @@ export class MoveAnalysisDTO {
       previousScore: this.previousScore(),
       positionScore: this.positionScore().score,
       moveScoreDelta: this.moveScoreDelta,
+      timeTook: this.timeTook,
       moveNumber: this.moveNumber(),
       category: this.category,
       position: this.position,

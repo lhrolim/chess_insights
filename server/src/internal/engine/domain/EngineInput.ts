@@ -39,11 +39,15 @@ export class EngineMove {
   move: string;
   fenPosition: string;
   cumulativeStartPos: string;
+  timeTook?: number; //time it took in millis to perform this move
+  whiteMove?: boolean = undefined;
 
-  constructor(move: string, fenPosition: string, cumulativeStartPos: string) {
+  constructor(move: string, fenPosition: string, cumulativeStartPos: string, timeTook?: number) {
     this.move = move;
     this.fenPosition = fenPosition;
     this.cumulativeStartPos = cumulativeStartPos;
+    this.timeTook = timeTook;
+    this.whiteMove = this.isWhiteToMove();
   }
 
   public lastMove(): string {
@@ -54,6 +58,9 @@ export class EngineMove {
   }
 
   public isWhiteToMove(): boolean {
+    if (this.whiteMove !== undefined) {
+      return this.whiteMove;
+    }
     if (this.fenPosition) {
       return this.fenPosition.split(" ")[1] === "w";
     }

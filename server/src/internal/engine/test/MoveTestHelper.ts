@@ -1,4 +1,3 @@
-import { UCIMoveResult } from "../domain/EngineTypes";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 
 export class MoveAnalysisPOTO {

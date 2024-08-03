@@ -43,6 +43,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
           result.wasWhiteMove = !isWhiteToMove;
           result.position = engineMove.cumulativeStartPos;
           result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);
+          result.timeTook = engineMove.timeTook;
           if (result.isEndOfGame()) {
             return resolve(result);
           }
@@ -91,7 +92,8 @@ export class EngineAnalyzer implements IEngineAnalyzer {
   // Method to analyze all moves
   private async doAnalyze(
     moves: EngineMove[],
-    options: GameAnalyzisOptions = { depth: 20, lines: 3 }
+    options: GameAnalyzisOptions = { depth: 20, lines: 3 },
+    ratings?: number[]
   ): Promise<GameAnalyzisResult> {
     let analysisResults = Array<MoveAnalysisDTO>();
     let previousAnalyis: MoveAnalysisDTO = null;
@@ -114,8 +116,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     if (config.server.isLocal()) {
       logFullStockFishOutput(analysisResults);
     }
-    const consolidatedResult = GameAnalyzerBuilder.buildConsolidatedAnalysis(analysisResults);
-    return new GameAnalyzisResult(analysisResults, consolidatedResult);
+    return GameAnalyzerBuilder.buildConsolidatedAnalysis(moves, analysisResults);
   }
 
   public async findCandidateMoves(engineInput: EngineMove, options?: GameAnalyzisOptions): Promise<MoveAnalysisDTO> {
