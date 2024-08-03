@@ -8,7 +8,11 @@ export default {
     allowed_origins: (process.env.SERVER_ALLOWED_ORIGINS && process.env.SERVER_ALLOWED_ORIGINS.split(",")) || "",
     session_keys: (process.env.SERVER_SESSION_KEYS && process.env.SERVER_SESSION_KEYS.split(" ")) || [],
     database: {
-      mongo_uri: process.env.MONGO_DB_CONNECTION_STRING
+      server: process.env.MONGO_DB_SERVER,
+      port: process.env.MONGO_DB_PORT,
+      database: process.env.MONGO_DB_NAME,
+      mongo_user: process.env.MONGO_DB_USER,
+      mongo_password: process.env.MONGO_DB_PASSWORD
     },
     stockfish: {
       port: process.env.STOCKFISH_PORT,

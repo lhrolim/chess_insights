@@ -8,18 +8,19 @@ export class SQSProducer {
   private sqsClient: SQSClient;
 
   constructor() {
+    const awsConfig = Config.server.aws;
     this.sqsClient = new SQSClient({
-      region: Config.server.aws.region,
-      endpoint: Config.server.aws.sqs.url,
+      region: awsConfig.region,
+      endpoint: awsConfig.sqs.url,
       credentials: {
-        accessKeyId: Config.server.aws.accesskey,
-        secretAccessKey: Config.server.aws.secretkey
+        accessKeyId: awsConfig.accesskey,
+        secretAccessKey: awsConfig.secretkey
       }
     });
   }
 
   public async sendMessage(queueName: string, messageBody: any): Promise<void> {
-    const queueUrl = `${Config.server.aws.sqs.url}/${queueName}`;
+    const queueUrl = `${Config.server.aws.sqs.url}/${Config.server.aws.accountID}/${queueName}`;
 
     const messageBodyString = JSON.stringify(messageBody);
 

@@ -2,12 +2,17 @@ import mongoose from 'mongoose';
 import config from '../../config';
 
 // MongoDB URI, replace with your actual connection string
-const MONGO_URI = config.server.database.mongo_uri;
 
 export const connectToDatabase = async () => {
   try {
-    console.log('Connecting to MongoDB at ', MONGO_URI);
-    await mongoose.connect(MONGO_URI);
+    const server = config.server.database.server;
+    const port = config.server.database.port;
+    const database = config.server.database.database;
+    const user = config.server.database.mongo_user;
+    const password = config.server.database.mongo_password;
+
+    console.log(`Connecting to MongoDB at mongodb://${user}:xxx@${server}:${port}/${database}`);
+    await mongoose.connect(`mongodb://${user}:${password}@${server}:${port}/${database}`);
     console.log('Connected to MongoDB');
   } catch (error) {
     console.error('Error connecting to MongoDB', error);
