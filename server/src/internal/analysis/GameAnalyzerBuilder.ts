@@ -145,11 +145,11 @@ export class GameAnalyzerBuilder {
     const blackMoves = moveAnalysis.filter(move => !move.wasWhiteMove);
 
     // Calculate total and average deltas for white moves
-    const totalWhiteDelta = whiteMoves.reduce((sum, move) => sum + move.moveScoreDelta, 0);
+    const totalWhiteDelta = whiteMoves.reduce((sum, move) => sum + Math.abs(move.moveScoreDelta), 0);
     const averageWhiteDelta = totalWhiteDelta / whiteMoves.length;
 
     // Calculate total and average deltas for black moves
-    const totalBlackDelta = blackMoves.reduce((sum, move) => sum + move.moveScoreDelta, 0);
+    const totalBlackDelta = blackMoves.reduce((sum, move) => sum + Math.abs(move.moveScoreDelta), 0);
     const averageBlackDelta = totalBlackDelta / blackMoves.length;
 
     // Establish benchmarks

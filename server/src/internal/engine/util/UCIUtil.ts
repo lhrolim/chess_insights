@@ -87,8 +87,8 @@ export class UCIUtil {
     return EndOfGameMode.MATE;
   }
 
-  public static parseUCIResult(uciAnswer: string, depth: number, isWhiteToMove: boolean): UCIResult {
-    const endOfGameCheck = UCIUtil.isEndOfGame(uciAnswer, isWhiteToMove);
+  public static parseUCIResult(uciAnswer: string, depth: number, areRepliesWhiteMoves: boolean): UCIResult {
+    const endOfGameCheck = UCIUtil.isEndOfGame(uciAnswer, areRepliesWhiteMoves);
     this.logHashInfo(uciAnswer);
     if (endOfGameCheck && endOfGameCheck !== EndOfGameMode.NONE) {
       logger.debug("Received:\n" + uciAnswer);
@@ -103,21 +103,29 @@ export class UCIUtil {
     const movesResult = new Array<UCIMoveResult>();
     for (const line of filteredLines) {
       //if multipv is enabled we will have several move options
-      const score = UCIUtil.parseScore(line, isWhiteToMove);
+      const score = UCIUtil.parseScore(line, areRepliesWhiteMoves);
       if (score != null) {
         const move = UCIUtil.parseMove(line);
         movesResult.push(new UCIMoveResult(move, score));
       }
     }
     movesResult.sort((a, b) => {
-      const firstElement = isWhiteToMove ? b : a;
-      const secondElement = isWhiteToMove ? a : b;
-      const mateScore = isWhiteToMove ? MATE_CONSTANT : -MATE_CONSTANT;
-      const firstElementScore = firstElement.data.score || mateScore;
-      const secondElementScore = secondElement.data.score || mateScore;
+      const firstElement = areRepliesWhiteMoves ? b : a;
+      const secondElement = areRepliesWhiteMoves ? a : b;
+      // const mateScore = areRepliesWhiteMoves ? MATE_CONSTANT : -MATE_CONSTANT;
+      const firstElementScore = this.getScoreConsideringMate(areRepliesWhiteMoves, firstElement.data);
+      const secondElementScore = this.getScoreConsideringMate(areRepliesWhiteMoves, secondElement.data);
       return firstElementScore - secondElementScore;
     });
     return { moves: movesResult, endOfGame: endOfGameCheck, ignored: false };
+  }
+
+  public static getScoreConsideringMate(areRepliesWhiteMoves: boolean, moveData: MoveData) {
+    if (moveData.score != null) {
+      return moveData.score;
+    }
+    const mateIn = moveData.mate; //positive means I am giving mate, and negative I am receiving it
+    return areRepliesWhiteMoves ? mateIn * MATE_CONSTANT : -mateIn * MATE_CONSTANT;
   }
 
   public static getStartPositionFromMoves(moves: string[]): string {

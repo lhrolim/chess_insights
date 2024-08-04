@@ -17,10 +17,17 @@ info depth 20 seldepth 28 multipv 2 score cp -36 nodes 1839086 nps 894062 hashfu
 info depth 20 seldepth 27 multipv 3 score cp -46 nodes 1839086 nps 894062 hashfull 618 tbhits 0 time 2057 pv e2e4 e5f4 f1c4 b8c6 d2d4 d8h4 e1f1 d7d6 h2h3 g7g5 b1c3 h7h6
 `;
 
+
 const F2F4_E7E5_G2G4_REPLY = `
 info depth 20 seldepth 2 multipv 1 score mate 1 nodes 684926 nps 793657 hashfull 280 tbhits 0 time 863 pv d8h4,
 info depth 20 seldepth 26 multipv 2 score cp 234 nodes 684926 nps 793657 hashfull 280 tbhits 0 time 863 pv d7d5 f1g2 e5f4 d2d4 f8d6 c2c4 d5c4 b1d2 h7h5 g4h5 b8c6 d2c4 h8h5 g2f3 h5h4 c4d6 c7d6,
 info depth 20 seldepth 23 multipv 3 score cp 219 nodes 684926 nps 793657 hashfull 280 tbhits 0 time 863 pv e5f4 g1f3 d7d5 d2d4 f8d6 h1g1 b8c6 c2c4 d5c4 b1c3 h7h6 h2h3 g8f6 e2e4
+`;
+
+const REPLY_WITH_MATE = `
+info depth 10 seldepth 12 multipv 1 score cp -764 nodes 144787 nps 12065583 hashfull 9 tbhits 0 time 12 pv f1f2 f4d3 f2c2 g5e3 b7b1 e3f3 h1g1 d3f4,
+info depth 10 seldepth 19 multipv 2 score cp -792 nodes 144787 nps 12065583 hashfull 9 tbhits 0 time 12 pv b7b8 g8h7 f1f2 f4d3 f2c2 g5e3 b8h8 h7h8 h2h4 e3f3 h1h2 h8h7 a2a4 f3e4 a4a5 e4h4 h2g1 h4e1 g1g2 e1a5,
+info depth 10 seldepth 3 multipv 3 score mate -1 nodes 144787 nps 12065583 hashfull 9 tbhits 0 time 12 pv a2a3 g5g2 
 `;
 
 const MATE_IN_1 = `'info depth 20 seldepth 2 multipv 1 score mate 1 nodes 832789 nps 601726 hashfull 349 tbhits 0 time 1384 pv d8h4`;
@@ -119,7 +126,7 @@ describe("UCIUtil", () => {
       expect(reply.moves[2].data.score).toBe(-46);
     });
 
-    it("should return next candidate moves considering mate first", () => {
+    it("should return next candidate moves considering mate I am doing first", () => {
       const reply = UCIUtil.parseUCIResult(F2F4_E7E5_G2G4_REPLY, 20, false);
       expect(reply.moves.length).toBe(3);
       expect(reply.endOfGame).toBe(EndOfGameMode.NONE);
@@ -131,6 +138,20 @@ describe("UCIUtil", () => {
       expect(reply.moves[1].data.score).toBe(-234);
       expect(reply.moves[2].move).toBe("e5f4");
       expect(reply.moves[2].data.score).toBe(-219);
+    });
+
+    it("should return next candidate moves considering mate I'm receiving last", () => {
+      const reply = UCIUtil.parseUCIResult(REPLY_WITH_MATE, 10, true);
+      expect(reply.moves.length).toBe(3);
+      expect(reply.endOfGame).toBe(EndOfGameMode.NONE);
+      expect(reply.ignored).toBe(false);
+      expect(reply.moves[0].move).toBe("f1f2");
+      expect(reply.moves[0].data.score).toBe(-764);
+      expect(reply.moves[1].move).toBe("b7b8");
+      expect(reply.moves[1].data.score).toBe(-792);
+      expect(reply.moves[2].move).toBe("a2a3");
+      expect(reply.moves[2].data.mate).toBe(-1);
+      expect(reply.moves[2].data.mate).toBeTruthy();
     });
   });
 
