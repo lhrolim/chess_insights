@@ -21,6 +21,9 @@ export class MoveAnalysisDTO {
 
   // { score: 900, mate: 0 } ==> "barrilda!" should be equal of the best reply of next moves
   positionScore(): MoveData {
+   if (this.endOfGame === EndOfGameMode.MATE || !this.nextMoves) {
+     return { score: 0, mate: 0, isWhiteToMove: this.wasWhiteMove };
+   }
     return this.nextMoves[0].data;
   }
 
