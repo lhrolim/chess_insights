@@ -6,6 +6,7 @@ export type MoveAnalysisDTOForPrecision = {
   moveScoreDelta: number;
   category: MoveCategory;
   wasWhiteMove: boolean;
+  endofGame?: EndOfGameMode;
 };
 
 export class MoveAnalysisDTO {
@@ -21,9 +22,9 @@ export class MoveAnalysisDTO {
 
   // { score: 900, mate: 0 } ==> "barrilda!" should be equal of the best reply of next moves
   positionScore(): MoveData {
-   if (this.endOfGame === EndOfGameMode.MATE || !this.nextMoves) {
-     return { score: 0, mate: 0, isWhiteToMove: this.wasWhiteMove };
-   }
+    if (this.endOfGame === EndOfGameMode.MATE || !this.nextMoves) {
+      return { score: 0, mate: 0, isWhiteToMove: this.wasWhiteMove };
+    }
     return this.nextMoves[0].data;
   }
 
@@ -105,7 +106,7 @@ export class MoveAnalysisDTO {
 
     const positionScoreString = score.score ? `Score: ${score.score}` : `Mate in ${score.mate}`;
 
-    return `Move Played: ${this.movePlayed}, Next Best Move: ${this.nextMoves[0]?.move}, Position Score: ${positionScoreString}, Move Score Delta: ${this.moveScoreDelta}, Result: ${this.category}, Position: ${this.position}`;
+    return `Move Played: ${this.movePlayed}, Best Reply Move: ${this.nextMoves[0]?.move}, Position Score: ${positionScoreString}, Move Score Delta: ${this.moveScoreDelta}, Result: ${this.category}, Position: ${this.position}`;
   }
 
   previousScore(): number {
@@ -133,7 +134,8 @@ export class MoveAnalysisDTO {
     return {
       moveScoreDelta: this.moveScoreDelta,
       category: this.category,
-      wasWhiteMove: this.wasWhiteMove
+      wasWhiteMove: this.wasWhiteMove,
+      endofGame: this.endOfGame
     };
   }
 }

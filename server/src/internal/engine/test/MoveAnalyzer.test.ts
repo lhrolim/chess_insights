@@ -216,11 +216,54 @@ describe("categorizeMove", () => {
     });
   });
 
+  describe("mate scenarios", () => {
+    it("returns MATE_CONSTANT when joins a mate web", () => {
+      const pastMove = MoveAnalysisPOTO.withScore(400); //white already winning
+      const ma = MoveAnalysisPOTO.inMateWeb(5, false);
+      const result = MoveAnalyzer.calculateDeltaScore(ma.positionScore(), pastMove.positionScore());
+      expect(result).toBe(MoveAnalysisThresholds.MATE_CONSTANT - 400);
+    });
+
+    it("returns a 0 in regular mate scenario and excellent move", () => {
+      const pastMove = MoveAnalysisPOTO.inMateWeb(5, false);
+      const ma = MoveAnalysisPOTO.inMateWeb(4, true, "d6d8"); //second best
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(0);
+      expect(result.category).toBe(MoveCategory.Excellent);
+    });
+
+    it("returns a 0 in longer mate web", () => {
+      const pastMove = MoveAnalysisPOTO.inMateWeb(5, false);
+      const ma = MoveAnalysisPOTO.inMateWeb(9, true, "d2d3"); //second best
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(0);
+      expect(result.category).toBe(MoveCategory.Excellent);
+    });
+
+    it("returns a miss if escapes mate", () => {
+      const pastMove = MoveAnalysisPOTO.inMateWeb();
+      const ma = MoveAnalysisPOTO.withScore(955, true, "h2h3");
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.category).toBe(MoveCategory.Miss);
+    });
+
+    it("enters mate web", () => {
+      const pastMove = MoveAnalysisPOTO.blackMistake();
+      const ma = MoveAnalysisPOTO.withScore(1, true, "h4g6");
+      ma.movePlayed = "h4g6";
+      ma.nextMoves[0].data.mate = 6;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.category).toBe(MoveCategory.Best); //TODO: piece sacrificed should count as great
+    });
+  });
+
   it("first move, return Book", () => {
-    const ma = MoveAnalysisPOTO.withScore(900);
+    const ma = MoveAnalysisPOTO.withScore(30);
+    ma.movePlayed = "e2e4";
+    ma.position = "e2e4";
     const result = MoveAnalyzer.analyzeMove(ma, null);
     expect(result.category).toBe(MoveCategory.Book);
-    expect(result.moveScoreDelta).toBe(900);
+    expect(result.moveScoreDelta).toBe(30);
   });
 
   // Add more test cases for different scenarios

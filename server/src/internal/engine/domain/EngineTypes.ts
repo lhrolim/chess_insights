@@ -18,7 +18,8 @@ export enum MoveCategory {
   Innacuracy = "inaccuracy",
   Mistake = "mistake",
   Blunder = "blunder",
-  Miss = "miss"
+  Miss = "miss",
+  Ignored = "ignored" // to account for scenarios where we are analyzing half of the game onwards
 }
 
 export type UCIResult = {

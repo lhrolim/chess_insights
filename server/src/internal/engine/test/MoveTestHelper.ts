@@ -1,12 +1,16 @@
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 
 export class MoveAnalysisPOTO {
-  public static inMateWeb(): MoveAnalysisDTO {
+  public static inMateWeb(moves: number = 2, wasWhiteMove: boolean = true, movePlayed?: string): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
+    moveAnalysis.wasWhiteMove = wasWhiteMove;
+    moveAnalysis.movePlayed = movePlayed;
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: 900, mate: 2 } },
-      { move: "d6d8", data: { score: 900, mate: 4 } }
+      { move: "e6e7", data: { score: null, mate: moves } },
+      { move: "d6d8", data: { score: null, mate: 4 } },
+      { move: "h2h3", data: { score: 955, mate: null } }
     ];
+    moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
     return moveAnalysis;
   }
 
@@ -112,9 +116,20 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
-  public static withScore(score: number, whiteMove: boolean = true, move = "e6e7"): MoveAnalysisDTO {
+  public static blackMistake(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
-    moveAnalysis.nextMoves = [{ move: move, data: { score, mate: null } }];
+    moveAnalysis.wasWhiteMove = false;
+    moveAnalysis.nextMoves = [
+      { move: "h4g6", data: { score: null, mate: 7 } },
+      { move: "g5g6", data: { score: null, mate: 11 } },
+      { move: "h2h3", data: { score: 921, mate: null } }
+    ];
+    return moveAnalysis;
+  }
+
+  public static withScore(score: number, whiteMove: boolean = true, nextBestMove = "e6e7"): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
+    moveAnalysis.nextMoves = [{ move: nextBestMove, data: { score, mate: null } }];
     moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
     moveAnalysis.wasWhiteMove = whiteMove;
     return moveAnalysis;

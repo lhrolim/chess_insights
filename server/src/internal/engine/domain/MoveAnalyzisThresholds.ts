@@ -13,4 +13,6 @@ export class MoveAnalysisThresholds {
   public static OPENING_THRESHOLD = 5; //number of moves to consider under a lower depth
 
   public static BOOK_MOVE_THRESHOLD = 7; //max number of moves to consider a book move
+
+  public static MATE_CONSTANT = 1000;
 }

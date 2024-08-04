@@ -2,15 +2,18 @@ import { MoveData, MoveCategory } from "../domain/EngineTypes";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 
-const MATE_CONSTANT = 10000;
+
 
 export class MoveAnalyzer {
   public static calculateDeltaScore(moveData: MoveData, pastScore?: MoveData): number {
     if (!pastScore) {
       return moveData.score;
     }
+    if (pastScore.mate && moveData.mate) {
+      return 0;
+    }
     if (moveData.mate) {
-      return moveData.mate * MATE_CONSTANT;
+      return MoveAnalysisThresholds.MATE_CONSTANT - pastScore.score;
     }
     if (pastScore.mate) {
       return -moveData.score;
@@ -32,8 +35,11 @@ export class MoveAnalyzer {
     moveAnalysis: MoveAnalysisDTO,
     whiteMove: boolean
   ): MoveCategory {
-    if (!previousAnalysis || checkForBookMoves(moveAnalysis)) {
+    if (checkForBookMoves(moveAnalysis)) {
       return MoveCategory.Book;
+    }
+    if (!previousAnalysis) {
+      return MoveCategory.Ignored;
     }
     const normalizedDelta = whiteMove ? -deltaScore : deltaScore; // if black is moving a positive is score is actually really bad as white is now better
     const positionGotWorse = normalizedDelta > 0;
@@ -58,7 +64,7 @@ export class MoveAnalyzer {
       return MoveAnalyzer.positionGotWorseScenario(normalizedDelta, previousAnalysis, moveAnalysis);
     }
 
-    return MoveCategory.Good;
+    return normalizedDelta === 0 ? MoveCategory.Excellent : MoveCategory.Good;
   }
   static positionGotWorseScenario(
     normalizedDelta: number,

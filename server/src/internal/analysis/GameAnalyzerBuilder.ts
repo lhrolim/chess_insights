@@ -1,5 +1,5 @@
 import { EngineMove } from "@internal/engine/domain/EngineInput";
-import { MoveCategory } from "@internal/engine/domain/EngineTypes";
+import { EndOfGameMode, MoveCategory } from "@internal/engine/domain/EngineTypes";
 import {
   ConsolidateMoveAnalysis,
   createDefaultConsolidateMoveAnalysis,

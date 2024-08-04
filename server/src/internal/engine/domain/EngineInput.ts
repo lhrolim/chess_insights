@@ -41,6 +41,7 @@ export class EngineMove {
   cumulativeStartPos: string;
   timeTook?: number; //time it took in millis to perform this move
   whiteMove?: boolean = undefined;
+  pieceSacrificed?: boolean;
 
   constructor(move: string, fenPosition: string, cumulativeStartPos: string, timeTook?: number) {
     this.move = move;

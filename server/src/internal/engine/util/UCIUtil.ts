@@ -3,7 +3,6 @@ import { EndOfGameMode, MoveCategory, MoveData, UCIMoveResult, UCIResult } from 
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 const logger = getLogger(__filename, LogTypes.Analysis);
 
-const MATE_CONSTANT = 10000;
 
 export class UCIUtil {
   static matchesDepth(line: string, depth: number): unknown {
@@ -91,7 +90,7 @@ export class UCIUtil {
     const endOfGameCheck = UCIUtil.isEndOfGame(uciAnswer, areRepliesWhiteMoves);
     this.logHashInfo(uciAnswer);
     if (endOfGameCheck && endOfGameCheck !== EndOfGameMode.NONE) {
-      logger.debug("Received:\n" + uciAnswer);
+      logger.trace("Received:\n" + uciAnswer);
       return { moves: [], endOfGame: endOfGameCheck, ignored: false };
     }
     let filteredLines = uciAnswer.split("\n").filter(line => UCIUtil.matchesDepth(line, depth));
@@ -99,7 +98,7 @@ export class UCIUtil {
     if (filteredLines.length === 0) {
       return { moves: [], endOfGame: endOfGameCheck, ignored: true };
     }
-    logger.debug("Received:\n" + filteredLines);
+    logger.trace("Received:\n" + filteredLines);
     const movesResult = new Array<UCIMoveResult>();
     for (const line of filteredLines) {
       //if multipv is enabled we will have several move options
@@ -124,8 +123,10 @@ export class UCIUtil {
     if (moveData.score != null) {
       return moveData.score;
     }
-    const mateIn = moveData.mate; //positive means I am giving mate, and negative I am receiving it
-    return areRepliesWhiteMoves ? mateIn * MATE_CONSTANT : -mateIn * MATE_CONSTANT;
+    const mateIn = moveData.mate > 0 ? 1 : -1; //positive means I am giving mate, and negative I am receiving it
+    return areRepliesWhiteMoves
+      ? mateIn * MoveAnalysisThresholds.MATE_CONSTANT
+      : mateIn * -MoveAnalysisThresholds.MATE_CONSTANT;
   }
 
   public static getStartPositionFromMoves(moves: string[]): string {

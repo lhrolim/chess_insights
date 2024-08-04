@@ -47,6 +47,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
           result.endOfGame = UCIUtil.isEndOfGame(output, isWhiteToMove);
           result.timeTook = engineMove.timeTook;
           if (result.isEndOfGame()) {
+            result.moveScoreDelta = 0;
             return resolve(result);
           }
 
@@ -101,8 +102,9 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     let previousAnalyis: MoveAnalysisDTO = null;
     const startMove = options.startMove || 1;
     for (let i = 0; i < moves.length; i++) {
-      if (MoveUtil.shouldSkipMove(i, startMove)) {
-        logger.debug(`Skipping move ${i}:${moves[i].move} as it is before the start move`);
+      const skipData = MoveUtil.shouldSkipMove(i, startMove);
+      if (skipData.shouldSkipEntirely) {
+        logger.trace(`Skipping move ${i}:${moves[i].move} as it is before the start move`);
         continue;
       }
       const move = moves[i];
@@ -112,14 +114,11 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       logger.debug(`${i}:Analyzing game at move ${move.cumulativeStartPos} fen: ${move.fenPosition}`);
       const result = await this.analyzeSingleMove(move, adjustedDepth, adjusteLines, previousAnalyis);
       logger.debug("analysis:" + result.toString());
-      analysisResults.push(result);
+      if (!skipData.shouldSkipOnlyResult) {
+        analysisResults.push(result);
+      }
       previousAnalyis = result;
     }
-    // try {
-    //   this.client.disconnect();
-    // } catch (e) {
-    //   console.error("Error disconnecting:", e);
-    // }
     if (config.server.isLocal()) {
       logFullStockFishOutput(analysisResults);
     }
