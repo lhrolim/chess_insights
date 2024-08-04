@@ -9,6 +9,8 @@ import { UCIUtil } from "../util/UCIUtil";
 import { IEngineAnalyzer } from "../IEngineAnalyzer";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 import config from "../../../config";
+import { log } from "console";
+import { MoveUtil } from "@internal/util/MoveUtil";
 
 const logger = getLogger(__filename, LogTypes.Analysis);
 
@@ -92,12 +94,17 @@ export class EngineAnalyzer implements IEngineAnalyzer {
   // Method to analyze all moves
   private async doAnalyze(
     moves: EngineMove[],
-    options: GameAnalyzisOptions = { depth: 20, lines: 3 },
+    options: GameAnalyzisOptions = { depth: 20, lines: 3, startMove: 1 },
     ratings?: number[]
   ): Promise<GameAnalyzisResult> {
     let analysisResults = Array<MoveAnalysisDTO>();
     let previousAnalyis: MoveAnalysisDTO = null;
+    const startMove = options.startMove || 1;
     for (let i = 0; i < moves.length; i++) {
+      if (MoveUtil.shouldSkipMove(i, startMove)) {
+        logger.debug(`Skipping move ${i}:${moves[i].move} as it is before the start move`);
+        continue;
+      }
       const move = moves[i];
       // const adjusteLines = UCIUtil.getRecommendedLines(i, options.lines); //no point in bringing multiple lines at initial positions
       const adjusteLines = 3;
@@ -141,8 +148,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
 function logFullStockFishOutput(analysisResults: Array<MoveAnalysisDTO>) {
   logger.debug("Full analysis results:");
   analysisResults.forEach((analysis, index) => {
-    const moveNumber = Math.floor((index + 2) / 2);
-    logger.debug(`Move ${moveNumber} ${analysis.wasWhiteMove ? "W" : "B"}: ${analysis.movePlayed}`);
+    logger.debug(`Move ${analysis.moveNumber()} ${analysis.wasWhiteMove ? "W" : "B"}: ${analysis.movePlayed}`);
     logger.debug(`Position: ${analysis.position}`);
     logger.debug(`Output: ${analysis.rawStockfishOutput}`);
   });

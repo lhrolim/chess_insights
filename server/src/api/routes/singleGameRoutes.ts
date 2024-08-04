@@ -137,9 +137,9 @@ router.get("/analyze", async (req: Request, res: Response) => {
 router.post(
   "/analyzePGN",
   asyncHandler(async (req: Request, res: Response) => {
-    const { pgn } = req.body;
+    const { pgn, startmove } = req.body;
     const engineInput = EngineInput.fromPGN(pgn);
-    const options = { depth: 10, lines: 3, eloRating: 3500, threads: 8 };
+    const options = { depth: 10, lines: 3, eloRating: 3500, threads: 8, startMove: startmove };
     const result = await engineAnalyzer.analyzeGame(engineInput, options);
 
     res.send(result);

@@ -5,6 +5,7 @@ export type GameAnalyzisOptions = {
   eloRating?: number;
   threads?: number;
   playerRatings?: number[];
+  startMove?: number; // if set previous moves would be ignored and analysis would start from this move
 };
 
 export enum MoveCategory {
