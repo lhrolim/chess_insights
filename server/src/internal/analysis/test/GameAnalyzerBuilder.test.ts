@@ -21,6 +21,26 @@ describe("GameAnalyzerBuilder.getCPLForRating", () => {
   });
 });
 
+describe("calculate precision out of average cploss", () => {
+  it("should return 100 for 0 cploss", () => {
+    let result = GameAnalyzerBuilder.getPrecisionOutOfAverageCPLoss(0.66, true);
+    expect(result).toBe(71.6);
+
+    result = GameAnalyzerBuilder.getPrecisionOutOfAverageCPLoss(0.4, true);
+    expect(result).toBe(83.7);
+  });
+});
+
+// describe("calculate precision out of average cploss informing rating", () => {
+//   it("should return 100 for 0 cploss", () => {
+//     let result = GameAnalyzerBuilder.getPrecisionOutOfAverageCPLoss(0.66, true, [1500, 1500]);
+//     expect(result).toBe(70.2);
+
+//     result = GameAnalyzerBuilder.getPrecisionOutOfAverageCPLoss(0.4, true, [1500, 1500]);
+//     expect(result).toBe(84.4);
+//   });
+// });
+
 describe("GameAnalyzerBuilder.calculatePrecision", () => {
   const moveAnalysis: MoveAnalysisDTOForPrecision[] = [
     { moveScoreDelta: 0.6, category: MoveCategory.Innacuracy, wasWhiteMove: true },
