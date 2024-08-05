@@ -29,7 +29,7 @@ export class MoveAnalysisPOTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
       { move: "e6e7", data: new MoveData(150, null) },
-      { move: "d6d8", data: new MoveData(-120, null) },
+      { move: "d6d8", data: new MoveData(-100, null) },
       { move: "d6d7", data: new MoveData(-300, null) }
     ];
     return moveAnalysis;

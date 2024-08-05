@@ -59,7 +59,7 @@ export class MoveAnalyzer {
 
     const tablesTurned = moveAnalysis.didTablesTurn(previousAnalysis);
     if (tablesTurned) {
-      return MoveAnalyzer.tablesTurnedScenario(moveAnalysis, normalizedDelta, whiteMove);
+      return MoveAnalyzer.tablesTurnedScenario(moveAnalysis, normalizedDelta, moveContext);
     }
 
     if (positionGotWorse) {
@@ -110,12 +110,16 @@ export class MoveAnalyzer {
     return MoveCategory.Excellent;
   }
 
-  private static tablesTurnedScenario(moveAnalysis: MoveAnalysisDTO, delta: number, whiteMove: boolean): MoveCategory {
+  private static tablesTurnedScenario(
+    moveAnalysis: MoveAnalysisDTO,
+    delta: number,
+    moveContext: MoveAnalysisContext
+  ): MoveCategory {
     const absDelta = Math.abs(delta);
-    if (moveAnalysis.aboutEqual()) {
+    if (moveContext.stillAboutEqual) {
       return MoveCategory.Miss;
     }
-    if (absDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT) {
+    if (absDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT && moveContext.oponentHasDecisiveAdvantage) {
       return MoveCategory.Blunder;
     }
     if (absDelta > MoveAnalysisThresholds.INNACURACY_CONSTANT) {
@@ -137,6 +141,7 @@ export class MoveAnalyzer {
       moveAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove);
     const stillHasAdvantage = moveAnalysis.hasClearAdvantage(moveAnalysis.wasWhiteMove);
     const stillAboutEqual = moveAnalysis.aboutEqual();
+    const oponentHasDecisiveAdvantage = moveAnalysis.hasDecisiveAdvantage(!moveAnalysis.wasWhiteMove);
     const alreadyLost = moveAnalysis.alreadyLost(moveAnalysis.wasWhiteMove);
     const deltaBetweenSuggestedMoves = previousAnalysis.deltaBetweenSuggestedMoves();
     const secondBestKeepsEquality = previousAnalysis.secondBestKeepsEquality();
@@ -145,6 +150,7 @@ export class MoveAnalyzer {
     const onlyOneLeadsToMate = previousAnalysis.onlyOneLeadsToMate();
     return {
       lostDecisiveAdvantage,
+      oponentHasDecisiveAdvantage,
       keptDecisiveAdvantage,
       stillAboutEqual,
       stillHasAdvantage,
@@ -175,6 +181,7 @@ class MoveAnalysisContext {
   stillHasAdvantage: boolean;
   stillAboutEqual: boolean;
   alreadyLost: boolean;
+  oponentHasDecisiveAdvantage: boolean;
 }
 
 const brilliantGreatOrBest = (
@@ -182,18 +189,21 @@ const brilliantGreatOrBest = (
   whiteMove: boolean,
   context: MoveAnalysisContext
 ): MoveCategory => {
-  if (context.secondBestKeepsCompletelyWinning || context.alreadyLost) {
+  if (context.alreadyLost || context.secondBestKeepsCompletelyWinning) {
     return MoveCategory.Best;
   }
-  if (context.secondBestKeepsEquality) {
-    return context.onlyOneLeadsToMate ? MoveCategory.Great : MoveCategory.Best;
-  }
+
   if (context.normalizedDelta > MoveAnalysisThresholds.BRILLIANT_CONSTANT) {
     return MoveCategory.Brilliant;
   }
   if (context.normalizedDelta > MoveAnalysisThresholds.GREAT_CONSTANT || context.onlyOneLeadsToMate) {
     return MoveCategory.Great;
   }
+
+  if (context.secondBestKeepsEquality) {
+    return context.onlyOneLeadsToMate ? MoveCategory.Great : MoveCategory.Best;
+  }
+
   return MoveCategory.Best;
 };
 

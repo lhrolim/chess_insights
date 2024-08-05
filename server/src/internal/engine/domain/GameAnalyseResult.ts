@@ -32,11 +32,11 @@ export type ConsolidateMoveAnalysis = {
   numberOfBestMoves: number;
   numberOfExcellentMoves: number;
   numberOfGoodMoves: number;
+  numberOfBookMoves: number;
   numberOfInaccuracies: number;
   numberOfMistakes: number;
   numberOfBlunders: number;
   numberOfMisses: number;
-  numberOfBookMoves: number;
   totalMoves: number;
 };
 
