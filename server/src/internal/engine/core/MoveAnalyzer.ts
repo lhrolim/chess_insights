@@ -1,8 +1,7 @@
 import { MoveData, MoveCategory } from "../domain/EngineTypes";
+import { ChessJSMoveData } from "../../chessjs/domain/ChessJSMoveData";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
-
-
 
 export class MoveAnalyzer {
   public static calculateDeltaScore(moveData: MoveData, pastScore?: MoveData): number {
@@ -21,7 +20,11 @@ export class MoveAnalyzer {
     return moveData.score - pastScore.score;
   }
 
-  public static analyzeMove(uciAnalysis: MoveAnalysisDTO, previousAnalyses: MoveAnalysisDTO): MoveAnalysisData {
+  public static analyzeMove(
+    uciAnalysis: MoveAnalysisDTO,
+    previousAnalyses: MoveAnalysisDTO,
+    fenData?: ChessJSMoveData
+  ): MoveAnalysisData {
     const whiteMove = uciAnalysis.wasWhiteMove;
     const positionScore = uciAnalysis.positionScore();
     const moveScoreDelta = MoveAnalyzer.calculateDeltaScore(positionScore, previousAnalyses?.positionScore());
@@ -136,8 +139,12 @@ export type MoveAnalysisData = {
 const brilliantGreatOrBest = (previousAnalyses: MoveAnalysisDTO, whiteMove: boolean): MoveCategory => {
   const deltaBetweenSuggestedMoves = previousAnalyses.deltaBetweenSuggestedMoves();
   const secondBestKeepsEquality = previousAnalyses.secondBestKeepsEquality();
+  const secondBestKeepsCompletelyWinning = previousAnalyses.hasCompleteAdvantage(whiteMove);
   const normalizedDelta = whiteMove ? deltaBetweenSuggestedMoves : -deltaBetweenSuggestedMoves; //delta between top choices of engine
   const onlyOneLeadsToMate = previousAnalyses.onlyOneLeadsToMate();
+  if (onlyOneLeadsToMate && secondBestKeepsCompletelyWinning) {
+    return MoveCategory.Best;
+  }
   if (secondBestKeepsEquality) {
     return onlyOneLeadsToMate ? MoveCategory.Great : MoveCategory.Best;
   }

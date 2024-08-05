@@ -9,7 +9,7 @@ export class MoveAnalysisThresholds {
 
   public static EQUALITY_CONSTANT = 70;
   public static DECISIVE_ADVANTAGE = 250;
-  public static COMPLETELY_LOST = 400;
+  public static COMPLETE_ADVANTAGE = 400;
 
   public static OPENING_THRESHOLD = 5; //number of moves to consider under a lower depth
 

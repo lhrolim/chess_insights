@@ -1,5 +1,7 @@
-import { parseMovesFromPGN, buildEngineMoves } from "@internal/util/pgnparserutil";
+import { parseMovesFromPGN } from "@internal/util/pgnparserutil";
 import { UCIUtil } from "../util/UCIUtil";
+import { ChessJSMoveData } from "../../chessjs/domain/ChessJSMoveData";
+import { MoveUtil } from "@internal/util/MoveUtil";
 
 export class EngineInput {
   moves: EngineMove[];
@@ -20,13 +22,13 @@ export class EngineInput {
 
   public static fromMoves(moves: string[]): EngineInput {
     const startPos = UCIUtil.getStartPositionFromMoves(moves);
-    const engineMoves = buildEngineMoves(moves);
+    const engineMoves = MoveUtil.buildEngineMoves(moves);
     return new EngineInput(null, startPos, engineMoves);
   }
 
   public static fromStartPos(startPos: string): EngineInput {
     const moves = UCIUtil.getMovesFromStartPosition(startPos);
-    return new EngineInput(undefined, startPos, buildEngineMoves(moves));
+    return new EngineInput(undefined, startPos, MoveUtil.buildEngineMoves(moves));
   }
 
   public static fromPGN(pgn: string): EngineInput {
@@ -42,13 +44,21 @@ export class EngineMove {
   timeTook?: number; //time it took in millis to perform this move
   whiteMove?: boolean = undefined;
   pieceSacrificed?: boolean;
+  fenData?: ChessJSMoveData; //data that could be extracted just by checking the fen, before any engine analysis
 
-  constructor(move: string, fenPosition: string, cumulativeStartPos: string, timeTook?: number) {
+  constructor(
+    move: string,
+    fenPosition: string,
+    cumulativeStartPos: string,
+    timeTook?: number,
+    fenData?: ChessJSMoveData
+  ) {
     this.move = move;
     this.fenPosition = fenPosition;
     this.cumulativeStartPos = cumulativeStartPos;
     this.timeTook = timeTook;
     this.whiteMove = this.isWhiteToMove();
+    this.fenData = fenData;
   }
 
   public lastMove(): string {

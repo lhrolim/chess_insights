@@ -6,6 +6,9 @@ import { Chess } from "chess.js";
 import { EngineMove } from "@internal/engine/domain/EngineInput";
 import { forEach } from "typescript-collections/dist/lib/arrays";
 import { ClockUtil } from "./ClockUtil";
+import { ChessJSUtil } from "./ChessJSDataUtil";
+import { ChessJSMoveData } from "@internal/chessjs/domain/ChessJSMoveData";
+import { MoveUtil, PGNMove } from "./MoveUtil";
 const chess = new Chess();
 
 export type PGNParsedData = {
@@ -63,36 +66,7 @@ export const parseRelevantDataFromPGN = (pgn: string, amIPlayingAsWhite: boolean
 
 export const parseMovesFromPGN = (pgn: string): EngineMove[] => {
   const moves = parseRawMoves(pgn);
-  return buildEngineMoves(moves);
-};
-
-export const buildEngineMoves = (moves: PGNMove[] | string[]): EngineMove[] => {
-  const engineMoves = Array<EngineMove>();
-  chess.reset();
-  let startPos = "";
-  moves.forEach(pgnMove => {
-    let adjustedMove: PGNMove;
-
-    if (typeof pgnMove === "string") {
-      // If move is a string, create a PGNMove with an empty clock
-      adjustedMove = { move: pgnMove, timeTaken: NaN };
-    } else {
-      // If move is already a PGNMove, use it directly
-      adjustedMove = pgnMove;
-    }
-
-    const move = adjustedMove.move;
-    const validMove = chess.move(move);
-    if (!validMove) {
-      throw new Error("Invalid move");
-    }
-    const { from, to } = validMove;
-    const coordinateMove = from + to;
-    startPos += " " + coordinateMove;
-    engineMoves.push(new EngineMove(coordinateMove, chess.fen(), startPos.trim(), adjustedMove.timeTaken));
-  });
-
-  return engineMoves;
+  return MoveUtil.buildEngineMoves(moves);
 };
 
 const parseRawMoves = (pgn: string): Array<PGNMove> => {
@@ -124,9 +98,4 @@ const parseRawMoves = (pgn: string): Array<PGNMove> => {
   } catch (e) {
     logger.error("unable to parse game pgn", e);
   }
-};
-
-type PGNMove = {
-  move: string;
-  timeTaken: number;
 };

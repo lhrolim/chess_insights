@@ -94,6 +94,12 @@ export class MoveAnalysisDTO {
       : this.positionScore().score < -MoveAnalysisThresholds.DECISIVE_ADVANTAGE;
   }
 
+  hasCompleteAdvantage(whitePerspective: boolean): boolean {
+    return whitePerspective
+      ? this.positionScore().score > MoveAnalysisThresholds.COMPLETE_ADVANTAGE
+      : this.positionScore().score < -MoveAnalysisThresholds.COMPLETE_ADVANTAGE;
+  }
+
   alreadyLost(whitePerspective: boolean): boolean {
     return whitePerspective
       ? this.positionScore().score < MoveAnalysisThresholds.DECISIVE_ADVANTAGE
