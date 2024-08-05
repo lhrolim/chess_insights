@@ -134,6 +134,16 @@ describe("categorizeMove", () => {
       expect(result.moveScoreDelta).toBe(-253);
       expect(result.category).toBe(MoveCategory.Mistake);
     });
+
+    it("white already lost, return best move, not great", () => {
+      const pastMove = MoveAnalysisPOTO.with3MovesLostPositionCompletelyWhite();
+      const ma = MoveAnalysisPOTO.withScore(-547);
+      ma.wasWhiteMove = true;
+      ma.movePlayed = "b7b8";
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(0);
+      expect(result.category).toBe(MoveCategory.Best);
+    });
   });
 
   describe("brilliant, great or best scenario", () => {
@@ -155,6 +165,16 @@ describe("categorizeMove", () => {
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.moveScoreDelta).toBe(0);
       expect(result.category).toBe(MoveCategory.Great);
+    });
+
+    it("returns best if all moves keep good adavantage regardless of the threshold", () => {
+      const pastMove = MoveAnalysisPOTO.black3Excellent();
+      const ma = MoveAnalysisPOTO.withScore(-437);
+      ma.movePlayed = "a7d4";
+      ma.wasWhiteMove = false;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(0);
+      expect(result.category).toBe(MoveCategory.Best);
     });
 
     it("best move, but only one good, above threshold, return brilliant", () => {

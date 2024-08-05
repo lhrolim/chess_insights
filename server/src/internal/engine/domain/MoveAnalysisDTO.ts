@@ -102,8 +102,8 @@ export class MoveAnalysisDTO {
 
   alreadyLost(whitePerspective: boolean): boolean {
     return whitePerspective
-      ? this.positionScore().score < MoveAnalysisThresholds.DECISIVE_ADVANTAGE
-      : this.positionScore().score > -MoveAnalysisThresholds.DECISIVE_ADVANTAGE;
+      ? this.positionScore().score < -MoveAnalysisThresholds.DECISIVE_ADVANTAGE
+      : this.positionScore().score > MoveAnalysisThresholds.DECISIVE_ADVANTAGE;
   }
 
   pointsLost(): number {

@@ -146,9 +146,26 @@ export class EngineAnalyzer implements IEngineAnalyzer {
 }
 function logFullStockFishOutput(analysisResults: Array<MoveAnalysisDTO>) {
   logger.debug("Full analysis results:");
+  const perCategoryMovesWhite: any = {};
+  const perCategoryMovesBlack: any = {};
   analysisResults.forEach((analysis, index) => {
     logger.debug(`Move ${analysis.moveNumber()} ${analysis.wasWhiteMove ? "W" : "B"}: ${analysis.movePlayed}`);
     logger.debug(`Position: ${analysis.position}`);
     logger.debug(`Output: ${analysis.rawStockfishOutput}`);
+
+    if (!perCategoryMovesWhite[analysis.category]) {
+      perCategoryMovesWhite[analysis.category] = [];
+    }
+    if (!perCategoryMovesBlack[analysis.category]) {
+      perCategoryMovesBlack[analysis.category] = [];
+    }
+    const array = analysis.wasWhiteMove ? perCategoryMovesWhite : perCategoryMovesBlack;
+    array[analysis.category].push({
+      i: analysis.moveNumber(),
+      move: analysis.movePlayed,
+      score: analysis.moveScoreDelta
+    });
   });
+  logger.debug(`Per category moves White: ${JSON.stringify(perCategoryMovesWhite, null, 1)}`);
+  logger.debug(`Per category moves Black: ${JSON.stringify(perCategoryMovesBlack, null, 1)}`);
 }

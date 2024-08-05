@@ -35,6 +35,17 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
+  public static black3Excellent(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
+    moveAnalysis.wasWhiteMove = true;
+    moveAnalysis.nextMoves = [
+      { move: "a7d4", data: new MoveData(-437, null) },
+      { move: "h3g2", data: new MoveData(-251, null) },
+      { move: "h3g4", data: new MoveData(-236, null) }
+    ];
+    return moveAnalysis;
+  }
+
   public static withOnlyOneVeryGood(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
