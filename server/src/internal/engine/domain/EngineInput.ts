@@ -44,21 +44,15 @@ export class EngineMove {
   timeTook?: number; //time it took in millis to perform this move
   whiteMove?: boolean = undefined;
   pieceSacrificed?: boolean;
-  fenData?: ChessJSMoveData; //data that could be extracted just by checking the fen, before any engine analysis
+  chessJSData?: ChessJSMoveData; //data that could be extracted just by checking the fen, before any engine analysis
 
-  constructor(
-    move: string,
-    fenPosition: string,
-    cumulativeStartPos: string,
-    timeTook?: number,
-    fenData?: ChessJSMoveData
-  ) {
-    this.move = move;
-    this.fenPosition = fenPosition;
+  constructor(chessJSData: ChessJSMoveData, cumulativeStartPos: string, timeTook?: number) {
+    this.move = chessJSData.coordinatedMove;
+    this.fenPosition = chessJSData.fen;
     this.cumulativeStartPos = cumulativeStartPos;
     this.timeTook = timeTook;
     this.whiteMove = this.isWhiteToMove();
-    this.fenData = fenData;
+    this.chessJSData = chessJSData;
   }
 
   public lastMove(): string {

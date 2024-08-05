@@ -41,10 +41,61 @@ describe("FenData", () => {
     MoveUtil.buildEngineMoves(traxlerCounterAttackLine);
   });
 
-  xit("move is an active sacrifice", () => {
+  it("move is an active sacrifice", () => {
     const italianVariationLine = ["e4", "e5", "Nf3", "Nc6", "Bc4", "Nf6", "Nc3", "Nxe4"];
     const moves = MoveUtil.buildEngineMoves(italianVariationLine);
-    expect(moves[moves.length - 1].fenData?.isSacrifice).toBeTruthy();
-    expect(moves[moves.length - 1].fenData?.isCapture).toBeTruthy();
+    expect(moves[moves.length - 1].chessJSData?.isCapture).toBeTruthy();
+    expect(moves[moves.length - 1].chessJSData?.isSacrifice).toBeTruthy();
+  });
+
+  it("move is not an active sacrifice, rather exchange", () => {
+    const italianVariationLine = ["e4", "e5", "Nf3", "Nc6", "Bb5", "Nf6", "Bxc6", "bxc6"];
+    const moves = MoveUtil.buildEngineMoves(italianVariationLine);
+    expect(moves[moves.length - 2].chessJSData?.isCapture).toBeTruthy();
+    expect(moves[moves.length - 2].chessJSData?.isSacrifice).toBeFalsy();
+    expect(moves[moves.length - 1].chessJSData?.isCapture).toBeTruthy();
+    expect(moves[moves.length - 1].chessJSData?.isSacrifice).toBeFalsy();
+  });
+
+  it("move is not an active sacrifice, rather exchange of pawns", () => {
+    const italianVariationLine = ["e4", "e5", "d4"];
+    const moves = MoveUtil.buildEngineMoves(italianVariationLine);
+    expect(moves[moves.length - 1].chessJSData?.isCapture).toBeFalsy();
+    expect(moves[moves.length - 1].chessJSData?.isSacrifice).toBeFalsy();
+  });
+
+  it("move is not an active sacrifice, rather exchange of pawns 2", () => {
+    const line = [
+      "e4",
+      "e5",
+      "Nf3",
+      "Nc6",
+      "Bc4",
+      "Bc5",
+      "d3",
+      "Nf6",
+      "O-O",
+      "d6",
+      "c3",
+      "a5",
+      "Bb3",
+      "Ba7",
+      "Qe2",
+      "O-O",
+      "Bg5",
+      "h6",
+      "Be3",
+      "Ne7",
+      "Nh4",
+      "a4",
+      "Bc2",
+      "Bg4",
+      "Nf3",
+      "Ng6",
+      "d4"
+    ];
+    const moves = MoveUtil.buildEngineMoves(line);
+    expect(moves[moves.length - 1].chessJSData?.isCapture).toBeFalsy();
+    expect(moves[moves.length - 1].chessJSData?.isSacrifice).toBeFalsy();
   });
 });

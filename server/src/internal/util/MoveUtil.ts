@@ -28,11 +28,9 @@ export class MoveUtil {
         adjustedMove = pgnMove;
       }
       const move = adjustedMove.move;
-      chessJSMoveData = ChessJSUtil.getFenData(chess, move, chessJSMoveData);
+      chessJSMoveData = ChessJSUtil.getChessJSData(chess, move, chessJSMoveData);
       startPos += " " + chessJSMoveData.coordinatedMove;
-      engineMoves.push(
-        new EngineMove(chessJSMoveData.coordinatedMove, chessJSMoveData.fen, startPos.trim(), adjustedMove.timeTaken)
-      );
+      engineMoves.push(new EngineMove(chessJSMoveData, startPos.trim(), adjustedMove.timeTaken));
     });
 
     return engineMoves;

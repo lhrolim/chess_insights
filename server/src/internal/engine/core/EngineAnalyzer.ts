@@ -53,7 +53,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
 
           // The score of the position assuming the opponent will play the best move
           result.nextMoves = analyzedNextMoves.moves;
-          const moveAnalysisResult = MoveAnalyzer.analyzeMove(result, pastMoveAnalysis, engineMove.fenData); // e.g., it was 0.8 before, so scoreDelta = 0.5 - 0.8 = -0.3
+          const moveAnalysisResult = MoveAnalyzer.analyzeMove(result, pastMoveAnalysis, engineMove.chessJSData); // e.g., it was 0.8 before, so scoreDelta = 0.5 - 0.8 = -0.3
           result.category = moveAnalysisResult.category;
           result.moveScoreDelta = moveAnalysisResult.moveScoreDelta;
           result.rawStockfishOutput = output;

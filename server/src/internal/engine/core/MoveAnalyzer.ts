@@ -1,5 +1,5 @@
 import { MoveData, MoveCategory } from "../domain/EngineTypes";
-import { ChessJSMoveData } from "../../chessjs/domain/ChessJSMoveData";
+import { ChessJSMoveData, DEFAULT_CHESS_JS_MOVE_DATA } from "../../chessjs/domain/ChessJSMoveData";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 
@@ -28,7 +28,7 @@ export class MoveAnalyzer {
     const whiteMove = uciAnalysis.wasWhiteMove;
     const positionScore = uciAnalysis.positionScore();
     const moveScoreDelta = MoveAnalyzer.calculateDeltaScore(positionScore, previousAnalyses?.positionScore());
-    const category = MoveAnalyzer.getMoveCategory(moveScoreDelta, previousAnalyses, uciAnalysis, whiteMove);
+    const category = MoveAnalyzer.getMoveCategory(moveScoreDelta, previousAnalyses, uciAnalysis, whiteMove, fenData);
     return { category, moveScoreDelta, positionScore };
   }
 
@@ -36,7 +36,8 @@ export class MoveAnalyzer {
     deltaScore: number,
     previousAnalysis: MoveAnalysisDTO,
     moveAnalysis: MoveAnalysisDTO,
-    whiteMove: boolean
+    whiteMove: boolean,
+    fenData?: ChessJSMoveData
   ): MoveCategory {
     if (checkForBookMoves(moveAnalysis)) {
       return MoveCategory.Book;
@@ -54,7 +55,7 @@ export class MoveAnalyzer {
     }
     const bestOptionScore = previousAnalysis.nextMoves[0].data.score;
     if (previousSuggestedMoves[0] == moveAnalysis.movePlayed) {
-      return brilliantGreatOrBest(previousAnalysis, whiteMove, moveContext);
+      return brilliantGreatOrBest(previousAnalysis, whiteMove, moveContext, fenData);
     }
 
     const tablesTurned = moveAnalysis.didTablesTurn(previousAnalysis);
@@ -187,15 +188,17 @@ class MoveAnalysisContext {
 const brilliantGreatOrBest = (
   previousAnalyses: MoveAnalysisDTO,
   whiteMove: boolean,
-  context: MoveAnalysisContext
+  context: MoveAnalysisContext,
+  fenData: ChessJSMoveData = DEFAULT_CHESS_JS_MOVE_DATA
 ): MoveCategory => {
+  if (context.normalizedDelta > MoveAnalysisThresholds.BRILLIANT_CONSTANT && fenData?.isSacrifice) {
+    return MoveCategory.Brilliant;
+  }
+
   if (context.alreadyLost || context.secondBestKeepsCompletelyWinning) {
     return MoveCategory.Best;
   }
 
-  if (context.normalizedDelta > MoveAnalysisThresholds.BRILLIANT_CONSTANT) {
-    return MoveCategory.Brilliant;
-  }
   if (context.normalizedDelta > MoveAnalysisThresholds.GREAT_CONSTANT || context.onlyOneLeadsToMate) {
     return MoveCategory.Great;
   }

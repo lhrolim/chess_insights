@@ -182,7 +182,7 @@ describe("categorizeMove", () => {
       const ma = MoveAnalysisPOTO.withScore(350);
       ma.movePlayed = "e6e7";
       ma.wasWhiteMove = true;
-      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove, { isSacrifice: true });
       expect(result.moveScoreDelta).toBe(0);
       expect(result.category).toBe(MoveCategory.Brilliant);
     });
@@ -192,7 +192,7 @@ describe("categorizeMove", () => {
       const ma = MoveAnalysisPOTO.withScore(-350);
       ma.movePlayed = "e6e7";
       ma.wasWhiteMove = false;
-      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove, { isSacrifice: true });
       expect(result.moveScoreDelta).toBe(0);
       expect(result.category).toBe(MoveCategory.Brilliant);
     });
