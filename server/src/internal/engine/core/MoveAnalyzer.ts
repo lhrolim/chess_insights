@@ -47,9 +47,9 @@ export class MoveAnalyzer {
     }
     const normalizedDelta = whiteMove ? -deltaScore : deltaScore; // if black is moving a positive is score is actually really bad as white is now better
     const positionGotWorse = normalizedDelta > 0;
-    const moveContext = this.generateContext(moveAnalysis, previousAnalysis, whiteMove);
-
     const previousSuggestedMoves = previousAnalysis.nextMoves.map(move => move.move);
+    const moveContext = this.generateContext(moveAnalysis, previousAnalysis, previousSuggestedMoves, whiteMove);
+
     if (previousAnalysis.inMateWeb() && !moveAnalysis.inMateWeb()) {
       return MoveCategory.Miss;
     }
@@ -79,8 +79,14 @@ export class MoveAnalyzer {
     moveAnalysis: MoveAnalysisDTO,
     moveContext: MoveAnalysisContext
   ): MoveCategory {
-    const { lostDecisiveAdvantage, keptDecisiveAdvantage, stillHasAdvantage, stillAboutEqual, alreadyLost } =
-      moveContext;
+    const {
+      lostDecisiveAdvantage,
+      keptDecisiveAdvantage,
+      stillHasAdvantage,
+      stillAboutEqual,
+      alreadyLost,
+      amongstEngineChoices
+    } = moveContext;
     if (normalizedDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT) {
       if (lostDecisiveAdvantage && (stillHasAdvantage || stillAboutEqual)) {
         return MoveCategory.Miss;
@@ -93,6 +99,10 @@ export class MoveAnalyzer {
       }
       return alreadyLost ? MoveCategory.Mistake : MoveCategory.Blunder;
     }
+    if (keptDecisiveAdvantage) {
+      return amongstEngineChoices ? MoveCategory.Excellent : MoveCategory.Good;
+    }
+
     if (normalizedDelta > MoveAnalysisThresholds.INNACURACY_CONSTANT) {
       if (lostDecisiveAdvantage && stillHasAdvantage) {
         return MoveCategory.Innacuracy;
@@ -132,6 +142,7 @@ export class MoveAnalyzer {
   private static generateContext(
     moveAnalysis: MoveAnalysisDTO,
     previousAnalysis: MoveAnalysisDTO,
+    previousSuggestedMoves: string[],
     whiteMove: boolean
   ): MoveAnalysisContext {
     const lostDecisiveAdvantage =
@@ -149,6 +160,7 @@ export class MoveAnalyzer {
     const secondBestKeepsCompletelyWinning = previousAnalysis.hasCompleteAdvantage(whiteMove);
     const normalizedDelta = whiteMove ? deltaBetweenSuggestedMoves : -deltaBetweenSuggestedMoves; //delta between top choices of engine
     const onlyOneLeadsToMate = previousAnalysis.onlyOneLeadsToMate();
+    const amongstEngineChoices = previousSuggestedMoves.includes(moveAnalysis.movePlayed);
     return {
       lostDecisiveAdvantage,
       oponentHasDecisiveAdvantage,
@@ -160,7 +172,8 @@ export class MoveAnalyzer {
       secondBestKeepsEquality,
       secondBestKeepsCompletelyWinning,
       onlyOneLeadsToMate,
-      deltaBetweenSuggestedMoves
+      deltaBetweenSuggestedMoves,
+      amongstEngineChoices
     };
   }
 }
@@ -183,6 +196,7 @@ class MoveAnalysisContext {
   stillAboutEqual: boolean;
   alreadyLost: boolean;
   oponentHasDecisiveAdvantage: boolean;
+  amongstEngineChoices: boolean;
 }
 
 const brilliantGreatOrBest = (
