@@ -13,7 +13,7 @@ export class MoveAnalyzer {
       return 0;
     }
     if (moveData.mate) {
-      return MoveAnalysisThresholds.MATE_CONSTANT - pastScore.score;
+      return Math.max(0, MoveAnalysisThresholds.MATE_CONSTANT - pastScore.score);
     }
     if (pastScore.mate) {
       return -moveData.score;
@@ -52,9 +52,7 @@ export class MoveAnalyzer {
     if (previousSuggestedMoves[0] == moveAnalysis.movePlayed) {
       return brilliantGreatOrBest(previousAnalysis, whiteMove);
     }
-    if (previousSuggestedMoves.includes(moveAnalysis.movePlayed)) {
-      return MoveCategory.Excellent;
-    }
+
     const tablesTurned = moveAnalysis.didTablesTurn(previousAnalysis);
     if (tablesTurned) {
       return MoveAnalyzer.tablesTurnedScenario(moveAnalysis, normalizedDelta, whiteMove);
@@ -62,6 +60,10 @@ export class MoveAnalyzer {
 
     if (positionGotWorse) {
       return MoveAnalyzer.positionGotWorseScenario(normalizedDelta, previousAnalysis, moveAnalysis);
+    }
+
+    if (previousSuggestedMoves.includes(moveAnalysis.movePlayed)) {
+      return MoveCategory.Excellent;
     }
 
     return normalizedDelta === 0 ? MoveCategory.Excellent : MoveCategory.Good;
@@ -92,8 +94,8 @@ export class MoveAnalyzer {
       return MoveCategory.Blunder;
     }
     if (normalizedDelta > MoveAnalysisThresholds.INNACURACY_CONSTANT) {
-      if (lostDecisiveAdvantage && (stillHasAdvantage || stillAboutEqual)) {
-        return MoveCategory.Miss;
+      if (lostDecisiveAdvantage && stillHasAdvantage) {
+        return MoveCategory.Innacuracy;
       }
       if (keptDeciseAdvantage) {
         return MoveCategory.Innacuracy;
@@ -101,7 +103,7 @@ export class MoveAnalyzer {
       return MoveCategory.Mistake;
     }
     if (normalizedDelta > MoveAnalysisThresholds.GOOD_CONSTANT) {
-      return MoveCategory.Innacuracy;
+      return stillHasAdvantage ? MoveCategory.Good : MoveCategory.Innacuracy;
     }
     if (normalizedDelta > MoveAnalysisThresholds.EXCELLENT_CONSTANT) {
       return MoveCategory.Good;
@@ -134,13 +136,14 @@ const brilliantGreatOrBest = (previousAnalyses: MoveAnalysisDTO, whiteMove: bool
   const deltaBetweenSuggestedMoves = previousAnalyses.deltaBetweenSuggestedMoves();
   const secondBestKeepsEquality = previousAnalyses.secondBestKeepsEquality();
   const normalizedDelta = whiteMove ? deltaBetweenSuggestedMoves : -deltaBetweenSuggestedMoves; //delta between top choices of engine
+  const onlyOneLeadsToMate = previousAnalyses.onlyOneLeadsToMate();
   if (secondBestKeepsEquality) {
-    return MoveCategory.Best;
+    return onlyOneLeadsToMate ? MoveCategory.Great : MoveCategory.Best;
   }
   if (normalizedDelta > MoveAnalysisThresholds.BRILLIANT_CONSTANT) {
     return MoveCategory.Brilliant;
   }
-  if (normalizedDelta > MoveAnalysisThresholds.GREAT_CONSTANT) {
+  if (normalizedDelta > MoveAnalysisThresholds.GREAT_CONSTANT || onlyOneLeadsToMate) {
     return MoveCategory.Great;
   }
   return MoveCategory.Best;

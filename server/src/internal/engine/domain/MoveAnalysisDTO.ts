@@ -23,7 +23,7 @@ export class MoveAnalysisDTO {
   // { score: 900, mate: 0 } ==> "barrilda!" should be equal of the best reply of next moves
   positionScore(): MoveData {
     if (this.endOfGame === EndOfGameMode.MATE || !this.nextMoves) {
-      return { score: 0, mate: 0, isWhiteToMove: this.wasWhiteMove };
+      return new MoveData(0, 0, this.wasWhiteMove);
     }
     return this.nextMoves[0].data;
   }
@@ -33,7 +33,14 @@ export class MoveAnalysisDTO {
   }
 
   inMateWeb(): boolean {
-    return this.positionScore().mate !== null && this.positionScore().mate > 0;
+    return this.positionScore().isMate();
+  }
+
+  onlyOneLeadsToMate() {
+    if (this.nextMoves.length < 2) {
+      return this.inMateWeb();
+    }
+    return this.inMateWeb() && !this.nextMoves[1].data.isMate();
   }
 
   didTablesTurn(previousAnalyses: MoveAnalysisDTO): boolean {

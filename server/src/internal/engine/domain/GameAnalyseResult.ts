@@ -16,11 +16,11 @@ export class GameAnalyzisResult {
 
   toJSON() {
     return {
+      whitePrecision: this.whitePrecision,
+      blackPrecision: this.blackPrecision,
       whiteAnalysis: this.whiteAnalysis,
       blackAnalysis: this.blackAnalysis,
       moves: this.moves,
-      whitePrecision: this.whitePrecision,
-      blackPrecision: this.blackPrecision,
       myFirstMistake: this.myFirstMistake
     };
   }

@@ -158,17 +158,20 @@ export class GameAnalyzerBuilder {
       throw new Error("The array of move analysis is empty");
     }
 
+    const whiteOriginalMoves = moveAnalysis.filter(move => move.wasWhiteMove);
+    const blackOriginalMoves = moveAnalysis.filter(move => !move.wasWhiteMove);
+
     // Split the move analysis into white and black moves
-    const whiteMoves = moveAnalysis.filter(move => move.wasWhiteMove);
-    const blackMoves = moveAnalysis.filter(move => !move.wasWhiteMove);
+    const whiteMovesWithLosses = whiteOriginalMoves.filter(move => move.wasWhiteMove && move.moveScoreDelta < 0);
+    const blackMovesWithLosses = blackOriginalMoves.filter(move => !move.wasWhiteMove && move.moveScoreDelta > 0);
 
     // Calculate total and average deltas for white moves
-    const totalWhiteDelta = whiteMoves.reduce((sum, move) => sum + Math.abs(move.moveScoreDelta), 0);
-    const averageWhiteDelta = Math.round(totalWhiteDelta / whiteMoves.length) / 100;
+    const totalWhiteDelta = whiteMovesWithLosses.reduce((sum, move) => sum + Math.abs(move.moveScoreDelta), 0);
+    const averageWhiteDelta = Math.round(totalWhiteDelta / whiteOriginalMoves.length) / 100;
 
     // Calculate total and average deltas for black moves
-    const totalBlackDelta = blackMoves.reduce((sum, move) => sum + Math.abs(move.moveScoreDelta), 0);
-    const averageBlackDelta = Math.round(totalBlackDelta / blackMoves.length) / 100;
+    const totalBlackDelta = blackMovesWithLosses.reduce((sum, move) => sum + Math.abs(move.moveScoreDelta), 0);
+    const averageBlackDelta = Math.round(totalBlackDelta / blackOriginalMoves.length) / 100;
 
     // Normalize the average delta to a score between 0 and 100 for white moves
     const whitePrecisionScore = this.getPrecisionOutOfAverageCPLoss(averageWhiteDelta, true, playerRatings);

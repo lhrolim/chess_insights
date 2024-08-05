@@ -62,6 +62,10 @@ export class MoveData {
     this.isWhiteToMove = isWhiteToMove;
   }
 
+  isMate(): boolean {
+    return this.mate !== null && this.mate !== 0;
+  }
+
   toString(): string {
     return `Score: ${this.score}, Mate: ${this.mate}, IsWhiteToMove: ${this.isWhiteToMove}`;
   }

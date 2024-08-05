@@ -125,8 +125,8 @@ export class UCIUtil {
     }
     const mateIn = moveData.mate > 0 ? 1 : -1; //positive means I am giving mate, and negative I am receiving it
     return areRepliesWhiteMoves
-      ? mateIn * MoveAnalysisThresholds.MATE_CONSTANT
-      : mateIn * -MoveAnalysisThresholds.MATE_CONSTANT;
+      ? mateIn * 100 * MoveAnalysisThresholds.MATE_CONSTANT
+      : mateIn * -100 * MoveAnalysisThresholds.MATE_CONSTANT;
   }
 
   public static getStartPositionFromMoves(moves: string[]): string {

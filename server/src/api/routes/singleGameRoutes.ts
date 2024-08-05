@@ -137,9 +137,10 @@ router.get("/analyze", async (req: Request, res: Response) => {
 router.post(
   "/analyzePGN",
   asyncHandler(async (req: Request, res: Response) => {
-    const { pgn, startmove } = req.body;
+    const { pgn, startmove, depth } = req.body;
     const engineInput = EngineInput.fromPGN(pgn);
-    const options = { depth: 10, lines: 3, eloRating: 3500, threads: 8, startMove: startmove };
+    const depthToUse = depth ? parseInt(depth) : 20;
+    const options = { depth: depthToUse, lines: 3, eloRating: 3500, threads: 8, startMove: startmove };
     const result = await engineAnalyzer.analyzeGame(engineInput, options);
 
     res.send(result);

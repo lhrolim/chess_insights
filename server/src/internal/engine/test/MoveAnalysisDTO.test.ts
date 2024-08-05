@@ -18,6 +18,14 @@ describe("count moves correctly", () => {
     ma.position = "e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 d7d6";
     expect(ma.moveNumber()).toBe(4);
   });
+
+
+  it("is in mate web", () => {
+    const ma = MoveAnalysisPOTO.withScore(50);
+    ma.position = "e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 d2d3 d7d6";
+    expect(ma.moveNumber()).toBe(4);
+  });
+
 });
 
 describe("previousScore", () => {

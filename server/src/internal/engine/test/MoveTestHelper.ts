@@ -1,3 +1,4 @@
+import { MoveData } from "../domain/EngineTypes";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 
 export class MoveAnalysisPOTO {
@@ -6,9 +7,9 @@ export class MoveAnalysisPOTO {
     moveAnalysis.wasWhiteMove = wasWhiteMove;
     moveAnalysis.movePlayed = movePlayed;
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: null, mate: moves } },
-      { move: "d6d8", data: { score: null, mate: 4 } },
-      { move: "h2h3", data: { score: 955, mate: null } }
+      { move: "e6e7", data: new MoveData(null, moves) },
+      { move: "d6d8", data: new MoveData(null, 4) },
+      { move: "h2h3", data: new MoveData(955, null) }
     ];
     moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
     return moveAnalysis;
@@ -17,9 +18,9 @@ export class MoveAnalysisPOTO {
   public static with3EqualOptionsForWhite(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: 50, mate: null } },
-      { move: "d6d8", data: { score: 20, mate: null } },
-      { move: "d6d7", data: { score: 10, mate: null } }
+      { move: "e6e7", data: new MoveData(50, null) },
+      { move: "d6d8", data: new MoveData(20, null) },
+      { move: "d6d7", data: new MoveData(10, null) }
     ];
     return moveAnalysis;
   }
@@ -27,9 +28,9 @@ export class MoveAnalysisPOTO {
   public static withOnlyOneDecent(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: 150, mate: null } },
-      { move: "d6d8", data: { score: -120, mate: null } },
-      { move: "d6d7", data: { score: -300, mate: null } }
+      { move: "e6e7", data: new MoveData(150, null) },
+      { move: "d6d8", data: new MoveData(-120, null) },
+      { move: "d6d7", data: new MoveData(-300, null) }
     ];
     return moveAnalysis;
   }
@@ -37,9 +38,9 @@ export class MoveAnalysisPOTO {
   public static withOnlyOneVeryGood(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: 350, mate: null } },
-      { move: "d6d8", data: { score: -200, mate: null } },
-      { move: "d6d7", data: { score: -300, mate: null } }
+      { move: "e6e7", data: new MoveData(350, null) },
+      { move: "d6d8", data: new MoveData(-200, null) },
+      { move: "d6d7", data: new MoveData(-300, null) }
     ];
     return moveAnalysis;
   }
@@ -47,9 +48,9 @@ export class MoveAnalysisPOTO {
   public static withOnlyOneVeryGoodBlack(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: -350, mate: null } },
-      { move: "d6d8", data: { score: 200, mate: null } },
-      { move: "d6d7", data: { score: 300, mate: null } }
+      { move: "e6e7", data: new MoveData(-350, null) },
+      { move: "d6d8", data: new MoveData(200, null) },
+      { move: "d6d7", data: new MoveData(300, null) }
     ];
     return moveAnalysis;
   }
@@ -57,9 +58,9 @@ export class MoveAnalysisPOTO {
   public static with3MovesLostPositionForWhite(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: -210, mate: null } },
-      { move: "d6d8", data: { score: -220, mate: null } },
-      { move: "d6d7", data: { score: -250, mate: null } }
+      { move: "e6e7", data: new MoveData(-210, null) },
+      { move: "d6d8", data: new MoveData(-220, null) },
+      { move: "d6d7", data: new MoveData(-250, null) }
     ];
     return moveAnalysis;
   }
@@ -67,9 +68,9 @@ export class MoveAnalysisPOTO {
   public static with3EqualOptionsForBlack(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: -50, mate: null } },
-      { move: "d6d8", data: { score: -20, mate: null } },
-      { move: "d6d7", data: { score: -10, mate: null } }
+      { move: "e6e7", data: new MoveData(-50, null) },
+      { move: "d6d8", data: new MoveData(-20, null) },
+      { move: "d6d7", data: new MoveData(-10, null) }
     ];
     return moveAnalysis;
   }
@@ -78,9 +79,9 @@ export class MoveAnalysisPOTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.wasWhiteMove = true;
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: 250, mate: null } },
-      { move: "d6d8", data: { score: 220, mate: null } },
-      { move: "d6d7", data: { score: 210, mate: null } }
+      { move: "e6e7", data: new MoveData(250, null) },
+      { move: "d6d8", data: new MoveData(220, null) },
+      { move: "d6d7", data: new MoveData(210, null) }
     ];
     return moveAnalysis;
   }
@@ -89,9 +90,9 @@ export class MoveAnalysisPOTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.wasWhiteMove = true;
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: 350, mate: null } },
-      { move: "d6d8", data: { score: 220, mate: null } },
-      { move: "d6d7", data: { score: 210, mate: null } }
+      { move: "e6e7", data: new MoveData(350, null) },
+      { move: "d6d8", data: new MoveData(220, null) },
+      { move: "d6d7", data: new MoveData(210, null) }
     ];
     return moveAnalysis;
   }
@@ -99,9 +100,9 @@ export class MoveAnalysisPOTO {
   public static with3OptionsBlackAdvantage250(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: -250, mate: null } },
-      { move: "d6d8", data: { score: -220, mate: null } },
-      { move: "d6d7", data: { score: -210, mate: null } }
+      { move: "e6e7", data: new MoveData(-250, null) },
+      { move: "d6d8", data: new MoveData(-220, null) },
+      { move: "d6d7", data: new MoveData(-210, null) }
     ];
     return moveAnalysis;
   }
@@ -109,9 +110,9 @@ export class MoveAnalysisPOTO {
   public static decisiveBlack(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [
-      { move: "e6e7", data: { score: -450, mate: null } },
-      { move: "d6d8", data: { score: -440, mate: null } },
-      { move: "d6d7", data: { score: -430, mate: null } }
+      { move: "e6e7", data: new MoveData(-450, null) },
+      { move: "d6d8", data: new MoveData(-440, null) },
+      { move: "d6d7", data: new MoveData(-430, null) }
     ];
     return moveAnalysis;
   }
@@ -120,16 +121,16 @@ export class MoveAnalysisPOTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.wasWhiteMove = false;
     moveAnalysis.nextMoves = [
-      { move: "h4g6", data: { score: null, mate: 7 } },
-      { move: "g5g6", data: { score: null, mate: 11 } },
-      { move: "h2h3", data: { score: 921, mate: null } }
+      { move: "h4g6", data: new MoveData(null, 7) },
+      { move: "g5g6", data: new MoveData(null, 11) },
+      { move: "h2h3", data: new MoveData(921, null) }
     ];
     return moveAnalysis;
   }
 
   public static withScore(score: number, whiteMove: boolean = true, nextBestMove = "e6e7"): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
-    moveAnalysis.nextMoves = [{ move: nextBestMove, data: { score, mate: null } }];
+    moveAnalysis.nextMoves = [{ move: nextBestMove, data: new MoveData(score, null) }];
     moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
     moveAnalysis.wasWhiteMove = whiteMove;
     return moveAnalysis;

@@ -30,8 +30,19 @@ describe("categorizeMove", () => {
       expect(result.category).toBe(MoveCategory.Mistake);
     });
 
-    it("less than 1 point lost still winning ==> innacuraccy", () => {
+    it("less than 1 point lost still winning ==> good", () => {
       const pastMove = MoveAnalysisPOTO.with3OptionsWhiteAdvantage250();
+      const ma = MoveAnalysisPOTO.withScore(
+        pastMove.positionScore().score - (MoveAnalysisThresholds.INNACURACY_CONSTANT - 1)
+      );
+      ma.wasWhiteMove = true;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(-1 * (MoveAnalysisThresholds.INNACURACY_CONSTANT - 1));
+      expect(result.category).toBe(MoveCategory.Good);
+    });
+
+    it("marks innacuraccy if less than 1 point and lost edge", () => {
+      const pastMove = MoveAnalysisPOTO.withScore(140);
       const ma = MoveAnalysisPOTO.withScore(
         pastMove.positionScore().score - (MoveAnalysisThresholds.INNACURACY_CONSTANT - 1)
       );
@@ -50,13 +61,13 @@ describe("categorizeMove", () => {
       expect(result.category).toBe(MoveCategory.Excellent);
     });
 
-    it("lost considerable advantage, but kept over equality ==> return miss", () => {
+    it("lost considerable advantage, but kept over equality ==> return innacuraccy", () => {
       const pastMove = MoveAnalysisPOTO.with3OptionsWhiteAdvantage350();
       const ma = MoveAnalysisPOTO.withScore(230);
       ma.wasWhiteMove = true;
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.moveScoreDelta).toBe(-120);
-      expect(result.category).toBe(MoveCategory.Miss);
+      expect(result.category).toBe(MoveCategory.Innacuracy);
     });
   });
 
@@ -224,9 +235,24 @@ describe("categorizeMove", () => {
       expect(result).toBe(MoveAnalysisThresholds.MATE_CONSTANT - 400);
     });
 
+    it("should return 0 if had more than the Mate constant", () => {
+      const pastMove = MoveAnalysisPOTO.withScore(1800); //white already winning
+      const ma = MoveAnalysisPOTO.inMateWeb(5, false);
+      const result = MoveAnalyzer.calculateDeltaScore(ma.positionScore(), pastMove.positionScore());
+      expect(result).toBe(0);
+    });
+
     it("returns a 0 in regular mate scenario and excellent move", () => {
-      const pastMove = MoveAnalysisPOTO.inMateWeb(5, false);
+      const pastMove = MoveAnalysisPOTO.inMateWeb(-5, false);
       const ma = MoveAnalysisPOTO.inMateWeb(4, true, "d6d8"); //second best
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(0);
+      expect(result.category).toBe(MoveCategory.Excellent);
+    });
+
+    it("[black]returns a 0 in regular mate scenario and excellent move", () => {
+      const pastMove = MoveAnalysisPOTO.inMateWeb(5, true);
+      const ma = MoveAnalysisPOTO.inMateWeb(-4, false, "d6d8"); //second best
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.moveScoreDelta).toBe(0);
       expect(result.category).toBe(MoveCategory.Excellent);
@@ -247,13 +273,34 @@ describe("categorizeMove", () => {
       expect(result.category).toBe(MoveCategory.Miss);
     });
 
-    it("enters mate web", () => {
+    it("enters mate web, multiple options to enter", () => {
       const pastMove = MoveAnalysisPOTO.blackMistake();
       const ma = MoveAnalysisPOTO.withScore(1, true, "h4g6");
       ma.movePlayed = "h4g6";
       ma.nextMoves[0].data.mate = 6;
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.category).toBe(MoveCategory.Best); //TODO: piece sacrificed should count as great
+    });
+
+    it("enters mate web, single option", () => {
+      const pastMove = MoveAnalysisPOTO.blackMistake();
+      pastMove.nextMoves[1].data.mate = null;
+      pastMove.nextMoves[1].data.score = 1200;
+      const ma = MoveAnalysisPOTO.withScore(1, true, "h4g6");
+      ma.movePlayed = "h4g6";
+      ma.nextMoves[0].data.mate = 6;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.category).toBe(MoveCategory.Great); //single option
+    });
+
+    it("return miss if misses entering mate web", () => {
+      const pastMove = MoveAnalysisPOTO.blackMistake();
+      pastMove.nextMoves[1].data.mate = null;
+      pastMove.nextMoves[1].data.score = 1200;
+      const ma = MoveAnalysisPOTO.withScore(300, true, "h4g6");
+      ma.movePlayed = "h2h3";
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.category).toBe(MoveCategory.Miss); //single option
     });
   });
 

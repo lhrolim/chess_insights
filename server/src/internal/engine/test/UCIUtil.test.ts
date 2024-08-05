@@ -1,4 +1,5 @@
 import { EndOfGameMode, MoveCategory, MoveData } from "../domain/EngineTypes";
+import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 import { UCIUtil } from "../util/UCIUtil";
 import { MoveAnalysisPOTO } from "./MoveTestHelper";
 
@@ -16,7 +17,6 @@ info depth 20 seldepth 30 multipv 1 score cp 39 nodes 1839086 nps 894062 hashful
 info depth 20 seldepth 28 multipv 2 score cp -36 nodes 1839086 nps 894062 hashfull 618 tbhits 0 time 2057 pv d2d3 e5f4 c1f4 d7d5 e2e4 b8c6 e4d5 d8d5 g1f3 g8f6 f1e2 c8e6 e1g1 e8c8 b1c3 d5d7 f3g5 f8c5 g1h1 c6d4 e2f3 c5d6,
 info depth 20 seldepth 27 multipv 3 score cp -46 nodes 1839086 nps 894062 hashfull 618 tbhits 0 time 2057 pv e2e4 e5f4 f1c4 b8c6 d2d4 d8h4 e1f1 d7d6 h2h3 g7g5 b1c3 h7h6
 `;
-
 
 const F2F4_E7E5_G2G4_REPLY = `
 info depth 20 seldepth 2 multipv 1 score mate 1 nodes 684926 nps 793657 hashfull 280 tbhits 0 time 863 pv d8h4,
@@ -42,6 +42,12 @@ const BLACK_REPLIES_WITH_MATE = `
 info depth 10 seldepth 14 multipv 1 score cp -2260 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f7 g6e7 g8f8 e6f7 b2b5 g5b5 f8f7 g4g8 f7e7 b5d5,
 info depth 10 seldepth 15 multipv 2 score cp -2726 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv b2b1 a1b1 f8f7 g6e7 g8f8 e6f7 c7e5 g4h5 e5e2 b1b8 f8e7,
 info depth 10 seldepth 10 multipv 3 score mate -8 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f5 g6e7 g8f8 g5f5 f8e8 g4g8 e8e7 g8g7 e7e6 f5f6 e6d5
+`;
+
+const WHITE_MATE = `
+info depth 10 seldepth 14 multipv 1 score cp 11000 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f7 g6e7 g8f8 e6f7 b2b5 g5b5 f8f7 g4g8 f7e7 b5d5,
+info depth 10 seldepth 15 multipv 2 score cp 2200 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv b2b1 a1b1 f8f7 g6e7 g8f8 e6f7 c7e5 g4h5 e5e2 b1b8 f8e7,
+info depth 10 seldepth 10 multipv 3 score mate 10 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f5 g6e7 g8f8 g5f5 f8e8 g4g8 e8e7 g8g7 e7e6 f5f6 e6d5
 `;
 
 describe("UCIUtil", () => {
@@ -158,6 +164,21 @@ describe("UCIUtil", () => {
       expect(reply.moves[2].move).toBe("a2a3");
       expect(reply.moves[2].data.mate).toBe(-1);
       expect(reply.moves[2].data.mate).toBeTruthy();
+    });
+
+    it("puts mate first always", () => {
+      const reply = UCIUtil.parseUCIResult(WHITE_MATE, 10, true);
+      expect(reply.moves.length).toBe(3);
+      expect(reply.endOfGame).toBe(EndOfGameMode.NONE);
+      expect(reply.ignored).toBe(false);
+      expect(reply.moves[0].move).toBe("f8f5");
+      expect(reply.moves[0].data.score).toBeNull();
+      expect(reply.moves[0].data.mate).toBeTruthy();
+      expect(reply.moves[1].move).toBe("f8f7");
+      expect(reply.moves[1].data.score).toBe(11000);
+      expect(reply.moves[2].move).toBe("b2b1");
+      expect(reply.moves[2].data.score).toBe(2200);
+      expect(reply.moves[2].data.mate).toBeFalsy();
     });
   });
 
