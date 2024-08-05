@@ -81,6 +81,7 @@ export class MoveAnalyzer {
       moveAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove);
     const stillHasAdvantage = moveAnalysis.hasClearAdvantage(moveAnalysis.wasWhiteMove);
     const stillAboutEqual = moveAnalysis.aboutEqual();
+    const alreadyLost = moveAnalysis.alreadyLost(moveAnalysis.wasWhiteMove);
     if (normalizedDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT) {
       if (lostDecisiveAdvantage && (stillHasAdvantage || stillAboutEqual)) {
         return MoveCategory.Miss;
@@ -91,7 +92,7 @@ export class MoveAnalyzer {
       if (stillHasAdvantage) {
         return MoveCategory.Mistake;
       }
-      return MoveCategory.Blunder;
+      return alreadyLost ? MoveCategory.Mistake : MoveCategory.Blunder;
     }
     if (normalizedDelta > MoveAnalysisThresholds.INNACURACY_CONSTANT) {
       if (lostDecisiveAdvantage && stillHasAdvantage) {

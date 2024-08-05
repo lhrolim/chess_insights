@@ -6,12 +6,13 @@ import {
   GameAnalyzisResult
 } from "@internal/engine/domain/GameAnalyseResult";
 import { MoveAnalysisDTO, MoveAnalysisDTOForPrecision } from "@internal/engine/domain/MoveAnalysisDTO";
+import { MoveAnalysisThresholds } from "@internal/engine/domain/MoveAnalyzisThresholds";
 
 interface RatingToCPLMapping {
   [rating: number]: number;
 }
 
-    // Establish benchmarks
+// Establish benchmarks
 const grandmasterLevelDelta = 0.05;
 const beginnerLevelDelta = 2.2;
 
@@ -166,11 +167,17 @@ export class GameAnalyzerBuilder {
     const blackMovesWithLosses = blackOriginalMoves.filter(move => !move.wasWhiteMove && move.moveScoreDelta > 0);
 
     // Calculate total and average deltas for white moves
-    const totalWhiteDelta = whiteMovesWithLosses.reduce((sum, move) => sum + Math.abs(move.moveScoreDelta), 0);
+    const totalWhiteDelta = whiteMovesWithLosses.reduce(
+      (sum, move) => sum + GameAnalyzerBuilder.normalizedValue(move),
+      0
+    );
     const averageWhiteDelta = Math.round(totalWhiteDelta / whiteOriginalMoves.length) / 100;
 
     // Calculate total and average deltas for black moves
-    const totalBlackDelta = blackMovesWithLosses.reduce((sum, move) => sum + Math.abs(move.moveScoreDelta), 0);
+    const totalBlackDelta = blackMovesWithLosses.reduce(
+      (sum, move) => sum + GameAnalyzerBuilder.normalizedValue(move),
+      0
+    );
     const averageBlackDelta = Math.round(totalBlackDelta / blackOriginalMoves.length) / 100;
 
     // Normalize the average delta to a score between 0 and 100 for white moves
@@ -178,6 +185,10 @@ export class GameAnalyzerBuilder {
     const blackPrecisionScore = this.getPrecisionOutOfAverageCPLoss(averageBlackDelta, false, playerRatings);
 
     return [whitePrecisionScore, blackPrecisionScore];
+  }
+
+  private static normalizedValue(move: MoveAnalysisDTOForPrecision) {
+    return Math.min(MoveAnalysisThresholds.MATE_CONSTANT, Math.abs(move.moveScoreDelta));
   }
 
   public static getPrecisionOutOfAverageCPLoss(

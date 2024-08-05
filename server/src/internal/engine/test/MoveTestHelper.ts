@@ -65,6 +65,16 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
+  public static with3MovesLostPositionCompletelyWhite(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
+    moveAnalysis.nextMoves = [
+      { move: "b7b8", data: new MoveData(-547, null) },
+      { move: "g2f3", data: new MoveData(-800, null) },
+      { move: "d3f3", data: new MoveData(0, 15) }
+    ];
+    return moveAnalysis;
+  }
+
   public static with3EqualOptionsForBlack(): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [

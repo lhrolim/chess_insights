@@ -116,13 +116,23 @@ describe("categorizeMove", () => {
       expect(result.category).toBe(MoveCategory.Good);
     });
 
-    it("white already lost, no good moves, position deteriorated,return innacuracy", () => {
+    it("white already lost, no good moves,return innacuracy", () => {
       const pastMove = MoveAnalysisPOTO.with3MovesLostPositionForWhite();
-      const ma = MoveAnalysisPOTO.withScore(-260);
+      const ma = MoveAnalysisPOTO.withScore(-230);
       ma.wasWhiteMove = true;
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
-      expect(result.moveScoreDelta).toBe(-50);
-      expect(result.category).toBe(MoveCategory.Innacuracy);
+      expect(result.moveScoreDelta).toBe(-20);
+      expect(result.category).toBe(MoveCategory.Good);
+    });
+
+    it("white already lost, no good moves, position deteriorated,return mistake max", () => {
+      const pastMove = MoveAnalysisPOTO.with3MovesLostPositionCompletelyWhite();
+      const ma = MoveAnalysisPOTO.withScore(-800);
+      ma.movePlayed = "d6d8"; //second best
+      ma.wasWhiteMove = true;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(-253);
+      expect(result.category).toBe(MoveCategory.Mistake);
     });
   });
 
