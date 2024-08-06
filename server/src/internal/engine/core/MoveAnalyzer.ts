@@ -55,7 +55,7 @@ export class MoveAnalyzer {
       whiteMove
     );
 
-    if (previousAnalysis.givingMate(whiteMove) && !moveAnalysis.givingMate()) {
+    if (previousAnalysis.givingMate(whiteMove) && !moveAnalysis.givingMate(whiteMove)) {
       //this move misses the opportunity to give it a mate
       return MoveCategory.Miss;
     }

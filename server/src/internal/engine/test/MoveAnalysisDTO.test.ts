@@ -1,3 +1,5 @@
+import { MoveData } from "../domain/EngineTypes";
+import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 import { MoveAnalysisPOTO } from "./MoveTestHelper";
 
@@ -77,11 +79,18 @@ describe("is already lost", () => {
 describe("is in mate web", () => {
   it("white:should return true if in mate web", () => {
     const ma = MoveAnalysisPOTO.withMate(2);
-    expect(ma.givingMate()).toBeTruthy();
+    expect(ma.givingMate(true)).toBeTruthy();
+  });
+
+  it("white:should return true if giving mate", () => {
+    const ma = new MoveAnalysisDTO();
+    ma.nextMoves = [{ move: "any", data: new MoveData(null, -2, false) }];
+    ma.wasWhiteMove = true;
+    expect(ma.givingMate(true)).toBeTruthy();
   });
 
   it("black: should return true if in mate web", () => {
-    const ma = MoveAnalysisPOTO.withMate(-2, false);
+    const ma = MoveAnalysisPOTO.withMate(2, false);
     expect(ma.givingMate()).toBeTruthy();
   });
 

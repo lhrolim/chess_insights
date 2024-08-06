@@ -2,7 +2,7 @@ export class MoveAnalysisThresholds {
   public static EXCELLENT_CONSTANT = 15; //after that we consider it only a good move
   public static GOOD_CONSTANT = 30; //after that we consider it an innacuracy
   public static INNACURACY_CONSTANT = 80; // after that we consider it a mistake
-  public static BLUNDER_CONSTANT = 200; // after that we consider it a mistake
+  public static BLUNDER_CONSTANT = 250;
 
   public static GREAT_LOWER_CONSTANT = 150;
   public static BRILLIANT_LOWER_CONSTANT = 250;

@@ -63,7 +63,7 @@ export class MoveData {
   }
 
   isMate(whitePerspective: boolean): boolean {
-    const whiteFactor = whitePerspective ? 1 : -1;
+    const whiteFactor = whitePerspective ? -1 : 1; //reversing as it is the next move
     return this.mate !== null && whiteFactor * this.mate > 0;
   }
 

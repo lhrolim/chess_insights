@@ -38,16 +38,27 @@ info depth 20 seldepth 25 multipv 1 score cp 28 nodes 650811 nps 529114 hashfull
 bestmove d7d5 ponder g1f3
 `;
 
-const BLACK_REPLIES_WITH_MATE = `
+const WHITE_MOVE_BLACK_TO_MATE = `
 info depth 10 seldepth 14 multipv 1 score cp -2260 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f7 g6e7 g8f8 e6f7 b2b5 g5b5 f8f7 g4g8 f7e7 b5d5,
 info depth 10 seldepth 15 multipv 2 score cp -2726 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv b2b1 a1b1 f8f7 g6e7 g8f8 e6f7 c7e5 g4h5 e5e2 b1b8 f8e7,
 info depth 10 seldepth 10 multipv 3 score mate -8 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f5 g6e7 g8f8 g5f5 f8e8 g4g8 e8e7 g8g7 e7e6 f5f6 e6d5
 `;
 
-const WHITE_MATE = `
+const BLACK_NEXT_WHITE_TO_MATE = `
 info depth 10 seldepth 14 multipv 1 score cp 11000 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f7 g6e7 g8f8 e6f7 b2b5 g5b5 f8f7 g4g8 f7e7 b5d5,
 info depth 10 seldepth 15 multipv 2 score cp 2200 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv b2b1 a1b1 f8f7 g6e7 g8f8 e6f7 c7e5 g4h5 e5e2 b1b8 f8e7,
 info depth 10 seldepth 10 multipv 3 score mate 10 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f5 g6e7 g8f8 g5f5 f8e8 g4g8 e8e7 g8g7 e7e6 f5f6 e6d5
+`;
+
+const WHITE_NEXT_BLACK_TO_MATE = `
+info depth 10 seldepth 14 multipv 1 score cp 11000 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f7 g6e7 g8f8 e6f7 b2b5 g5b5 f8f7 g4g8 f7e7 b5d5,
+info depth 10 seldepth 15 multipv 2 score cp 2200 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv b2b1 a1b1 f8f7 g6e7 g8f8 e6f7 c7e5 g4h5 e5e2 b1b8 f8e7,
+info depth 10 seldepth 10 multipv 3 score mate 10 nodes 67446 nps 11241000 hashfull 1 tbhits 0 time 6 pv f8f5 g6e7 g8f8 g5f5 f8e8 g4g8 e8e7 g8g7 e7e6 f5f6 e6d5
+`;
+
+const BLACK_NEXT_WHITE_TO_MATE_AFTER = `
+'info depth 9 seldepth 3 multipv 1 score mate -1 nodes 567 nps 567000 hashfull 1 tbhits 0 time 1 pv c7g7 g6g7
+info depth 10 seldepth 3 multipv 1 score mate -1 nodes 696 nps 696000 hashfull 1 tbhits 0 time 1 pv c7g7 g6g7'
 `;
 
 describe("UCIUtil", () => {
@@ -80,9 +91,9 @@ describe("UCIUtil", () => {
   });
 
   describe("parseScore", () => {
-    it("should parse the score from the line and return MoveScore", () => {
+    it("should parse the score from the line and return MoveScore, however at white perspective always!", () => {
       const moveResult = UCIUtil.parseScore(MATE_IN_1, false);
-      expect(moveResult.mate).toBe(1);
+      expect(moveResult.mate).toBe(-1);
       expect(moveResult.isWhiteToMove).toBe(false);
     });
 
@@ -167,7 +178,7 @@ describe("UCIUtil", () => {
     });
 
     it("puts mate first always", () => {
-      const reply = UCIUtil.parseUCIResult(WHITE_MATE, 10, true);
+      const reply = UCIUtil.parseUCIResult(BLACK_NEXT_WHITE_TO_MATE, 10, true);
       expect(reply.moves.length).toBe(3);
       expect(reply.endOfGame).toBe(EndOfGameMode.NONE);
       expect(reply.ignored).toBe(false);
@@ -179,6 +190,15 @@ describe("UCIUtil", () => {
       expect(reply.moves[2].move).toBe("b2b1");
       expect(reply.moves[2].data.score).toBe(2200);
       expect(reply.moves[2].data.mate).toBeFalsy();
+    });
+
+    it("normalizes white giving mate to positive and receiving mate to negative", () => {
+      const reply = UCIUtil.parseUCIResult(BLACK_NEXT_WHITE_TO_MATE_AFTER, 10, false);
+      expect(reply.moves.length).toBe(1);
+      expect(reply.endOfGame).toBe(EndOfGameMode.NONE);
+      expect(reply.ignored).toBe(false);
+      expect(reply.moves[0].move).toBe("c7g7");
+      expect(reply.moves[0].data.mate).toBe(1);
     });
   });
 
@@ -194,6 +214,28 @@ describe("UCIUtil", () => {
     it("should join the moves into a single string", () => {
       const result = UCIUtil.getStartPositionFromMoves(["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6"]);
       expect(result).toBe(["e2e4 e7e5 g1f3 b8c6 f1c4 g8f6"].join(" "));
+    });
+  });
+
+  describe("getScoreConsideringMate", () => {
+    it("white giving mate", () => {
+      const result = UCIUtil.getScoreConsideringMate(true, new MoveData(null, 1));
+      expect(result).toBe(100 * MoveAnalysisThresholds.MATE_CONSTANT);
+    });
+
+    it("white receiving mate", () => {
+      const result = UCIUtil.getScoreConsideringMate(true, new MoveData(null, -1));
+      expect(result).toBe(-100 * MoveAnalysisThresholds.MATE_CONSTANT);
+    });
+
+    it("black giving mate", () => {
+      const result = UCIUtil.getScoreConsideringMate(false, new MoveData(null, -11));
+      expect(result).toBe(-11 * 100 * MoveAnalysisThresholds.MATE_CONSTANT);
+    });
+
+    it("black receiving mate", () => {
+      const result = UCIUtil.getScoreConsideringMate(false, new MoveData(null, 1));
+      expect(result).toBe(1 * 100 * MoveAnalysisThresholds.MATE_CONSTANT);
     });
 
     // Add more test cases for different scenarios

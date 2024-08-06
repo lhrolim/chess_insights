@@ -41,7 +41,9 @@ export class UCIUtil {
     // Try to match the "score mate" pattern
     scoreMatch = line.match(/score mate (-?\d+)/);
     if (scoreMatch) {
-      return new MoveData(null, parseInt(scoreMatch[1], 10), isWhiteToMove);
+      const mateScore = parseInt(scoreMatch[1], 10);
+      const whitePerspectiveScore = isWhiteToMove ? mateScore : -mateScore;
+      return new MoveData(null, whitePerspectiveScore, isWhiteToMove);
     }
 
     return null;
@@ -123,10 +125,15 @@ export class UCIUtil {
     if (moveData.score != null) {
       return moveData.score;
     }
-    const mateIn = moveData.mate > 0 ? 1 : -1; //positive means I am giving mate, and negative I am receiving it
-    return areRepliesWhiteMoves
-      ? mateIn * 100 * MoveAnalysisThresholds.MATE_CONSTANT
-      : mateIn * -100 * MoveAnalysisThresholds.MATE_CONSTANT;
+    const isWhiteMating = moveData.mate > 0 ? 1 : -1; //positive means white to mave mate, negative means black to mate
+    const areRepliesWhiteMovesFactor = areRepliesWhiteMoves ? 1 : -1;
+    if (areRepliesWhiteMoves) {
+      return 100 * MoveAnalysisThresholds.MATE_CONSTANT * moveData.mate;
+    }
+    return -100 * MoveAnalysisThresholds.MATE_CONSTANT * -moveData.mate;
+    // if (isWhiteMating){
+    // }
+    // return 100 * MoveAnalysisThresholds.MATE_CONSTANT * areRepliesWhiteMovesFactor * moveData.mate;
   }
 
   public static getStartPositionFromMoves(moves: string[]): string {
