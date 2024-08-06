@@ -78,19 +78,6 @@ export class ChessJSDataUtil {
     if (capturedPoints >= piecePoints) {
       return false;
     }
-
-    // Simulate exchanges
-    return this.simulateExchanges(chess, validMove, opponentAttackers, supporters, piecePoints, capturedPoints);
-  }
-
-  private static simulateExchanges(
-    chess: Chess,
-    validMove: Move,
-    opponentAttackers: Square[],
-    supporters: Square[],
-    piecePoints: number,
-    capturedPoints: number
-  ): boolean {
     // Get values of opponent attackers
     const opponentAttackerValues = opponentAttackers
       .map(square => {
@@ -106,23 +93,34 @@ export class ChessJSDataUtil {
         return piece ? pieceValues[piece.type] : 0;
       })
       .sort((a, b) => a - b);
+    // Simulate exchanges
+    return this.simulateExchanges(validMove.color, opponentAttackerValues, supporterValues, capturedPoints,piecePoints);
+  }
 
-    let netLoss = -capturedPoints;
+  public static simulateExchanges(
+    color: Color,
+    opponentAttackerValues: number[],
+    supporterValues: number[],
+    capturedPoints: number,
+    piecePoints: number
+  ): boolean {
+    let netLoss = capturedPoints;
     let supporterIndex = 0;
+    const whitePerspective = color === "w" ? 1 : -1;
 
     for (let attackerValue of opponentAttackerValues) {
       if (supporterIndex < supporterValues.length) {
-        netLoss += attackerValue - supporterValues[supporterIndex++];
+        netLoss += attackerValue + supporterValues[supporterIndex++];
       } else {
-        netLoss += attackerValue;
+        netLoss -= piecePoints;
       }
-
-      // If at any point the net loss is positive, it is a sacrifice
-      if (netLoss > 0) {
+      // If at any point the net loss is positive from the perspective of the player making the move, it is a sacrifice
+      if (netLoss < 0) {
         return true;
       }
     }
 
-    return false;
+    // Final check to ensure it's not a sacrifice if the total net loss is non-positive
+    return netLoss < 0;
   }
 }

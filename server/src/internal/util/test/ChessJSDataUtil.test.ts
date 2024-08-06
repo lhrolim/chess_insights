@@ -32,3 +32,17 @@ describe("pieces to recapture logic", () => {
     expect(result.isExchange).toBeTruthy();
   });
 });
+
+describe("capture exchange logic", () => {
+  it("is not a sacrifice if a pawn is defended by 2 paws and attacked by one bishop", () => {
+    expect(ChessJSDataUtil.simulateExchanges("b", [3], [1, 1], 0, 1)).toBeFalsy();
+  });
+
+  it("is is a sacrifice n for p", () => {
+    expect(ChessJSDataUtil.simulateExchanges("b", [3], [], 1, 3)).toBeTruthy();
+  });
+
+  it("not a sacrifice q defending pawn", () => {
+    expect(ChessJSDataUtil.simulateExchanges("w", [1], [9], 0, 1)).toBeFalsy();
+  });
+});
