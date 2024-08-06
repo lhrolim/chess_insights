@@ -19,6 +19,7 @@ export enum MoveCategory {
   Mistake = "mistake",
   Blunder = "blunder",
   Miss = "miss",
+  Forced = "forced", //TODO:implement it
   Ignored = "ignored" // to account for scenarios where we are analyzing half of the game onwards
 }
 
