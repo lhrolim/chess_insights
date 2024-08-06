@@ -1,7 +1,7 @@
 import getLogger, { LogTypes } from "@infra/logging/logger";
 import { GameAnalyzerBuilder } from "@internal/analysis/GameAnalyzerBuilder";
 import { EngineMove, EngineInput } from "../domain/EngineInput";
-import { GameAnalyzisOptions } from "../domain/EngineTypes";
+import { GameAnalyzisOptions, MoveCategory } from "../domain/EngineTypes";
 import { GameAnalyzisResult } from "../domain/GameAnalyseResult";
 import { MoveAnalyzer } from "./MoveAnalyzer";
 import { StockfishClient } from "./StockfishClient";
@@ -160,12 +160,22 @@ function logFullStockFishOutput(analysisResults: Array<MoveAnalysisDTO>) {
       perCategoryMovesBlack[analysis.category] = [];
     }
     const array = analysis.wasWhiteMove ? perCategoryMovesWhite : perCategoryMovesBlack;
-    array[analysis.category].push({
-      i: analysis.moveNumber(),
-      move: analysis.movePlayed,
-      score: analysis.moveScoreDelta
-    });
+    if (
+      analysis.category !== MoveCategory.Book &&
+      analysis.category !== MoveCategory.Ignored &&
+      analysis.category !== MoveCategory.Miss &&
+      analysis.category !== MoveCategory.Excellent &&
+      analysis.category !== MoveCategory.Best &&
+      analysis.category !== MoveCategory.Great &&
+      !analysis.isEndOfGame()
+    ) {
+      array[analysis.category].push({
+        i: analysis.moveNumber(),
+        move: analysis.movePlayed,
+        score: analysis.moveScoreDelta
+      });
+    }
   });
-  logger.debug(`Per category moves White: ${JSON.stringify(perCategoryMovesWhite, null, 1)}`);
+  // logger.debug(`Per category moves White: ${JSON.stringify(perCategoryMovesWhite, null, 1)}`);
   logger.debug(`Per category moves Black: ${JSON.stringify(perCategoryMovesBlack, null, 1)}`);
 }

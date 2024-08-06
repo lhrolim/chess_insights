@@ -73,3 +73,41 @@ describe("is already lost", () => {
     expect(ma.alreadyLost(false)).toBe(false);
   });
 });
+
+describe("is in mate web", () => {
+  it("white:should return true if in mate web", () => {
+    const ma = MoveAnalysisPOTO.withMate(2);
+    expect(ma.givingMate()).toBeTruthy();
+  });
+
+  it("black: should return true if in mate web", () => {
+    const ma = MoveAnalysisPOTO.withMate(-2, false);
+    expect(ma.givingMate()).toBeTruthy();
+  });
+
+  it("white:should return true if in mate web", () => {
+    const ma = MoveAnalysisPOTO.withMate(-2);
+    expect(ma.receivingMate()).toBeTruthy();
+  });
+
+  it("black: should return true if in mate web", () => {
+    const ma = MoveAnalysisPOTO.withMate(2, false);
+    expect(ma.receivingMate()).toBeTruthy();
+  });
+});
+
+describe("only one leads to mate", () => {
+  it("white:only one leads to mate", () => {
+    const pastMove = MoveAnalysisPOTO.blackMistake();
+    pastMove.nextMoves[1].data.mate = null;
+    pastMove.nextMoves[1].data.score = 1200;
+    expect(pastMove.onlyOneLeadsToMate(true)).toBeTruthy();
+  });
+
+  it("black: only one leads to mate", () => {
+    const pastMove = MoveAnalysisPOTO.whiteMistake();
+    pastMove.nextMoves[1].data.mate = null;
+    pastMove.nextMoves[1].data.score = -1200;
+    expect(pastMove.onlyOneLeadsToMate(false)).toBeTruthy();
+  });
+});

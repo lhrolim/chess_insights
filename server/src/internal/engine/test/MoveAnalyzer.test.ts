@@ -125,14 +125,14 @@ describe("categorizeMove", () => {
       expect(result.category).toBe(MoveCategory.Good);
     });
 
-    it("white already lost, no good moves, position deteriorated,return mistake max", () => {
+    it("white already lost, no good moves, position deteriorated,return innacuracy", () => {
       const pastMove = MoveAnalysisPOTO.with3MovesLostPositionCompletelyWhite();
       const ma = MoveAnalysisPOTO.withScore(-800);
       ma.movePlayed = "d6d8"; //second best
       ma.wasWhiteMove = true;
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.moveScoreDelta).toBe(-253);
-      expect(result.category).toBe(MoveCategory.Mistake);
+      expect(result.category).toBe(MoveCategory.Innacuracy);
     });
 
     it("white already lost, return best move, not great", () => {
@@ -143,6 +143,17 @@ describe("categorizeMove", () => {
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.moveScoreDelta).toBe(0);
       expect(result.category).toBe(MoveCategory.Best);
+    });
+
+    it("black already completely lost, return mistake not blunder even if joining mate web", () => {
+      const pastMove = MoveAnalysisPOTO.withScore(660, false, "f8b8");
+      const ma = MoveAnalysisPOTO.withScore(0);
+      ma.nextMoves[0].data.mate = 7;
+      ma.movePlayed = "b7b8";
+      ma.wasWhiteMove = false;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(340);
+      expect(result.category).toBe(MoveCategory.Mistake);
     });
   });
 
@@ -208,17 +219,37 @@ describe("categorizeMove", () => {
       expect(result.category).toBe(MoveCategory.Miss);
     });
 
-    // it("still had decisive, losing 180 ==> innacuracy", () => {
-    //   const pastMove = MoveAnalysisPOTO.with3OptionsBlackAdvantage250();
-    //   pastMove.nextMoves[0].data.score = 430;
-    //   const ma = MoveAnalysisPOTO.withScore(MoveAnalysisThresholds.DECISIVE_ADVANTAGE + 1);
-    //   ma.wasWhiteMove = false;
-    //   const result = MoveAnalyzer.analyzeMove(ma, pastMove);
-    //   expect(result.moveScoreDelta).toBe(
-    //     MoveAnalysisThresholds.DECISIVE_ADVANTAGE + 1 - pastMove.positionScore().score
-    //   );
-    //   expect(result.category).toBe(MoveCategory.Innacuracy);
-    // });
+    it("still had decisive, losing 180 ==> innacuracy", () => {
+      const pastMove = MoveAnalysisPOTO.with3OptionsBlackAdvantage250();
+      pastMove.nextMoves[0].data.score = 430;
+      const ma = MoveAnalysisPOTO.withScore(MoveAnalysisThresholds.DECISIVE_ADVANTAGE + 1);
+      ma.wasWhiteMove = false;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(
+        MoveAnalysisThresholds.DECISIVE_ADVANTAGE + 1 - pastMove.positionScore().score
+      );
+      expect(result.category).toBe(MoveCategory.Good);
+    });
+
+    it("is an exchange piece capture, return best regardless of score (avoid great)", () => {
+      const pastMove = MoveAnalysisPOTO.withOnlyOneDecent();
+      const ma = MoveAnalysisPOTO.withScore(150);
+      ma.movePlayed = "e6e7";
+      ma.wasWhiteMove = true;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove, { isExchangeCapture: true });
+      expect(result.moveScoreDelta).toBe(0);
+      expect(result.category).toBe(MoveCategory.Best);
+    });
+
+    it("is another piece capture, return great given criteria", () => {
+      const pastMove = MoveAnalysisPOTO.withOnlyOneDecent();
+      const ma = MoveAnalysisPOTO.withScore(150);
+      ma.movePlayed = "e6e7";
+      ma.wasWhiteMove = true;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove, { isCapture: true, isExchangeCapture: false });
+      expect(result.moveScoreDelta).toBe(0);
+      expect(result.category).toBe(MoveCategory.Great);
+    });
 
     it("still has decisive, losing tons ==> innacuracy", () => {
       const pastMove = MoveAnalysisPOTO.decisiveBlack();
@@ -238,6 +269,14 @@ describe("categorizeMove", () => {
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.moveScoreDelta).toBe(219);
       expect(result.category).toBe(MoveCategory.Innacuracy);
+    });
+
+    it("still has complete, not on list, losing tons ==> good", () => {
+      const pastMove = MoveAnalysisPOTO.withScore(1080);
+      const ma = MoveAnalysisPOTO.withScore(710, true, "f6g5");
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove);
+      expect(result.moveScoreDelta).toBe(-370);
+      expect(result.category).toBe(MoveCategory.Good);
     });
 
     it("lost decisive, kept advantage ==> miss", () => {

@@ -3,6 +3,7 @@ export type ChessJSMoveData = {
   isDevelopmentMove?: boolean;
   isRookLift?: boolean;
   isCapture?: boolean;
+  isExchangeCapture?: boolean;
   isFork?: boolean;
   isCheck?: boolean;
   isPin?: boolean;
@@ -12,7 +13,7 @@ export type ChessJSMoveData = {
   isDoublePawnPush?: boolean;
   fen?: string;
   coordinatedMove?: string;
-  materialAfter?: number;
+  materialBalance?: number;
   isGambito?: boolean;
 };
 
@@ -30,6 +31,6 @@ export const DEFAULT_CHESS_JS_MOVE_DATA: ChessJSMoveData = {
   isDoublePawnPush: false,
   fen: "",
   coordinatedMove: "",
-  materialAfter: 0,
+  materialBalance: 0,
   isGambito: false
 };

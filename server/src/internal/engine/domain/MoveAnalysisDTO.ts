@@ -32,15 +32,22 @@ export class MoveAnalysisDTO {
     return EndOfGameMode.NONE !== this.endOfGame;
   }
 
-  inMateWeb(): boolean {
-    return this.positionScore().isMate();
+  givingMate(perspective?: boolean): boolean {
+    let perspectiveToUse = perspective ?? this.wasWhiteMove;
+    return this.positionScore().isMate(perspectiveToUse);
   }
 
-  onlyOneLeadsToMate() {
+  receivingMate(perspective?: boolean): any {
+    let perspectiveToUse = perspective ?? this.wasWhiteMove;
+    return this.positionScore().isMate(!perspectiveToUse);
+  }
+
+  onlyOneLeadsToMate(perspective?: boolean): boolean {
+    let perspectiveToUse = perspective ?? this.wasWhiteMove;
     if (this.nextMoves.length < 2) {
-      return this.inMateWeb();
+      return this.givingMate(perspectiveToUse);
     }
-    return this.inMateWeb() && !this.nextMoves[1].data.isMate();
+    return this.givingMate(perspectiveToUse) && !this.nextMoves[1].data.isMate(perspectiveToUse);
   }
 
   didTablesTurn(previousAnalyses: MoveAnalysisDTO): boolean {
@@ -104,6 +111,12 @@ export class MoveAnalysisDTO {
     return whitePerspective
       ? this.positionScore().score < -MoveAnalysisThresholds.DECISIVE_ADVANTAGE
       : this.positionScore().score > MoveAnalysisThresholds.DECISIVE_ADVANTAGE;
+  }
+
+  alreadyCompletelyLost(whitePerspective: boolean): boolean {
+    return whitePerspective
+      ? this.positionScore().score < -MoveAnalysisThresholds.COMPLETE_ADVANTAGE
+      : this.positionScore().score > MoveAnalysisThresholds.COMPLETE_ADVANTAGE;
   }
 
   pointsLost(): number {

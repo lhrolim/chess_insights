@@ -2,6 +2,7 @@ import { MoveData, MoveCategory } from "../domain/EngineTypes";
 import { ChessJSMoveData, DEFAULT_CHESS_JS_MOVE_DATA } from "../../chessjs/domain/ChessJSMoveData";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
+import { MoveAnalysisContext, MoveAnalysisContextBuilder, MoveAnalysisData } from "./MoveAnalysisContextBuilder";
 
 export class MoveAnalyzer {
   public static calculateDeltaScore(moveData: MoveData, pastScore?: MoveData): number {
@@ -43,50 +44,71 @@ export class MoveAnalyzer {
       return MoveCategory.Book;
     }
     if (!previousAnalysis) {
+      //used only for scenarios where we are analyzing a game after a given move (ex: >25)
       return MoveCategory.Ignored;
     }
-    const normalizedDelta = whiteMove ? -deltaScore : deltaScore; // if black is moving a positive is score is actually really bad as white is now better
-    const positionGotWorse = normalizedDelta > 0;
-    const previousSuggestedMoves = previousAnalysis.nextMoves.map(move => move.move);
-    const moveContext = this.generateContext(moveAnalysis, previousAnalysis, previousSuggestedMoves, whiteMove);
 
-    if (previousAnalysis.inMateWeb() && !moveAnalysis.inMateWeb()) {
+    const moveContext = MoveAnalysisContextBuilder.generateContext(
+      moveAnalysis,
+      previousAnalysis,
+      deltaScore,
+      whiteMove
+    );
+
+    if (previousAnalysis.givingMate(whiteMove) && !moveAnalysis.givingMate()) {
+      //this move misses the opportunity to give it a mate
       return MoveCategory.Miss;
     }
     const bestOptionScore = previousAnalysis.nextMoves[0].data.score;
-    if (previousSuggestedMoves[0] == moveAnalysis.movePlayed) {
-      return brilliantGreatOrBest(previousAnalysis, whiteMove, moveContext, fenData);
+    if (moveContext.topChoice) {
+      return brilliantGreatOrBest(moveContext, fenData);
     }
 
     const tablesTurned = moveAnalysis.didTablesTurn(previousAnalysis);
     if (tablesTurned) {
-      return MoveAnalyzer.tablesTurnedScenario(moveAnalysis, normalizedDelta, moveContext);
+      return MoveAnalyzer.tablesTurnedScenario(moveAnalysis, moveContext);
     }
 
-    if (positionGotWorse) {
-      return MoveAnalyzer.positionGotWorseScenario(normalizedDelta, previousAnalysis, moveAnalysis, moveContext);
+    if (moveContext.positionGotWorse) {
+      return MoveAnalyzer.positionGotWorseScenario(moveAnalysis, moveContext);
     }
 
-    if (previousSuggestedMoves.includes(moveAnalysis.movePlayed)) {
+    if (moveContext.amongstEngineChoices) {
       return MoveCategory.Excellent;
     }
 
-    return normalizedDelta === 0 ? MoveCategory.Excellent : MoveCategory.Good;
+    return moveContext.normalizedDelta === 0 ? MoveCategory.Excellent : MoveCategory.Good;
   }
-  static positionGotWorseScenario(
-    normalizedDelta: number,
-    previousAnalysis: MoveAnalysisDTO,
-    moveAnalysis: MoveAnalysisDTO,
-    moveContext: MoveAnalysisContext
-  ): MoveCategory {
+  static positionGotWorseScenario(moveAnalysis: MoveAnalysisDTO, moveContext: MoveAnalysisContext): MoveCategory {
     const {
       lostDecisiveAdvantage,
       keptDecisiveAdvantage,
+      keptCompleteAdvantage,
       stillHasAdvantage,
       stillAboutEqual,
       alreadyLost,
-      amongstEngineChoices
+      alreadyCompletelyLost,
+      amongstEngineChoices,
+      topChoice,
+      normalizedDelta,
+      willGiveMateNow,
+      willReceiveMateNow
     } = moveContext;
+
+    if (keptCompleteAdvantage) {
+      if (topChoice) {
+        return MoveCategory.Best;
+      }
+
+      return amongstEngineChoices || normalizedDelta <= MoveAnalysisThresholds.EXCELLENT_CONSTANT
+        ? MoveCategory.Excellent
+        : MoveCategory.Good;
+    }
+
+    if (willReceiveMateNow) {
+      return alreadyCompletelyLost ? MoveCategory.Mistake : MoveCategory.Blunder;
+    }
+
     if (normalizedDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT) {
       if (lostDecisiveAdvantage && (stillHasAdvantage || stillAboutEqual)) {
         return MoveCategory.Miss;
@@ -97,10 +119,10 @@ export class MoveAnalyzer {
       if (stillHasAdvantage) {
         return MoveCategory.Mistake;
       }
+      if (alreadyCompletelyLost) {
+        return MoveCategory.Innacuracy;
+      }
       return alreadyLost ? MoveCategory.Mistake : MoveCategory.Blunder;
-    }
-    if (keptDecisiveAdvantage) {
-      return amongstEngineChoices ? MoveCategory.Excellent : MoveCategory.Good;
     }
 
     if (normalizedDelta > MoveAnalysisThresholds.INNACURACY_CONSTANT) {
@@ -110,7 +132,10 @@ export class MoveAnalyzer {
       if (keptDecisiveAdvantage) {
         return MoveCategory.Innacuracy;
       }
-      return MoveCategory.Mistake;
+      if (alreadyCompletelyLost) {
+        return MoveCategory.Good;
+      }
+      return alreadyLost ? MoveCategory.Innacuracy : MoveCategory.Mistake;
     }
     if (normalizedDelta > MoveAnalysisThresholds.GOOD_CONSTANT) {
       return stillHasAdvantage ? MoveCategory.Good : MoveCategory.Innacuracy;
@@ -121,11 +146,8 @@ export class MoveAnalyzer {
     return MoveCategory.Excellent;
   }
 
-  private static tablesTurnedScenario(
-    moveAnalysis: MoveAnalysisDTO,
-    delta: number,
-    moveContext: MoveAnalysisContext
-  ): MoveCategory {
+  private static tablesTurnedScenario(moveAnalysis: MoveAnalysisDTO, moveContext: MoveAnalysisContext): MoveCategory {
+    const delta = moveContext.normalizedDelta;
     const absDelta = Math.abs(delta);
     if (moveContext.stillAboutEqual) {
       return MoveCategory.Miss;
@@ -138,82 +160,26 @@ export class MoveAnalyzer {
     }
     return MoveCategory.Innacuracy;
   }
-
-  private static generateContext(
-    moveAnalysis: MoveAnalysisDTO,
-    previousAnalysis: MoveAnalysisDTO,
-    previousSuggestedMoves: string[],
-    whiteMove: boolean
-  ): MoveAnalysisContext {
-    const lostDecisiveAdvantage =
-      previousAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove) &&
-      !moveAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove);
-    const keptDecisiveAdvantage =
-      previousAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove) &&
-      moveAnalysis.hasDecisiveAdvantage(moveAnalysis.wasWhiteMove);
-    const stillHasAdvantage = moveAnalysis.hasClearAdvantage(moveAnalysis.wasWhiteMove);
-    const stillAboutEqual = moveAnalysis.aboutEqual();
-    const oponentHasDecisiveAdvantage = moveAnalysis.hasDecisiveAdvantage(!moveAnalysis.wasWhiteMove);
-    const alreadyLost = moveAnalysis.alreadyLost(moveAnalysis.wasWhiteMove);
-    const deltaBetweenSuggestedMoves = previousAnalysis.deltaBetweenSuggestedMoves();
-    const secondBestKeepsEquality = previousAnalysis.secondBestKeepsEquality();
-    const secondBestKeepsCompletelyWinning = previousAnalysis.hasCompleteAdvantage(whiteMove);
-    const normalizedDelta = whiteMove ? deltaBetweenSuggestedMoves : -deltaBetweenSuggestedMoves; //delta between top choices of engine
-    const onlyOneLeadsToMate = previousAnalysis.onlyOneLeadsToMate();
-    const amongstEngineChoices = previousSuggestedMoves.includes(moveAnalysis.movePlayed);
-    return {
-      lostDecisiveAdvantage,
-      oponentHasDecisiveAdvantage,
-      keptDecisiveAdvantage,
-      stillAboutEqual,
-      stillHasAdvantage,
-      alreadyLost,
-      normalizedDelta,
-      secondBestKeepsEquality,
-      secondBestKeepsCompletelyWinning,
-      onlyOneLeadsToMate,
-      deltaBetweenSuggestedMoves,
-      amongstEngineChoices
-    };
-  }
-}
-
-export type MoveAnalysisData = {
-  positionScore: MoveData;
-  category: MoveCategory;
-  moveScoreDelta: number;
-};
-
-class MoveAnalysisContext {
-  secondBestKeepsEquality: boolean;
-  secondBestKeepsCompletelyWinning: boolean;
-  normalizedDelta: number;
-  onlyOneLeadsToMate: boolean;
-  deltaBetweenSuggestedMoves: number;
-  lostDecisiveAdvantage: boolean;
-  keptDecisiveAdvantage: boolean;
-  stillHasAdvantage: boolean;
-  stillAboutEqual: boolean;
-  alreadyLost: boolean;
-  oponentHasDecisiveAdvantage: boolean;
-  amongstEngineChoices: boolean;
 }
 
 const brilliantGreatOrBest = (
-  previousAnalyses: MoveAnalysisDTO,
-  whiteMove: boolean,
   context: MoveAnalysisContext,
   fenData: ChessJSMoveData = DEFAULT_CHESS_JS_MOVE_DATA
 ): MoveCategory => {
-  if (context.normalizedDelta > MoveAnalysisThresholds.BRILLIANT_CONSTANT && fenData?.isSacrifice) {
-    return MoveCategory.Brilliant;
-  }
-
-  if (context.alreadyLost || context.secondBestKeepsCompletelyWinning) {
+  if (
+    context.alreadyCompletelyLost ||
+    context.alreadyLost ||
+    context.secondBestKeepsCompletelyWinning ||
+    fenData.isExchangeCapture
+  ) {
     return MoveCategory.Best;
   }
 
-  if (context.normalizedDelta > MoveAnalysisThresholds.GREAT_CONSTANT || context.onlyOneLeadsToMate) {
+  if (context.deltaBetweenSuggestedMoves > MoveAnalysisThresholds.BRILLIANT_LOWER_CONSTANT && fenData?.isSacrifice) {
+    return MoveCategory.Brilliant;
+  }
+
+  if (context.deltaBetweenSuggestedMoves > MoveAnalysisThresholds.GREAT_LOWER_CONSTANT || context.onlyOneLeadsToMate) {
     return MoveCategory.Great;
   }
 

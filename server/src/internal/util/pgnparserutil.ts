@@ -6,7 +6,7 @@ import { Chess } from "chess.js";
 import { EngineMove } from "@internal/engine/domain/EngineInput";
 import { forEach } from "typescript-collections/dist/lib/arrays";
 import { ClockUtil } from "./ClockUtil";
-import { ChessJSUtil } from "./ChessJSDataUtil";
+import { ChessJSDataUtil } from "./ChessJSDataUtil";
 import { ChessJSMoveData } from "@internal/chessjs/domain/ChessJSMoveData";
 import { MoveUtil, PGNMove } from "./MoveUtil";
 const chess = new Chess();

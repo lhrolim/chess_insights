@@ -1,3 +1,4 @@
+import { ChessJSContextData, PiecesToRecapture } from "@internal/chessjs/domain/ChessJSContextData";
 import { ChessJSMoveData as ChessJSMoveData } from "@internal/chessjs/domain/ChessJSMoveData";
 import { Chess, Color, Move, Square } from "chess.js";
 
@@ -10,9 +11,11 @@ const pieceValues = {
   k: 0
 };
 
-export class ChessJSUtil {
-  public static getChessJSData(chess: Chess, move: string, previousMove?: ChessJSMoveData): ChessJSMoveData {
+export class ChessJSDataUtil {
+  public static getChessJSData(chess: Chess, move: string, context: ChessJSContextData): ChessJSMoveData {
+    const materialBalance = context.materialBalance;
     const validMove = chess.move(move);
+    chess.isInsufficientMaterial();
     if (!validMove) {
       throw new Error("Invalid move");
     }
@@ -20,13 +23,45 @@ export class ChessJSUtil {
     const coordinateMove = from + to;
     const isCapture = move.includes("x");
     const isSacrifice = this.isSacrifice(chess, validMove);
-    // const materialAfter = ChessJSUtil.evaluateMaterial(chess);
+    let materialBalanceAfterMove = materialBalance;
+    let isExchange = false;
+    if (isCapture) {
+      const piecesToRecaptureData = this.buildCapturePieceData(validMove, context.piecesToRecapture);
+      const whiteFactor = validMove.color === "w" ? -1 : 1;
+      materialBalanceAfterMove = materialBalance - whiteFactor * pieceValues[validMove.captured];
+      isExchange = piecesToRecaptureData?.isExchange;
+    }
     return {
       coordinatedMove: coordinateMove,
       fen: chess.fen(),
       isCapture,
-      isSacrifice
+      isSacrifice,
+      isExchangeCapture: isExchange,
+      materialBalance: materialBalanceAfterMove
     };
+  }
+  public static buildCapturePieceData(
+    validMove: Move,
+    piecesToRecaptureMap: { [key: string]: PiecesToRecapture }
+  ): PiecesToRecapture {
+    const piecePoints = pieceValues[validMove.piece];
+    const capturedPoints = validMove.captured ? pieceValues[validMove.captured] : 0;
+    let isExchange = false;
+    let existingPieceToRecapture = piecesToRecaptureMap[validMove.to] || ({} as PiecesToRecapture); //piece that was at the position
+    if (existingPieceToRecapture) {
+      isExchange = existingPieceToRecapture.material === capturedPoints;
+    }
+    const newPiecesToRecapture = {
+      ...existingPieceToRecapture,
+      material: piecePoints,
+      capturedMaterial: capturedPoints,
+      color: validMove.color,
+      piece: validMove.piece,
+      capturedPiece: validMove.captured,
+      isExchange
+    };
+    piecesToRecaptureMap[validMove.to] = newPiecesToRecapture;
+    return newPiecesToRecapture;
   }
 
   static isSacrifice(chess: Chess, validMove: Move): boolean {

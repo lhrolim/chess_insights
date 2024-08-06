@@ -53,8 +53,25 @@ describe("FenData", () => {
     const moves = MoveUtil.buildEngineMoves(italianVariationLine);
     expect(moves[moves.length - 2].chessJSData?.isCapture).toBeTruthy();
     expect(moves[moves.length - 2].chessJSData?.isSacrifice).toBeFalsy();
+    expect(moves[moves.length - 2].chessJSData?.isExchangeCapture).toBeFalsy();
+    expect(moves[moves.length - 2].chessJSData?.materialBalance).toBe(3);
     expect(moves[moves.length - 1].chessJSData?.isCapture).toBeTruthy();
     expect(moves[moves.length - 1].chessJSData?.isSacrifice).toBeFalsy();
+    expect(moves[moves.length - 1].chessJSData?.isExchangeCapture).toBeTruthy();
+    expect(moves[moves.length - 1].chessJSData?.materialBalance).toBe(0);
+  });
+
+  it("already one pawn up move is not an active sacrifice, rather exchange", () => {
+    const italianVariationLine = ["e4", "e5", "Nf3", "h6", "Nxe5", "Nc6", "Nxc6", "bxc6"];
+    const moves = MoveUtil.buildEngineMoves(italianVariationLine);
+    expect(moves[moves.length - 2].chessJSData?.isCapture).toBeTruthy();
+    expect(moves[moves.length - 2].chessJSData?.isSacrifice).toBeFalsy();
+    expect(moves[moves.length - 2].chessJSData?.isExchangeCapture).toBeFalsy();
+    expect(moves[moves.length - 2].chessJSData?.materialBalance).toBe(4);
+    expect(moves[moves.length - 1].chessJSData?.isCapture).toBeTruthy();
+    expect(moves[moves.length - 1].chessJSData?.isSacrifice).toBeFalsy();
+    expect(moves[moves.length - 1].chessJSData?.materialBalance).toBe(1);
+    expect(moves[moves.length - 1].chessJSData?.isExchangeCapture).toBeTruthy();
   });
 
   it("move is not an active sacrifice, rather exchange of pawns", () => {

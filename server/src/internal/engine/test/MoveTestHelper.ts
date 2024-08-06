@@ -149,9 +149,28 @@ export class MoveAnalysisPOTO {
     return moveAnalysis;
   }
 
+  public static whiteMistake(): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
+    moveAnalysis.wasWhiteMove = true;
+    moveAnalysis.nextMoves = [
+      { move: "h4g6", data: new MoveData(null, -7) },
+      { move: "g5g6", data: new MoveData(null, -11) },
+      { move: "h2h3", data: new MoveData(921, null) }
+    ];
+    return moveAnalysis;
+  }
+
   public static withScore(score: number, whiteMove: boolean = true, nextBestMove = "e6e7"): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
     moveAnalysis.nextMoves = [{ move: nextBestMove, data: new MoveData(score, null) }];
+    moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
+    moveAnalysis.wasWhiteMove = whiteMove;
+    return moveAnalysis;
+  }
+
+  public static withMate(mateNumber: number, whiteMove: boolean = true, nextBestMove = "e6e7"): MoveAnalysisDTO {
+    const moveAnalysis = new MoveAnalysisDTO();
+    moveAnalysis.nextMoves = [{ move: nextBestMove, data: new MoveData(null, mateNumber) }];
     moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
     moveAnalysis.wasWhiteMove = whiteMove;
     return moveAnalysis;

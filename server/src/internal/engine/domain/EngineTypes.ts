@@ -62,8 +62,9 @@ export class MoveData {
     this.isWhiteToMove = isWhiteToMove;
   }
 
-  isMate(): boolean {
-    return this.mate !== null && this.mate !== 0;
+  isMate(whitePerspective: boolean): boolean {
+    const whiteFactor = whitePerspective ? 1 : -1;
+    return this.mate !== null && whiteFactor * this.mate > 0;
   }
 
   toString(): string {

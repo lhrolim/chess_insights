@@ -1,8 +1,9 @@
 import { ChessJSMoveData } from "@internal/chessjs/domain/ChessJSMoveData";
 import { EngineMove } from "@internal/engine/domain/EngineInput";
-import { ChessJSUtil } from "./ChessJSDataUtil";
+import { ChessJSDataUtil } from "./ChessJSDataUtil";
 
 import { Chess } from "chess.js";
+import { ChessJSContextData } from "@internal/chessjs/domain/ChessJSContextData";
 
 export class MoveUtil {
   public static shouldSkipMove(i: number, startMove: number): MoveSkipData {
@@ -16,6 +17,7 @@ export class MoveUtil {
     const chess = new Chess();
     const engineMoves = Array<EngineMove>();
     let startPos = "";
+    const chessJSMoveContext: ChessJSContextData = { materialBalance: 0, piecesToRecapture: {} };
     let chessJSMoveData: ChessJSMoveData = null;
     moves.forEach(pgnMove => {
       let adjustedMove: PGNMove;
@@ -28,7 +30,8 @@ export class MoveUtil {
         adjustedMove = pgnMove;
       }
       const move = adjustedMove.move;
-      chessJSMoveData = ChessJSUtil.getChessJSData(chess, move, chessJSMoveData);
+      chessJSMoveData = ChessJSDataUtil.getChessJSData(chess, move, chessJSMoveContext);
+      chessJSMoveContext.materialBalance = chessJSMoveData.materialBalance;
       startPos += " " + chessJSMoveData.coordinatedMove;
       engineMoves.push(new EngineMove(chessJSMoveData, startPos.trim(), adjustedMove.timeTaken));
     });
