@@ -73,8 +73,9 @@ describe("categorizeMove", () => {
 
   describe("tables turned scenario", () => {
     describe("had decisive advantage", () => {
-      it("tables turned but within equality ==> miss", () => {
+      it("tables turned and had decisive advantage ==> miss", () => {
         const pastMove = MoveAnalysisPOTO.with3OptionsBlackAdvantage250();
+        pastMove.nextMoves[0].data.score = -MoveAnalysisThresholds.DECISIVE_ADVANTAGE - 10;
         const ma = MoveAnalysisPOTO.withScore(MoveAnalysisThresholds.EQUALITY_CONSTANT - 1);
         ma.wasWhiteMove = false;
         const result = MoveAnalyzer.analyzeMove(ma, pastMove);
@@ -198,6 +199,16 @@ describe("categorizeMove", () => {
       expect(result.category).toBe(MoveCategory.Brilliant);
     });
 
+    it("capture not a sacrifice, best", () => {
+      const pastMove = MoveAnalysisPOTO.withOnlyOneVeryGood();
+      const ma = MoveAnalysisPOTO.withScore(350);
+      ma.movePlayed = "e6e7";
+      ma.wasWhiteMove = true;
+      const result = MoveAnalyzer.analyzeMove(ma, pastMove, { isSacrifice: false, isCapture: true });
+      expect(result.moveScoreDelta).toBe(0);
+      expect(result.category).toBe(MoveCategory.Best);
+    });
+
     it("black: best move, but only one good, above threshold, return brilliant", () => {
       const pastMove = MoveAnalysisPOTO.withOnlyOneVeryGoodBlack();
       const ma = MoveAnalysisPOTO.withScore(-350);
@@ -241,7 +252,7 @@ describe("categorizeMove", () => {
       expect(result.category).toBe(MoveCategory.Best);
     });
 
-    it("is another piece capture, return great given criteria", () => {
+    xit("is another piece capture, return great given criteria", () => {
       const pastMove = MoveAnalysisPOTO.withOnlyOneDecent();
       const ma = MoveAnalysisPOTO.withScore(150);
       ma.movePlayed = "e6e7";

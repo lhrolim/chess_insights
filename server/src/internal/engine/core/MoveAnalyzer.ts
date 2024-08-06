@@ -149,7 +149,7 @@ export class MoveAnalyzer {
   private static tablesTurnedScenario(moveAnalysis: MoveAnalysisDTO, moveContext: MoveAnalysisContext): MoveCategory {
     const delta = moveContext.normalizedDelta;
     const absDelta = Math.abs(delta);
-    if (moveContext.stillAboutEqual) {
+    if (moveContext.lostDecisiveAdvantage && moveContext.stillAboutEqual) {
       return MoveCategory.Miss;
     }
     if (absDelta > MoveAnalysisThresholds.BLUNDER_CONSTANT && moveContext.oponentHasDecisiveAdvantage) {
@@ -158,7 +158,7 @@ export class MoveAnalyzer {
     if (absDelta > MoveAnalysisThresholds.INNACURACY_CONSTANT) {
       return MoveCategory.Mistake;
     }
-    return MoveCategory.Innacuracy;
+    return moveContext.stillAboutEqual ? MoveCategory.Good : MoveCategory.Innacuracy;
   }
 }
 
@@ -170,14 +170,21 @@ const brilliantGreatOrBest = (
     context.alreadyCompletelyLost ||
     context.alreadyLost ||
     context.secondBestKeepsCompletelyWinning ||
-    fenData.isExchangeCapture
+    fenData.isExchangeCapture ||
+    (fenData.isCapture && !fenData.isSacrifice)
   ) {
     return MoveCategory.Best;
   }
 
-  if (context.deltaBetweenSuggestedMoves > MoveAnalysisThresholds.BRILLIANT_LOWER_CONSTANT && fenData?.isSacrifice) {
-    return MoveCategory.Brilliant;
+  if (fenData.isSacrifice) {
+    return context.deltaBetweenSuggestedMoves > MoveAnalysisThresholds.BRILLIANT_LOWER_CONSTANT
+      ? MoveCategory.Brilliant
+      : MoveCategory.Great;
   }
+
+  // if (context.deltaBetweenSuggestedMoves > MoveAnalysisThresholds.BRILLIANT_LOWER_CONSTANT) {
+  //   return MoveCategory.Brilliant;
+  // }
 
   if (context.deltaBetweenSuggestedMoves > MoveAnalysisThresholds.GREAT_LOWER_CONSTANT || context.onlyOneLeadsToMate) {
     return MoveCategory.Great;

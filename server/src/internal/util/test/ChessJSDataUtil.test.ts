@@ -45,4 +45,10 @@ describe("capture exchange logic", () => {
   it("not a sacrifice q defending pawn", () => {
     expect(ChessJSDataUtil.simulateExchanges("w", [1], [9], 0, 1)).toBeFalsy();
   });
+
+  it("is is a sacrifice b for p", () => {
+    expect(ChessJSDataUtil.simulateExchanges("b", [1], [3], 0, 3)).toBeTruthy();
+  });
+
+
 });

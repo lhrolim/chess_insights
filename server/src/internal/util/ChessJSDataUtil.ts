@@ -105,22 +105,21 @@ export class ChessJSDataUtil {
     piecePoints: number
   ): boolean {
     let netLoss = capturedPoints;
-    let supporterIndex = 0;
     const whitePerspective = color === "w" ? 1 : -1;
+    let pieceToLose = piecePoints;
 
-    for (let attackerValue of opponentAttackerValues) {
-      if (supporterIndex < supporterValues.length) {
-        netLoss += attackerValue + supporterValues[supporterIndex++];
-      } else {
-        netLoss -= piecePoints;
+    for (let i = 0; i < opponentAttackerValues.length; i++) {
+      const attackerPiece = opponentAttackerValues[i];
+      netLoss -= pieceToLose;
+      const supportPiece = supporterValues[i];
+      if (supportPiece) {
+        netLoss += attackerPiece;
+        pieceToLose = supportPiece;
       }
-      // If at any point the net loss is positive from the perspective of the player making the move, it is a sacrifice
       if (netLoss < 0) {
         return true;
       }
     }
-
-    // Final check to ensure it's not a sacrifice if the total net loss is non-positive
     return netLoss < 0;
   }
 }

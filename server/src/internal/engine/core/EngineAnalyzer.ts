@@ -165,7 +165,8 @@ function logFullStockFishOutput(analysisResults: Array<MoveAnalysisDTO>) {
       analysis.category !== MoveCategory.Ignored &&
       analysis.category !== MoveCategory.Excellent &&
       analysis.category !== MoveCategory.Best &&
-      analysis.category !== MoveCategory.Great &&
+      analysis.category !== MoveCategory.Good &&
+      // analysis.category !== MoveCategory.Great &&
       !analysis.isEndOfGame()
     ) {
       array[analysis.category].push({
@@ -175,6 +176,6 @@ function logFullStockFishOutput(analysisResults: Array<MoveAnalysisDTO>) {
       });
     }
   });
-  // logger.debug(`Per category moves White: ${JSON.stringify(perCategoryMovesWhite, null, 1)}`);
-  logger.debug(`Per category moves Black: ${JSON.stringify(perCategoryMovesBlack, null, 1)}`);
+  logger.debug(`Per category moves White: ${JSON.stringify(perCategoryMovesWhite, null, 1)}`);
+  // logger.debug(`Per category moves Black: ${JSON.stringify(perCategoryMovesBlack, null, 1)}`);
 }
