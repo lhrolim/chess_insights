@@ -128,7 +128,7 @@ describe("categorizeMove", () => {
     it("white already lost, no good moves, position deteriorated,return innacuracy", () => {
       const pastMove = MoveAnalysisPOTO.with3MovesLostPositionCompletelyWhite();
       const ma = MoveAnalysisPOTO.withScore(-800);
-      ma.movePlayed = "d6d8"; //second best
+      ma.movePlayed = "d6d8"; //not into the list of options
       ma.wasWhiteMove = true;
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
       expect(result.moveScoreDelta).toBe(-253);
@@ -288,10 +288,10 @@ describe("categorizeMove", () => {
     });
 
     it("lost decisive, kept advantage ==> miss", () => {
-      const pastMove = MoveAnalysisPOTO.withScore(-483);
+      const pastMove = MoveAnalysisPOTO.withScore(-583);
       const ma = MoveAnalysisPOTO.withScore(-224, false, "f6g5");
       const result = MoveAnalyzer.analyzeMove(ma, pastMove);
-      expect(result.moveScoreDelta).toBe(259);
+      expect(result.moveScoreDelta).toBe(359);
       expect(result.category).toBe(MoveCategory.Miss);
     });
   });

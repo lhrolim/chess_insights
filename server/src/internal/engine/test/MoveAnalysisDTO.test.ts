@@ -84,7 +84,7 @@ describe("is in mate web", () => {
 
   it("white:should return true if giving mate", () => {
     const ma = new MoveAnalysisDTO();
-    ma.nextMoves = [{ move: "any", data: new MoveData(null, -2, false) }];
+    ma.nextMoves = [{ move: "any", data: new MoveData(null, 2, false) }];
     ma.wasWhiteMove = true;
     expect(ma.givingMate(true)).toBeTruthy();
   });
@@ -100,7 +100,7 @@ describe("is in mate web", () => {
   });
 
   it("black: should return true if in mate web", () => {
-    const ma = MoveAnalysisPOTO.withMate(2, false);
+    const ma = MoveAnalysisPOTO.withMate(-2, false);
     expect(ma.receivingMate()).toBeTruthy();
   });
 });

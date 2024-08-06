@@ -170,7 +170,7 @@ export class MoveAnalysisPOTO {
 
   public static withMate(mateNumber: number, whiteMove: boolean = true, nextBestMove = "e6e7"): MoveAnalysisDTO {
     const moveAnalysis = new MoveAnalysisDTO();
-    const whiteFactor = whiteMove ? -1 : 1;
+    const whiteFactor = whiteMove ? 1 : -1;
     moveAnalysis.nextMoves = [{ move: nextBestMove, data: new MoveData(null, whiteFactor * mateNumber, !whiteMove) }];
     moveAnalysis.position = "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"; //to avoid a book move analysis
     moveAnalysis.wasWhiteMove = whiteMove;
