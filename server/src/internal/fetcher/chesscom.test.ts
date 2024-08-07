@@ -1,7 +1,8 @@
 import axios from "axios";
-import { fetchBestAnalyzedGamesOverPastMonths } from "./chesscom"; // Adjust the import path accordingly
+import { ChessCOMFetcher } from "./ChessComFetcher"; // Adjust the import path accordingly
 import { GameFormat, MatchResult, EndMatchMode, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 
+const chessCOMFetcher = new ChessCOMFetcher();
 // Mock the axios module
 jest.mock("axios");
 
@@ -92,7 +93,7 @@ describe.skip("fetchBestAnalyzedGamesOverPastMonths", () => {
         desc: true
       }
     };
-    const games = await fetchBestAnalyzedGamesOverPastMonths(searchDTO);
+    const games = await chessCOMFetcher.fetchBestAnalyzedGamesOverPastMonths(searchDTO);
 
     // Assert the expected results
     expect(games).toEqual([

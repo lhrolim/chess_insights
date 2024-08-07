@@ -1,64 +1,38 @@
 import { Request, Response, Router } from "express";
 
 import { GameFormat, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
-import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom";
-import { EngineInput } from "@internal/engine/domain/EngineInput";
-export const subRoute = "/api/games";
 import { asyncHandler } from "@infra/middlewares/asyncHandler";
 import { EngineAnalyzer } from "@internal/engine/core/EngineAnalyzer";
 import { StockfishClient } from "@internal/engine/core/StockfishClient";
+import { EngineInput } from "@internal/engine/domain/EngineInput";
+import { ChessCOMFetcher } from "@internal/fetcher/ChessComFetcher";
+import { PGNParserUtil } from "@internal/util/pgnparserutil";
+import { SiteFetcherFactory } from "@internal/fetcher/SiteFetcherFactory";
+import validator from "validator";
+import getLogger, { LogTypes } from "@infra/logging/logger";
 
+export const subRoute = "/api/games/analysis/";
+
+const logger = getLogger(__filename);
 const router = Router();
 const engineAnalyzer = new EngineAnalyzer(new StockfishClient());
 
-router.get("/best", async (req: Request, res: Response) => {
-  let {
-    user: userName,
-    format: gameFormat,
-    months,
-    minmoves,
-    minprecision,
-    maxgames
-  } = req.query as {
-    user: string;
-    format?: string;
-    months?: string;
-    minmoves?: string;
-    minprecision?: string;
-    maxgames?: string;
-  };
-  if (!userName) {
-    res.status(400).send("Please provide a username");
+function validateLinkParameters(urlString: string, res: Response<any, Record<string, any>>, userName: string) {
+  const isValidUrl = urlString.startsWith("https://www.chess.com") || urlString.startsWith("https://lichess.org");
+  const isUrl = validator.isURL(urlString);
+
+  if (!isValidUrl || !isUrl) {
+    res.status(400).json({ error: "Invalid URL" });
     res.end();
-    return;
   }
 
-  let monthsToLookBack = months ? parseInt(months) : 1;
-  let maxGamesToReturn = maxgames ? parseInt(maxgames) : 20;
-  let minNumberOfMoves = minmoves ? parseInt(minmoves) : 0;
-  let minPrecision = minprecision ? parseInt(minprecision) : 0;
-  const gameFormatEnum: GameFormat = gameFormat ? (gameFormat.toLowerCase() as GameFormat) : null;
+  if (!userName) {
+    res.status(400).json({ error: "Invalid user" });
+    res.end();
+  }
+}
 
-  const searchDTO: GameSearchDto = {
-    user: userName,
-    months: monthsToLookBack,
-    minMoves: minNumberOfMoves,
-    gameFormat: gameFormatEnum,
-    maxGames: maxGamesToReturn,
-    minAccuracy: minPrecision,
-    sortDTO: {
-      criteria: SortCriteria.PRECISION,
-      desc: true
-    }
-  };
-
-  const games = await fetchBestAnalyzedGamesOverPastMonths(searchDTO);
-
-  res.send(games);
-  res.end();
-});
-
-router.get("/analyze", async (req: Request, res: Response) => {
+router.get("/test", async (req: Request, res: Response) => {
   // const engine = Stockfish();
   // await analyzeMoves(["1. e4 e5", "2. Nf3 Nc6", "3. Bb5 a6"]);
   const stockfishClient = new EngineAnalyzer(new StockfishClient());
@@ -135,13 +109,14 @@ router.get("/analyze", async (req: Request, res: Response) => {
 });
 
 router.post(
-  "/analyzePGN",
+  "/pgn",
   asyncHandler(async (req: Request, res: Response) => {
     const { pgn, startmove, depth } = req.body;
     const engineInput = EngineInput.fromPGN(pgn);
+    const gameMetadata = PGNParserUtil.parseGameMetadata(pgn, true);
     const depthToUse = depth ? parseInt(depth) : 20;
     const options = { depth: depthToUse, lines: 3, eloRating: 3500, threads: 8, startMove: startmove };
-    const result = await engineAnalyzer.analyzeGame(engineInput, options);
+    const result = await engineAnalyzer.analyzeGame(engineInput, options, gameMetadata);
 
     res.send(result);
     res.end();
@@ -149,7 +124,7 @@ router.post(
 );
 
 router.post(
-  "/candidateMoves",
+  "/candidates",
   asyncHandler(async (req: Request, res: Response) => {
     const { fen, position } = req.body;
     let engineInput: EngineInput;
@@ -160,6 +135,35 @@ router.post(
     }
     const options = { depth: 20, lines: 3, eloRating: 2500, threads: 8 };
     const result = await engineAnalyzer.findCandidateMoves(engineInput.moves[engineInput.moves.length - 1], options);
+
+    res.send(result);
+    res.end();
+  })
+);
+
+router.get(
+  "/link",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { url, depth, user } = req.query;
+    // Ensure the parameters are of the expected type
+    const urlString = typeof url === "string" ? url : "";
+    const depthToUse = typeof depth === "string" ? parseInt(depth, 10) : 0;
+    const userName = typeof user === "string" ? user : "";
+
+    // Validate the URL
+    validateLinkParameters(urlString, res, userName);
+
+    const options = { depth: depthToUse, lines: 3, eloRating: 2500, threads: 8 };
+    const siteFetcher = SiteFetcherFactory.getSiteFetcher(urlString);
+    const game = await siteFetcher.fetchSingleGame(userName, urlString);
+    if (game === null) {
+      logger.info(`Game not found at ${urlString}`);
+      res.status(404).json({ error: "Game not found" });
+    }
+    const pgn = game.pgn;
+    const engineInput = EngineInput.fromPGN(pgn);
+    const gameMetadata = PGNParserUtil.parseGameMetadata(pgn, true);
+    const result = await engineAnalyzer.analyzeGame(engineInput, options, gameMetadata);
 
     res.send(result);
     res.end();

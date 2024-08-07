@@ -1,3 +1,5 @@
+import { max } from "moment";
+
 export interface GameResultDTO {
   url: string;
   user: string;
@@ -55,6 +57,15 @@ export enum EndMatchMode {
   Unknown = "unknown"
 }
 
+export const defaultSearchDTO = (user: string, months: number, maxGames?: number): GameSearchDto => {
+  return {
+    user,
+    months,
+    maxGames,
+    sortDTO: { criteria: SortCriteria.DATE, desc: true }
+  };
+};
+
 export type GameSearchDto = {
   user: string;
   months: number;
@@ -63,7 +74,7 @@ export type GameSearchDto = {
   minMoves?: number;
   opening?: string;
   gameFormat?: GameFormat;
-  maxGames: number;
+  maxGames?: number;
   sortDTO: SortDTO;
 };
 

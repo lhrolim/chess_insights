@@ -1,7 +1,7 @@
-import { MoveCategory } from "../domain/EngineTypes";
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 import { MoveAnalyzer } from "../core/MoveAnalyzer";
 import { MoveAnalysisPOTO } from "./MoveTestHelper";
+import { MoveCategory } from "../domain/MoveCategory";
 
 describe("categorizeMove", () => {
   describe("better position scenario", () => {

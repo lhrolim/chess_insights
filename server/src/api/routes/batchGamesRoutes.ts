@@ -1,6 +1,6 @@
 import { GameFormat, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 import { SQSProducer } from "@infra/sqs/SQSProducer";
-import { fetchBestAnalyzedGamesOverPastMonths } from "@internal/fetcher/chesscom";
+import { ChessCOMFetcher } from "@internal/fetcher/ChessComFetcher";
 import { Request, Response, Router } from "express";
 
 export const subRoute = "/api/games/batch";
@@ -9,6 +9,7 @@ import Config from "../../config";
 
 const router = Router();
 const producer = new SQSProducer();
+const chessComFetcher = new ChessCOMFetcher();
 
 import getLogger from "@infra/logging/logger";
 import { asyncHandler } from "@infra/middlewares/asyncHandler";
@@ -57,7 +58,7 @@ router.get(
       }
     };
 
-    const games = await fetchBestAnalyzedGamesOverPastMonths(searchDTO);
+    const games = await chessComFetcher.fetchBestAnalyzedGamesOverPastMonths(searchDTO);
     games.forEach(game => {
       logger.info(`Sending game ${game.url} to SQS`);
       producer.sendMessage(Config.server.aws.sqs.topic_names.pgn, game.url);

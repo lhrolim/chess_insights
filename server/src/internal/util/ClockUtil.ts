@@ -1,3 +1,5 @@
+import { GameModality } from "@internal/engine/domain/GameMetadata";
+
 export class ClockUtil {
   /**
    * Converts a time string to milliseconds.
@@ -46,5 +48,31 @@ export class ClockUtil {
     }
 
     return milliseconds;
+  }
+
+  public static getModalityFromClock(clockString: string): GameModality {
+    const clock = this.timeStringToMilliseconds(clockString);
+    if (clock < 60000) {
+      return GameModality.Bullet;
+    } else if (clock < 600000) {
+      return GameModality.Blitz;
+    } else if (clock < 1800000) {
+      return GameModality.Rapid;
+    } else {
+      return GameModality.Classical;
+    }
+  }
+
+  public static getModalityFromTimeControl(timeControlInS: string): GameModality {
+    const clock = parseInt(timeControlInS.split("+")[0]) * 1000;
+    if (clock < 60000) {
+      return GameModality.Bullet;
+    } else if (clock < 600000) {
+      return GameModality.Blitz;
+    } else if (clock < 1800000) {
+      return GameModality.Rapid;
+    } else {
+      return GameModality.Classical;
+    }
   }
 }

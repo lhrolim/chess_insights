@@ -55,6 +55,13 @@ describe("FenData", () => {
     expect(moves[moves.length - 1].chessJSData?.isSacrifice).toBeTruthy();
   });
 
+  it("move is an passive sacrifice", () => {
+    const petrovVariationLine = ["e4", "e5", "Nf3", "Nf6"];
+    const moves = MoveUtil.buildEngineMoves(petrovVariationLine);
+    expect(moves[moves.length - 1].chessJSData?.isCapture).toBeFalsy();
+    expect(moves[moves.length - 1].chessJSData?.isSacrifice).toBeFalsy();
+  });
+
   it("move is not an active sacrifice", () => {
     const italianVariationLine = ["e4", "h6", "Bc4", "e6"];
     const moves = MoveUtil.buildEngineMoves(italianVariationLine);

@@ -1,7 +1,8 @@
-import { parseMovesFromPGN } from "@internal/util/pgnparserutil";
+import { PGNParserUtil } from "@internal/util/pgnparserutil";
 import { UCIUtil } from "../util/UCIUtil";
 import { ChessJSMoveData } from "../../chessjs/domain/ChessJSMoveData";
 import { MoveUtil } from "@internal/util/MoveUtil";
+import { GameMetadata } from "./GameMetadata";
 
 export class EngineInput {
   moves: EngineMove[];
@@ -32,7 +33,7 @@ export class EngineInput {
   }
 
   public static fromPGN(pgn: string): EngineInput {
-    const moves = parseMovesFromPGN(pgn);
+    const moves = PGNParserUtil.parseMovesFromPGN(pgn);
     return new EngineInput(undefined, undefined, moves);
   }
 }

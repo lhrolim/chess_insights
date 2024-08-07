@@ -1,4 +1,4 @@
-import { EndOfGameMode, MoveCategory, MoveData } from "../domain/EngineTypes";
+import { EndOfGameMode, MoveData } from "../domain/EngineTypes";
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 import { UCIUtil } from "../util/UCIUtil";
 import { MoveAnalysisPOTO } from "./MoveTestHelper";

@@ -1,3 +1,5 @@
+import { ChessJSContextData } from "./ChessJSContextData";
+
 export type ChessJSMoveData = {
   isSacrifice?: boolean;
   isDevelopmentMove?: boolean;
@@ -15,6 +17,7 @@ export type ChessJSMoveData = {
   coordinatedMove?: string;
   materialBalance?: number;
   isGambito?: boolean;
+  contextBeforeMove?: ChessJSContextData;
 };
 
 export const DEFAULT_CHESS_JS_MOVE_DATA: ChessJSMoveData = {

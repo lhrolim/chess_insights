@@ -1,4 +1,15 @@
+import { Piece } from "chess.js";
+import { PiecesToRecapture } from "./PieceContextData";
+
 export type ChessJSContextData = {
+  whiteContextData?: ColorSpecificContextData;
+  blackContextData?: ColorSpecificContextData;
+  materialBalance?: number;
+  piecesToRecapture?: { [key: string]: PiecesToRecapture };
+  hangingPieces?: { [key: string]: Piece };
+};
+
+export type ColorSpecificContextData = {
   hasBishopPair?: boolean;
   hasPassedPawn?: boolean;
   hasIsolatedPawn?: boolean;
@@ -10,16 +21,4 @@ export type ChessJSContextData = {
   isKingSafe?: boolean;
   isKingInCenter?: boolean;
   allPiecesDeveloped?: boolean;
-  materialBalance?: number;
-  piecesToRecapture: { [key: string]: PiecesToRecapture };
-};
-
-export type PiecesToRecapture = {
-  material: number;
-  capturedMaterial: number;
-  color: string;
-  // moveNumber: number;
-  isExchange: boolean;
-  piece: string;
-  capturedPiece: string;
 };

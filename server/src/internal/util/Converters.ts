@@ -1,7 +1,8 @@
 import { EndMatchMode, GameResultDTO, MatchResult } from "@api/dtos/GameDtos";
 import ChessGameModel, { ChessGame } from "@internal/database/ChessGameModel";
-import { PGNParsedData, parseRelevantDataFromPGN } from "./pgnparserutil";
+import { PGNParserUtil } from "./pgnparserutil";
 import { convertEpochToFormattedDate, formattedDate } from "./dateutil";
+import { GameMetadata } from "@internal/engine/domain/GameMetadata";
 
 export const convertGameResultDTOToChessGame = (dto: GameResultDTO, pgn: string): ChessGame => {
   // Note: Adjust the creation logic based on actual required and optional fields
@@ -61,7 +62,7 @@ export const parseGamesFromApiResponse = (userName: string, game: any): GameResu
     return null;
   }
   let time = convertEpochToFormattedDate(game.end_time);
-  const pgnParsedData: PGNParsedData = parseRelevantDataFromPGN(game.pgn, amIPlayingAsWhite);
+  const pgnParsedData: GameMetadata = PGNParserUtil.parseGameMetadata(game.pgn, amIPlayingAsWhite);
   if (pgnParsedData == null) {
     console.log("pgnParsedData is null" + game);
     return null;
@@ -92,7 +93,7 @@ export const parseGamesFromApiResponse = (userName: string, game: any): GameResu
       rating: game.white.rating,
       result: game.white.result,
       precision: whiteAccuracy,
-      finalClock: pgnParsedData.whiteClock
+      finalClock: pgnParsedData.whiteFinalClock
     },
     blackData: {
       username: game.black.username,
@@ -100,7 +101,7 @@ export const parseGamesFromApiResponse = (userName: string, game: any): GameResu
       rating: game.black.rating,
       result: game.black.result,
       precision: blackAccuracy,
-      finalClock: pgnParsedData.blackClock
+      finalClock: pgnParsedData.blackFinalClock
     }
   };
 };

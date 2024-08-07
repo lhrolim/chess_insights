@@ -1,5 +1,6 @@
-import { ChessJSContextData, PiecesToRecapture } from "@internal/chessjs/domain/ChessJSContextData";
+import { ChessJSContextData } from "@internal/chessjs/domain/ChessJSContextData";
 import { ChessJSMoveData as ChessJSMoveData } from "@internal/chessjs/domain/ChessJSMoveData";
+import { PiecesToRecapture } from "@internal/chessjs/domain/PieceContextData";
 import { Chess, Color, Move, Square } from "chess.js";
 
 const pieceValues = {
@@ -94,7 +95,13 @@ export class ChessJSDataUtil {
       })
       .sort((a, b) => a - b);
     // Simulate exchanges
-    return this.simulateExchanges(validMove.color, opponentAttackerValues, supporterValues, capturedPoints,piecePoints);
+    return this.simulateExchanges(
+      validMove.color,
+      opponentAttackerValues,
+      supporterValues,
+      capturedPoints,
+      piecePoints
+    );
   }
 
   public static simulateExchanges(

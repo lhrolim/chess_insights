@@ -1,15 +1,16 @@
 import { time } from "console";
-import { MoveCategory, UCIMoveResult, EndOfGameMode, MoveData } from "./EngineTypes";
+import { UCIMoveResult, EndOfGameMode, MoveData } from "./EngineTypes";
 import { MoveAnalysisThresholds } from "./MoveAnalyzisThresholds";
+import { MoveCategory } from "./MoveCategory";
 
-export type MoveAnalysisDTOForPrecision = {
+export interface BasicMoveAnalysis {
   moveScoreDelta: number;
   category: MoveCategory;
   wasWhiteMove: boolean;
   endofGame?: EndOfGameMode;
-};
+}
 
-export class MoveAnalysisDTO {
+export class MoveAnalysisDTO implements BasicMoveAnalysis {
   movePlayed: string; // e2e4
   moveScoreDelta: number; // how did the score varied after this move has been played from a white perspective
   category: MoveCategory;
@@ -162,7 +163,7 @@ export class MoveAnalysisDTO {
     };
   }
 
-  getSimplifiedDTOForPrecision(): MoveAnalysisDTOForPrecision {
+  getSimplifiedDTOForPrecision(): BasicMoveAnalysis {
     return {
       moveScoreDelta: this.moveScoreDelta,
       category: this.category,

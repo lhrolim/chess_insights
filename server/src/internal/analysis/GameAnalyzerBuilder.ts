@@ -1,12 +1,13 @@
 import { EngineMove } from "@internal/engine/domain/EngineInput";
-import { EndOfGameMode, MoveCategory } from "@internal/engine/domain/EngineTypes";
 import {
   ConsolidateMoveAnalysis,
   createDefaultConsolidateMoveAnalysis,
   GameAnalyzisResult
 } from "@internal/engine/domain/GameAnalyseResult";
-import { MoveAnalysisDTO, MoveAnalysisDTOForPrecision } from "@internal/engine/domain/MoveAnalysisDTO";
+import { GameMetadata } from "@internal/engine/domain/GameMetadata";
+import { BasicMoveAnalysis, MoveAnalysisDTO } from "@internal/engine/domain/MoveAnalysisDTO";
 import { MoveAnalysisThresholds } from "@internal/engine/domain/MoveAnalyzisThresholds";
+import { MoveCategory } from "@internal/engine/domain/MoveCategory";
 
 interface RatingToCPLMapping {
   [rating: number]: number;
@@ -15,6 +16,12 @@ interface RatingToCPLMapping {
 // Establish benchmarks
 const grandmasterLevelDelta = 0.05;
 const beginnerLevelDelta = 2.2;
+
+const lowTimeRapid = 5000; //5 seconds or less
+const longTimeRapid = 30000; //30 seconds or more
+
+const lowTimeBlitz = 3000; //3 seconds or less
+const longTimeBlitz = 30000; //15 seconds or more
 
 const ratingToCPL: RatingToCPLMapping = {
   800: 1.5,
@@ -60,14 +67,96 @@ const ratingToCPL: RatingToCPLMapping = {
 export class GameAnalyzerBuilder {
   public static buildConsolidatedAnalysis(
     moves: EngineMove[],
-    engineMoveResults: MoveAnalysisDTO[]
+    engineMoveResults: MoveAnalysisDTO[],
+    gameMetadata: GameMetadata
   ): GameAnalyzisResult {
     const consolidatedResults = GameAnalyzerBuilder.buildConsolidatedArray(engineMoveResults);
     const calculatedPrecision = GameAnalyzerBuilder.calculatePrecision(engineMoveResults);
-    const result = new GameAnalyzisResult(engineMoveResults, consolidatedResults);
+    const result = new GameAnalyzisResult(engineMoveResults, consolidatedResults, gameMetadata);
     result.whitePrecision = calculatedPrecision[0];
     result.blackPrecision = calculatedPrecision[1];
+
+    result.firstMistakeWhite = this.getFirstMistake(moves, engineMoveResults, true);
+    result.firstMistakeBlack = this.getFirstMistake(moves, engineMoveResults, false);
+
+    result.firstMistakeWhiteLongTime = this.getFirstMistakeLongTime(moves, engineMoveResults, true, gameMetadata);
+    result.firstMistakeBlackLongTime = this.getFirstMistakeLongTime(moves, engineMoveResults, false, gameMetadata);
+
+    result.firstMistakeWhiteLowTime = this.getFirstMistakeLowTime(moves, engineMoveResults, true, gameMetadata);
+    result.firstMistakeBlackLowTime = this.getFirstMistakeLowTime(moves, engineMoveResults, false, gameMetadata);
+
     return result;
+  }
+  public static getFirstMistakeLowTime(
+    moves: EngineMove[],
+    engineMoveResults: MoveAnalysisDTO[],
+    white: boolean,
+    gameMetadata: GameMetadata
+  ): MoveAnalysisDTO {
+    let lowTimeThreshold = 5000; //default
+
+    if (gameMetadata) {
+      switch (gameMetadata.modality) {
+        case "Rapid":
+          lowTimeThreshold = lowTimeRapid;
+          break;
+        case "Blitz":
+          lowTimeThreshold = lowTimeBlitz;
+          break;
+        default:
+          break;
+      }
+    }
+
+    return engineMoveResults
+      .filter(move => move.wasWhiteMove === white)
+      .find(move => {
+        return (
+          (move.category === MoveCategory.Mistake || move.category === MoveCategory.Blunder) &&
+          move.timeTook <= lowTimeThreshold
+        );
+      });
+  }
+  public static getFirstMistakeLongTime(
+    moves: EngineMove[],
+    engineMoveResults: MoveAnalysisDTO[],
+    white: boolean,
+    gameMetadata: GameMetadata
+  ): MoveAnalysisDTO {
+    let highThreshold = 30000; //default
+
+    if (gameMetadata) {
+      switch (gameMetadata.modality) {
+        case "Rapid":
+          highThreshold = lowTimeRapid;
+          break;
+        case "Blitz":
+          highThreshold = lowTimeBlitz;
+          break;
+        default:
+          break;
+      }
+    }
+
+    return engineMoveResults
+      .filter(move => move.wasWhiteMove === white)
+      .find(move => {
+        return (
+          (move.category === MoveCategory.Mistake || move.category === MoveCategory.Blunder) &&
+          move.timeTook >= highThreshold
+        );
+      });
+  }
+  public static getFirstMistake(
+    moves: EngineMove[],
+    engineMoveResults: MoveAnalysisDTO[],
+    white: boolean
+  ): MoveAnalysisDTO {
+    return engineMoveResults
+      .filter(move => move.wasWhiteMove === white)
+      .find(move => {
+        return move.category === MoveCategory.Mistake || move.category === MoveCategory.Blunder;
+      });
   }
 
   private static buildConsolidatedArray(engineMoveResults: MoveAnalysisDTO[]) {
@@ -150,10 +239,7 @@ export class GameAnalyzerBuilder {
     return interpolatedCPL;
   }
 
-  public static calculatePrecision(
-    moveAnalysis: MoveAnalysisDTOForPrecision[],
-    playerRatings?: number[]
-  ): [number, number] {
+  public static calculatePrecision(moveAnalysis: BasicMoveAnalysis[], playerRatings?: number[]): [number, number] {
     // Check if the array is empty
     if (moveAnalysis.length === 0) {
       throw new Error("The array of move analysis is empty");
@@ -187,7 +273,7 @@ export class GameAnalyzerBuilder {
     return [whitePrecisionScore, blackPrecisionScore];
   }
 
-  private static normalizedValue(move: MoveAnalysisDTOForPrecision) {
+  private static normalizedValue(move: BasicMoveAnalysis) {
     return Math.min(MoveAnalysisThresholds.MATE_CONSTANT, Math.abs(move.moveScoreDelta));
   }
 

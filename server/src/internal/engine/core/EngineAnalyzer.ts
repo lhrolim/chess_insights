@@ -1,7 +1,7 @@
 import getLogger, { LogTypes } from "@infra/logging/logger";
 import { GameAnalyzerBuilder } from "@internal/analysis/GameAnalyzerBuilder";
 import { EngineMove, EngineInput } from "../domain/EngineInput";
-import { GameAnalyzisOptions, MoveCategory } from "../domain/EngineTypes";
+import { GameAnalyzisOptions } from "../domain/EngineTypes";
 import { GameAnalyzisResult } from "../domain/GameAnalyseResult";
 import { MoveAnalyzer } from "./MoveAnalyzer";
 import { StockfishClient } from "./StockfishClient";
@@ -9,8 +9,10 @@ import { UCIUtil } from "../util/UCIUtil";
 import { IEngineAnalyzer } from "../IEngineAnalyzer";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 import config from "../../../config";
-import { log } from "console";
 import { MoveUtil } from "@internal/util/MoveUtil";
+import { MoveCategory } from "../domain/MoveCategory";
+import e from "express";
+import { GameMetadata } from "../domain/GameMetadata";
 
 const logger = getLogger(__filename, LogTypes.Analysis);
 
@@ -78,7 +80,11 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     });
   }
 
-  public async analyzeGame(engineInput: EngineInput, options?: GameAnalyzisOptions): Promise<GameAnalyzisResult> {
+  public async analyzeGame(
+    engineInput: EngineInput,
+    options?: GameAnalyzisOptions,
+    gameMetadata?: GameMetadata
+  ): Promise<GameAnalyzisResult> {
     logger.info(`Starting game analysis`);
     const start = performance.now();
     this.client.setStockfishOptions({
@@ -86,7 +92,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
       threads: options?.threads,
       hashSize: 256
     });
-    const result = await this.doAnalyze(engineInput.moves, options);
+    const result = await this.doAnalyze(engineInput.moves, options, gameMetadata);
     const finish = performance.now();
     logger.info(`Analysis done took ${finish - start} milliseconds`);
     return result;
@@ -96,7 +102,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
   private async doAnalyze(
     moves: EngineMove[],
     options: GameAnalyzisOptions = { depth: 20, lines: 3, startMove: 1 },
-    ratings?: number[]
+    gameMetadata?: GameMetadata
   ): Promise<GameAnalyzisResult> {
     let analysisResults = Array<MoveAnalysisDTO>();
     let previousAnalyis: MoveAnalysisDTO = null;
@@ -122,7 +128,7 @@ export class EngineAnalyzer implements IEngineAnalyzer {
     if (config.server.isLocal()) {
       logFullStockFishOutput(analysisResults);
     }
-    return GameAnalyzerBuilder.buildConsolidatedAnalysis(moves, analysisResults);
+    return GameAnalyzerBuilder.buildConsolidatedAnalysis(moves, analysisResults, gameMetadata);
   }
 
   public async findCandidateMoves(engineInput: EngineMove, options?: GameAnalyzisOptions): Promise<MoveAnalysisDTO> {

@@ -1,18 +1,32 @@
+import { GameMetadata } from "./GameMetadata";
 import { MoveAnalysisDTO } from "./MoveAnalysisDTO";
 
 export class GameAnalyzisResult {
-  constructor(moves: MoveAnalysisDTO[], consolidateMoveAnalysis: ConsolidateMoveAnalysis[]) {
+  constructor(
+    moves: MoveAnalysisDTO[],
+    consolidateMoveAnalysis: ConsolidateMoveAnalysis[],
+    gameMetadata?: GameMetadata
+  ) {
     this.whiteAnalysis = consolidateMoveAnalysis[0];
     this.blackAnalysis = consolidateMoveAnalysis[1];
     this.moves = moves;
   }
 
+  gameMetadata?: GameMetadata;
   whiteAnalysis: ConsolidateMoveAnalysis;
   blackAnalysis: ConsolidateMoveAnalysis;
   moves: MoveAnalysisDTO[];
   whitePrecision?: number;
   blackPrecision?: number;
-  myFirstMistake?: MoveAnalysisDTO;
+
+  firstMistakeWhite?: MoveAnalysisDTO;
+  firstMistakeBlack?: MoveAnalysisDTO;
+
+  firstMistakeWhiteLongTime?: MoveAnalysisDTO; //took its time but still caused a mistake
+  firstMistakeBlackLongTime?: MoveAnalysisDTO; //took its time but still caused a mistake
+
+  firstMistakeWhiteLowTime?: MoveAnalysisDTO; //played fast and caused a mistake
+  firstMistakeBlackLowTime?: MoveAnalysisDTO; //played fast and caused a mistake
 
   toJSON() {
     return {
@@ -21,7 +35,8 @@ export class GameAnalyzisResult {
       whiteAnalysis: this.whiteAnalysis,
       blackAnalysis: this.blackAnalysis,
       moves: this.moves,
-      myFirstMistake: this.myFirstMistake
+      firstMistakeWhite: this.firstMistakeWhite,
+      firstMistakeBlack: this.firstMistakeBlack
     };
   }
 }

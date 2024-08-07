@@ -1,4 +1,4 @@
-import { GameSearchDto } from "@api/dtos/GameDtos";
+import { defaultSearchDTO, GameSearchDto, SortCriteria } from "@api/dtos/GameDtos";
 import ChessGameModel, { ChessGame } from "./ChessGameModel"; // Adjust the import path as necessary
 import { YearAndMonth } from "@internal/util/dateutil";
 
@@ -34,9 +34,13 @@ export class ChessGameDAO {
     }
   }
 
-  public static async bringGamesMatchingCriteria(user: string, criteria: GameSearchDto): Promise<ChessGame[]> {
+  public static async bringGamesMatchingCriteria(user: string, criteria?: GameSearchDto): Promise<ChessGame[]> {
     const now = new Date();
     const pastDate = new Date(now.setMonth(now.getMonth() - criteria.months));
+
+    if (!criteria) {
+      criteria = defaultSearchDTO(user, 1);
+    }
 
     let query = ChessGameModel.find({
       user: { $eq: user },

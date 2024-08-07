@@ -8,8 +8,9 @@ import fs from "fs";
 import cookieSession from "cookie-session";
 import path from "path";
 import Config from "./config";
-import singleGameRoutes, { subRoute as gameSubRoute } from "@api/routes/singleGameRoutes";
-import batchGameRoutes, { subRoute as batchGameSubRoute } from "@api/routes/batchGamesRoutes";
+import analysisRoute, { subRoute as analysisPath } from "@api/routes/analysisRoutes";
+import batchGameRoutes, { subRoute as batchGamePath } from "@api/routes/batchGamesRoutes";
+import gameListRoutes, { subRoute as gameListPath } from "@api/routes/gameListRoutes";
 import { connectToDatabase } from "@internal/database/MongoConnection";
 
 import { errorMiddleware } from "@infra/middlewares/errorMiddleware";
@@ -73,8 +74,9 @@ app.use(express.static(clientBuildDirectory)); // Non-index.html files
 Config.client.routes.forEach(route => app.use(route, express.static(path.join(clientBuildDirectory, "index.html"))));
 
 // API Endpoints
-app.use(gameSubRoute, singleGameRoutes);
-app.use(batchGameSubRoute, batchGameRoutes);
+app.use(analysisPath, analysisRoute);
+app.use(batchGamePath, batchGameRoutes);
+app.use(gameListPath, gameListRoutes);
 
 app.use(errorMiddleware);
 

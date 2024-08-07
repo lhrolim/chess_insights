@@ -1,8 +1,9 @@
-import { MoveData, MoveCategory } from "../domain/EngineTypes";
+import { MoveData } from "../domain/EngineTypes";
 import { ChessJSMoveData, DEFAULT_CHESS_JS_MOVE_DATA } from "../../chessjs/domain/ChessJSMoveData";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
 import { MoveAnalysisThresholds } from "../domain/MoveAnalyzisThresholds";
 import { MoveAnalysisContext, MoveAnalysisContextBuilder, MoveAnalysisData } from "./MoveAnalysisContextBuilder";
+import { MoveCategory } from "../domain/MoveCategory";
 
 export class MoveAnalyzer {
   public static calculateDeltaScore(moveData: MoveData, pastScore?: MoveData): number {

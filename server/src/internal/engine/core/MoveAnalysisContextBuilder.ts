@@ -1,5 +1,6 @@
-import { MoveData, MoveCategory } from "../domain/EngineTypes";
+import { MoveData } from "../domain/EngineTypes";
 import { MoveAnalysisDTO } from "../domain/MoveAnalysisDTO";
+import { MoveCategory } from "../domain/MoveCategory";
 
 export class MoveAnalysisContextBuilder {
   public static generateContext(

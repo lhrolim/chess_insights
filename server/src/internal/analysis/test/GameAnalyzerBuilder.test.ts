@@ -1,6 +1,6 @@
-import { MoveCategory } from "@internal/engine/domain/EngineTypes";
-import { MoveAnalysisDTOForPrecision } from "@internal/engine/domain/MoveAnalysisDTO";
+import { BasicMoveAnalysis } from "@internal/engine/domain/MoveAnalysisDTO";
 import { GameAnalyzerBuilder } from "../GameAnalyzerBuilder"; // Adjust the import path as needed
+import { MoveCategory } from "@internal/engine/domain/MoveCategory";
 
 describe("GameAnalyzerBuilder.getCPLForRating", () => {
   test("returns the correct CPL for exact ratings", () => {
@@ -42,7 +42,7 @@ describe("calculate precision out of average cploss", () => {
 // });
 
 describe("GameAnalyzerBuilder.calculatePrecision", () => {
-  const moveAnalysis: MoveAnalysisDTOForPrecision[] = [
+  const moveAnalysis: BasicMoveAnalysis[] = [
     { moveScoreDelta: 0.6, category: MoveCategory.Innacuracy, wasWhiteMove: true },
     { moveScoreDelta: 1.5, category: MoveCategory.Mistake, wasWhiteMove: false },
     { moveScoreDelta: 3.0, category: MoveCategory.Blunder, wasWhiteMove: true },
