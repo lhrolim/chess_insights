@@ -182,6 +182,6 @@ function logFullStockFishOutput(analysisResults: Array<MoveAnalysisDTO>) {
       });
     }
   });
-  logger.debug(`Per category moves White: ${JSON.stringify(perCategoryMovesWhite, null, 1)}`);
+  // logger.debug(`Per category moves White: ${JSON.stringify(perCategoryMovesWhite, null, 1)}`);
   // logger.debug(`Per category moves Black: ${JSON.stringify(perCategoryMovesBlack, null, 1)}`);
 }

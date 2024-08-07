@@ -1,0 +1,32 @@
+# Use an official Node.js runtime as the base image
+FROM node:22.3.0 as builder
+
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application code
+COPY . .
+
+# Transpile TypeScript to JavaScript
+RUN npm run build
+
+# Stage 2: Final image
+FROM node:22.3.0
+
+WORKDIR /usr/src/app
+
+# Copy only the necessary files from the builder stage
+COPY --from=builder /usr/src/app/package*.json ./
+COPY --from=builder /usr/src/app/build ./build
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Define the command to run the app
+CMD ["npm", "run", "start"]

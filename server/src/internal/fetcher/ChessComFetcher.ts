@@ -57,6 +57,7 @@ export class ChessCOMFetcher implements SiteFetcher {
     logger.info(`Fetching game from chess.com at ${url}`);
     const alreadyStored = await ChessGameDAO.findById(url);
     if (alreadyStored) {
+      logger.info("Returning game from database");
       return { url: url, pgn: alreadyStored.pgn };
     }
 
