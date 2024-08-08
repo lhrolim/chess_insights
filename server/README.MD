@@ -53,4 +53,17 @@ docker exec -it $(docker ps -qf "name=localstack") awslocal sqs get-queue-attrib
 
 1. Warp (command line tool)
 2. Mongo DB Compass GUI
-3. 
+3.
+
+### Docker
+
+Building the image
+```
+docker build -f docker/Dockerfile -t chesswiz . 
+```
+
+running the image locally
+
+```
+docker run -d -p 5000:5000 --name chesswiz --env-file ./docker/.env chesswiz
+```

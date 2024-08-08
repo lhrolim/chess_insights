@@ -23,10 +23,11 @@ WORKDIR /usr/src/app
 # Copy only the necessary files from the builder stage
 COPY --from=builder /usr/src/app/package*.json ./
 COPY --from=builder /usr/src/app/build ./build
+COPY --from=builder /usr/src/app/.env ./
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE 5000
 
 # Define the command to run the app
 CMD ["npm", "run", "start"]

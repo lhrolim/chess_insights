@@ -11,10 +11,10 @@
     "test": "jest --watch"
   },
   "_moduleAliases": {
-    "@api": "build/api",
-    "@util": "build/internal/util",
-    "@internal": "build/internal",
-    "@infra": "build/infra"
+    "@api": "./src/api",
+    "@util": "./src/internal/util",
+    "@internal": "./src/internal",
+    "@infra": "./src/infra"
   },
   "author": "",
   "license": "ISC",

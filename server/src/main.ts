@@ -1,20 +1,25 @@
-require("module-alias/register");
+// require("module-alias/register");
+require("./infra/env/AliasConfig");
+import { EnvManager } from "@infra/env/EnvManager";
 import dotenv from "dotenv";
+
+EnvManager.initialize().catch(error => {
+  console.error("Failed to initialize environment variables", error);
+  process.exit(1); // Exit with failure in case of an error
+});
 dotenv.config(); // Setup .env
 
-import express from "express";
-import https from "https";
-import fs from "fs";
-import cookieSession from "cookie-session";
-import path from "path";
-import Config from "./config";
 import analysisRoute, { subRoute as analysisPath } from "@api/routes/analysisRoutes";
 import batchGameRoutes, { subRoute as batchGamePath } from "@api/routes/batchGamesRoutes";
 import gameListRoutes, { subRoute as gameListPath } from "@api/routes/gameListRoutes";
 import { connectToDatabase } from "@internal/database/MongoConnection";
+import cookieSession from "cookie-session";
+import express from "express";
+import path from "path";
+import Config from "./config";
 
-import { errorMiddleware } from "@infra/middlewares/errorMiddleware";
 import getLogger from "@infra/logging/logger";
+import { errorMiddleware } from "@infra/middlewares/errorMiddleware";
 
 // import "@infra/middlewares/unhandledRejectionsHandler"; // Import the unhandledRejectionsHandler to catch unhandled promise rejections
 
@@ -89,17 +94,16 @@ async function initializeApplication() {
   const port = process.env.PORT || 5000;
 
   if (!isProduction) {
-    https
-      .createServer(
-        {
-          cert: fs.readFileSync("server.cert"),
-          key: fs.readFileSync("server.key")
-        },
-        app
-      )
-      .listen(port, () => {
-        console.log(`Listening on ${port} with HTTPS`);
-      });
+    // https
+    //   .createServer(
+    //     {
+    //       cert: fs.readFileSync("server.cert"),
+    //       key: fs.readFileSync("server.key")
+    //     },
+    // app
+    app.listen(port, () => {
+      console.log(`Listening on ${port} with HTTPS`);
+    });
   } else {
     app.listen(port, () => {
       console.log(`Listening on ${port}`);
@@ -111,6 +115,6 @@ async function initializeApplication() {
 
 // Immediately invoke the async function to start the application
 initializeApplication().catch(error => {
-  console.error('Failed to initialize the application', error);
+  console.error("Failed to initialize the application", error);
   process.exit(1); // Exit with failure in case of an error
 });
