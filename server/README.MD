@@ -1,3 +1,8 @@
+## Pre-Requisites
+
+1. docker
+2. aws-cli
+
 ## Running the application
 
 ### First time
@@ -55,7 +60,33 @@ docker exec -it $(docker ps -qf "name=localstack") awslocal sqs get-queue-attrib
 2. Mongo DB Compass GUI
 3.
 
-### Docker
+
+## Docker
+
+Building the image
+```
+docker build -f docker/Dockerfile -t chesswiz . 
+```
+
+running the image locally
+
+```
+docker run -d -p 5000:5000 --name chesswiz --env-file ./docker/.env chesswiz
+```
+
+## Registering to ECR
+
+Authenticate
+
+```aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 191564089703.dkr.ecr.us-east-1.amazonaws.com```
+
+Stockfish:
+
+1. `docker buildx build --platform=linux/amd64 -t chesswiz_sf -f Docker_sf_16 . --load`
+2. `docker tag chesswiz_sf:latest 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_sf:latest`
+3. `docker push 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_sf:latest`
+
+API:
 
 Building the image
 ```
