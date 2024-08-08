@@ -1,5 +1,6 @@
 import * as net from "net";
-import config from "../../../config";
+import { getConfig } from "../../../config";
+const config = getConfig();
 import getLogger from "@infra/logging/logger";
 import { EngineMove } from "../domain/EngineInput";
 

@@ -1,5 +1,3 @@
-import { DateTime } from "aws-sdk/clients/devicefarm";
-
 export type GameMetadata = {
   url?: string;
   whitePlayer: string;

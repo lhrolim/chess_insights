@@ -1,4 +1,5 @@
-import Config from "../../config";
+import { getConfig } from "../../config";
+const Config = getConfig();
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 import getLogger from "@infra/logging/logger";
@@ -11,11 +12,11 @@ export class SQSProducer {
     const awsConfig = Config.server.aws;
     this.sqsClient = new SQSClient({
       region: awsConfig.region,
-      endpoint: awsConfig.sqs.url,
-      credentials: {
-        accessKeyId: awsConfig.accesskey,
-        secretAccessKey: awsConfig.secretkey
-      }
+      endpoint: awsConfig.sqs.url
+      // credentials: {
+      //   accessKeyId: awsConfig.accesskey,
+      //   secretAccessKey: awsConfig.secretkey
+      // }
     });
   }
 

@@ -1,53 +1,48 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as AWS from "aws-sdk";
+import { SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { SSMClient, GetParametersByPathCommand, GetParametersByPathCommandOutput } from "@aws-sdk/client-ssm";
 import dotenv from "dotenv";
+import { getConfig } from "../../config";
 
 export class EnvManager {
   static loadEnvFile() {
-    const envFilePath = path.resolve(__dirname, ".env");
-    if (fs.existsSync(envFilePath)) {
-      const result = dotenv.config({ path: envFilePath });
-      if (result.error) {
-        throw result.error;
-      }
-    }
+    dotenv.config();
   }
 
-  static async loadEnvFromAWS() {
-    const ssm = new AWS.SSM({ region: process.env.AWS_REGION });
-    const secretsManager = new AWS.SecretsManager({ region: process.env.AWS_REGION });
+  static async loadFromAWSSSM() {
+    const region = process.env.AWS_REGION || "us-east-1";
+    const ssmClient = new SSMClient({ region });
+    const secretsManagerClient = new SecretsManagerClient({ region });
+    let config = getConfig();
 
-    // Define the parameter names and secret names
-    const parameterNames = ["/your-app-prefix/DB_PASSWORD", "/your-app-prefix/API_KEY"];
-    const secretNames = ["your-secret-name"];
+    const parameterPathPrefix = "/chesswiz/";
 
     try {
-      // Fetch parameters from SSM
-      const ssmData = await ssm
-        .getParameters({
-          Names: parameterNames,
-          WithDecryption: true
-        })
-        .promise();
+      // Fetch parameters from SSM by path
+      const parameters = [];
+      let nextToken;
+      do {
+        const command = new GetParametersByPathCommand({
+          Path: parameterPathPrefix,
+          WithDecryption: true,
+          NextToken: nextToken
+        });
+        const ssmData: GetParametersByPathCommandOutput = await ssmClient.send(command);
 
-      ssmData.Parameters.forEach(param => {
+        if (ssmData.Parameters) {
+          parameters.push(...ssmData.Parameters);
+        }
+
+        nextToken = ssmData.NextToken;
+        console.log(`NextToken: ${nextToken}`);
+      } while (nextToken);
+      const database = config.server.database;
+      parameters.forEach(param => {
         const paramName = param.Name.split("/").pop();
         if (paramName && param.Value) {
           process.env[paramName] = param.Value;
         }
       });
-
-      // Fetch secrets from Secrets Manager
-      for (const secretName of secretNames) {
-        const secretData = await secretsManager.getSecretValue({ SecretId: secretName }).promise();
-        if (secretData.SecretString) {
-          const secrets = JSON.parse(secretData.SecretString);
-          Object.keys(secrets).forEach(key => {
-            process.env[key] = secrets[key];
-          });
-        }
-      }
+      config = getConfig();
     } catch (err) {
       console.error("Error fetching parameters from AWS", err);
     }
@@ -59,17 +54,7 @@ export class EnvManager {
 
     // Then override with AWS data if in production
     if (process.env.NODE_ENV === "production") {
-      await this.loadEnvFromAWS();
+      await this.loadFromAWSSSM();
     }
   }
 }
-
-// Initialize environment variables
-// EnvManager.initialize()
-//   .then(() => {
-//     // Start your application here, e.g., import and run your main module
-//     // require('./main'); // Uncomment and adjust this line as needed
-//   })
-//   .catch(err => {
-//     console.error("Error during environment initialization", err);
-//   });

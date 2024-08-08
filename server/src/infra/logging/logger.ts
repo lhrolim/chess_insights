@@ -1,7 +1,8 @@
 import { createLogger, format, transports, Logger } from "winston";
 import path from "path";
 import DailyRotateFile from "winston-daily-rotate-file";
-import config from "../../config";
+import { getConfig } from "../../config";
+const config = getConfig();
 
 const { combine, timestamp, printf } = format;
 

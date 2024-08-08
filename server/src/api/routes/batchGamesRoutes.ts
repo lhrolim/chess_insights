@@ -5,7 +5,8 @@ import { Request, Response, Router } from "express";
 
 export const subRoute = "/api/games/batch";
 
-import Config from "../../config";
+import { getConfig } from "../../config";
+const Config = getConfig();
 
 const router = Router();
 const producer = new SQSProducer();

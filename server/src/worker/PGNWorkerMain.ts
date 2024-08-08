@@ -1,7 +1,8 @@
 require("module-alias/register");
 import dotenv from "dotenv";
 dotenv.config(); // Setup .env
-import Config from "../config";
+import { getConfig } from "../config";
+const Config = getConfig();
 import { SQSClient } from "@aws-sdk/client-sqs";
 import { errorMiddleware } from "@infra/middlewares/errorMiddleware";
 import getLogger from "@infra/logging/logger";
