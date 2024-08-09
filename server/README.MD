@@ -88,13 +88,26 @@ Stockfish:
 
 API:
 
-Building the image
-```
-docker build -f docker/Dockerfile -t chesswiz . 
-```
+1. `docker buildx build --platform=linux/amd64 -f docker/Dockerfile -t chesswiz_api . --load`
+2. `docker tag chesswiz_api:latest 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_api:latest`
+3. `docker push 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_api:latest`
 
-running the image locally
+
+## running the image locally
 
 ```
 docker run -d -p 5000:5000 --name chesswiz --env-file ./docker/.env chesswiz
 ```
+
+
+## LightSail
+
+1. Connect to instance
+2. Login to ecr: ```aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 191564089703.dkr.ecr.us-east-1.amazonaws.com```
+3. Download images:
+`docker pull 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_api:ladocktest`
+`docker pull 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_worker:latest`
+`docker pull 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_sf:latest`
+4. Run:
+SF:`docker run -d -p 23249:23249 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_sf:latest`
+api:`docker run -d -p 5000:5000 -e NODE_ENV=production 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_api:latest`

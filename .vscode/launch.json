@@ -18,7 +18,7 @@
         "request": "launch",
         "name": "Debug Worker",
         "runtimeExecutable": "${workspaceFolder}/server/node_modules/.bin/ts-node-dev",
-        "args": ["--respawn", "--transpile-only", "src/worker/PGNWorkerMain.ts"],
+        "args": ["--respawn", "--transpile-only", "src/main_worker.ts"],
         "protocol": "inspector",
         "console": "integratedTerminal",
         "internalConsoleOptions": "neverOpen",
