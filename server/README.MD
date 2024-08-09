@@ -92,6 +92,12 @@ API:
 2. `docker tag chesswiz_api:latest 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_api:latest`
 3. `docker push 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_api:latest`
 
+WORKER:
+
+1. `docker buildx build --platform=linux/amd64 -f docker/Dockerfile_workers -t chesswiz_worker . --load`
+2. `docker tag chesswiz_api:latest 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_worker:latest`
+3. `docker push 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_worker:latest`
+
 
 ## running the image locally
 

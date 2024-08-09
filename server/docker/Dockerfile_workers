@@ -28,4 +28,4 @@ COPY --from=builder /usr/src/app/node_modules ./node_modules
 
 # Expose the port the app runs on
 # Define the command to run the app
-CMD ["npm", "run", "start-workers"]
+CMD ["npm", "run", "start-worker"]
