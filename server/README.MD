@@ -8,6 +8,8 @@
 ### First time
 1. Generate an .env file copying from the .envexample
 2. Generate a .server.cert file
+3. update /etc/hosts to include the entry:
+`127.0.0.1 host.docker.internal` 
 
 #### SSL
 
@@ -82,19 +84,19 @@ Authenticate
 
 Stockfish:
 
-1. `docker buildx build --platform=linux/amd64 -t chesswiz_sf -f Docker_sf_16 . --load`
+1. `docker buildx build --platform=linux/amd64 -t chesswiz_sf -f Docker_sf . --load`
 2. `docker tag chesswiz_sf:latest 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_sf:latest`
 3. `docker push 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_sf:latest`
 
 API:
 
-1. `docker buildx build --platform=linux/amd64 -f docker/Dockerfile -t chesswiz_api . --load`
+1. `docker buildx build --platform=linux/amd64 -f docker/Dockerfile_api -t chesswiz_api . --load`
 2. `docker tag chesswiz_api:latest 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_api:latest`
 3. `docker push 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_api:latest`
 
 WORKER:
 
-1. `docker buildx build --platform=linux/amd64 -f docker/Dockerfile_workers -t chesswiz_worker . --load`
+1. `docker buildx build --platform=linux/amd64 -f docker/Dockerfile_worker -t chesswiz_worker . --load`
 2. `docker tag chesswiz_api:latest 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_worker:latest`
 3. `docker push 191564089703.dkr.ecr.us-east-1.amazonaws.com/chesswiz_worker:latest`
 
@@ -104,6 +106,8 @@ WORKER:
 ```
 docker run -d -p 5000:5000 --name chesswiz --env-file ./docker/.env chesswiz
 ```
+
+Inspect the file system: `docker run -it --rm chesswiz_worker /bin/sh`
 
 
 ## LightSail
